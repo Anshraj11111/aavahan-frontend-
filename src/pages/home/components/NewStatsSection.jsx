@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { Users, Trophy, Calendar, Zap } from 'lucide-react';
 import { staggerContainer } from '../../../lib/animations';
-import StatCard from '../../../components/common/StatCard';
 import SectionWrapper from '../../../components/common/SectionWrapper';
 
 /**
@@ -11,29 +10,39 @@ import SectionWrapper from '../../../components/common/SectionWrapper';
 const StatsSection = () => {
   const stats = [
     { 
-      icon: <Users size={32} />, 
+      icon: 'Users', 
       value: 10000, 
       label: 'Expected Participants',
       suffix: '+'
     },
     { 
-      icon: <Trophy size={32} />, 
+      icon: 'Trophy', 
       value: 50, 
       label: 'Events & Competitions',
       suffix: '+'
     },
     { 
-      icon: <Calendar size={32} />, 
+      icon: 'Calendar', 
       value: 3, 
       label: 'Days of Innovation'
     },
     { 
-      icon: <Zap size={32} />, 
+      icon: 'Zap', 
       value: 100, 
       label: 'Workshops & Sessions',
       suffix: '+'
     },
   ];
+
+  const getIcon = (iconName) => {
+    const icons = {
+      Users: <Users size={32} />,
+      Trophy: <Trophy size={32} />,
+      Calendar: <Calendar size={32} />,
+      Zap: <Zap size={32} />
+    };
+    return icons[iconName] || null;
+  };
 
   return (
     <SectionWrapper showGlow glowColor="blue" className="bg-navy-900/30">
@@ -46,13 +55,22 @@ const StatsSection = () => {
           className="grid grid-cols-2 lg:grid-cols-4 gap-6"
         >
           {stats.map((stat, index) => (
-            <StatCard
+            <motion.div 
               key={index}
-              value={stat.value}
-              label={stat.label}
-              icon={stat.icon}
-              suffix={stat.suffix}
-            />
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 }
+              }}
+              className="glass-panel rounded-xl border border-white/10 glow-border p-8 text-center transition-all duration-300"
+            >
+              <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 text-blue-400">
+                {getIcon(stat.icon)}
+              </div>
+              <div className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
+                {stat.value.toLocaleString()}{stat.suffix || ''}
+              </div>
+              <div className="text-sm md:text-base text-gray-400 font-medium">{stat.label}</div>
+            </motion.div>
           ))}
         </motion.div>
       </div>

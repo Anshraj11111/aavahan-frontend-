@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Calendar, Ticket, Home, Info, Phone, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PremiumButton from '../common/PremiumButton';
+import RegistrationModal from '../modals/RegistrationModal';
 
 /**
  * Navbar Component
@@ -11,6 +12,7 @@ import PremiumButton from '../common/PremiumButton';
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
   const location = useLocation();
 
   // Handle scroll effect (80px threshold)
@@ -120,11 +122,14 @@ const Navbar = () => {
               <Ticket size={18} />
               <span>My Tickets</span>
             </Link>
-            <Link to="/events">
-              <PremiumButton variant="primary" size="md" icon={<Sparkles size={18} />}>
-                Register Now
-              </PremiumButton>
-            </Link>
+            <PremiumButton 
+              variant="primary" 
+              size="md" 
+              icon={<Sparkles size={18} />}
+              onClick={() => setIsRegistrationModalOpen(true)}
+            >
+              Register Now
+            </PremiumButton>
           </div>
 
           {/* Mobile Menu Button */}
@@ -222,16 +227,15 @@ const Navbar = () => {
                         My Tickets
                       </PremiumButton>
                     </Link>
-                    <Link to="/events" className="block">
-                      <PremiumButton 
-                        variant="primary" 
-                        size="md" 
-                        icon={<Sparkles size={18} />}
-                        className="w-full justify-center"
-                      >
-                        Register Now
-                      </PremiumButton>
-                    </Link>
+                    <PremiumButton 
+                      variant="primary" 
+                      size="md" 
+                      icon={<Sparkles size={18} />}
+                      className="w-full justify-center"
+                      onClick={() => setIsRegistrationModalOpen(true)}
+                    >
+                      Register Now
+                    </PremiumButton>
                   </div>
                 </div>
               </motion.div>
@@ -239,6 +243,13 @@ const Navbar = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Registration Modal */}
+      <RegistrationModal
+        isOpen={isRegistrationModalOpen}
+        onClose={() => setIsRegistrationModalOpen(false)}
+        event={{ title: 'General Registration', description: 'Register for Tech Fest 2026' }}
+      />
     </header>
   );
 };

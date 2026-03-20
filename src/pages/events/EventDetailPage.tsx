@@ -12,6 +12,8 @@ const EventDetailPage = () => {
     queryKey: ['event', slug],
     queryFn: () => eventsService.getEventBySlug(slug!),
     enabled: !!slug,
+    retry: 1, // Only retry once to avoid excessive requests
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const event = eventResponse?.data;
@@ -22,7 +24,7 @@ const EventDetailPage = () => {
     const now = new Date();
     const registrationDeadline = new Date(event.registrationDeadline);
     
-    if (event.currentRegistrations >= event.maxRegistrations) {
+    if ((event.currentRegistrations || 0) >= (event.maxRegistrations || 0)) {
       return 'bg-red-500/20 text-red-400 border-red-500/30';
     } else if (registrationDeadline < now) {
       return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
@@ -37,7 +39,7 @@ const EventDetailPage = () => {
     const now = new Date();
     const registrationDeadline = new Date(event.registrationDeadline);
     
-    if (event.currentRegistrations >= event.maxRegistrations) {
+    if ((event.currentRegistrations || 0) >= (event.maxRegistrations || 0)) {
       return 'Registration Full';
     } else if (registrationDeadline < now) {
       return 'Registration Closed';
@@ -52,7 +54,7 @@ const EventDetailPage = () => {
     const now = new Date();
     const registrationDeadline = new Date(event.registrationDeadline);
     
-    return event.currentRegistrations < event.maxRegistrations && registrationDeadline > now;
+    return (event.currentRegistrations || 0) < (event.maxRegistrations || 0) && registrationDeadline > now;
   };
 
   const getStatusIcon = () => {
@@ -61,7 +63,7 @@ const EventDetailPage = () => {
     const now = new Date();
     const registrationDeadline = new Date(event.registrationDeadline);
     
-    if (event.currentRegistrations >= event.maxRegistrations) {
+    if ((event.currentRegistrations || 0) >= (event.maxRegistrations || 0)) {
       return <XCircle className="w-5 h-5 text-red-400" />;
     } else if (registrationDeadline < now) {
       return <AlertCircle className="w-5 h-5 text-yellow-400" />;
@@ -76,7 +78,7 @@ const EventDetailPage = () => {
     const now = new Date();
     const registrationDeadline = new Date(event.registrationDeadline);
     
-    if (event.currentRegistrations >= event.maxRegistrations) {
+    if ((event.currentRegistrations || 0) >= (event.maxRegistrations || 0)) {
       return 'Registration Full';
     } else if (registrationDeadline < now) {
       return 'Registration Closed';
@@ -99,14 +101,37 @@ const EventDetailPage = () => {
   if (error) {
     return (
       <div className="min-h-screen pt-20 flex items-center justify-center">
-        <div className="text-white text-center">
-          <p className="text-red-400 mb-4">Failed to load event details</p>
-          <button 
-            onClick={() => navigate('/events')}
-            className="btn-primary"
-          >
-            Back to Events
-          </button>
+        <div className="text-white text-center max-w-md mx-auto px-4">
+          <div className="glass p-8 rounded-2xl">
+            <h2 className="text-2xl font-bold text-red-400 mb-4">Unable to Load Event</h2>
+            <p className="text-white/80 mb-6">
+              {error?.message?.includes('404') 
+                ? 'This event was not found. It may have been removed or the URL is incorrect.'
+                : 'The backend server might not be running. Please check the development guide for setup instructions.'
+              }
+            </p>
+            <div className="space-y-3">
+              <button 
+                onClick={() => window.location.reload()}
+                className="btn-primary w-full"
+              >
+                Retry
+              </button>
+              <button 
+                onClick={() => navigate('/events')}
+                className="btn-secondary w-full"
+              >
+                Back to Events
+              </button>
+            </div>
+            {!error?.message?.includes('404') && (
+              <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                <p className="text-yellow-400 text-sm">
+                  <strong>Developer Note:</strong> Run <code>npm run dev</code> in the backend folder to start the API server.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -150,25 +175,25 @@ const EventDetailPage = () => {
             {/* Event Image */}
             <div className="relative">
               <img
-                src={event.bannerImage || event.posterImage || '/images/event-placeholder.jpg'}
-                alt={event.title}
+                src={event?.bannerImage || event?.posterImage || '/images/event-placeholder.jpg'}
+                alt={event?.title || 'Event'}
                 className="w-full h-96 object-cover rounded-2xl"
               />
               <div className="absolute top-6 left-6">
                 <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  event.category === 'cultural' 
+                  event?.category === 'cultural' 
                     ? 'bg-accent-500 text-white' 
                     : 'bg-primary-500 text-white'
                 }`}>
-                  {event.category === 'cultural' ? 'Cultural Event' : 'Technical Event'}
+                  {event?.category === 'cultural' ? 'Cultural Event' : 'Technical Event'}
                 </span>
               </div>
               <div className="absolute top-6 right-6">
                 <span className="bg-black/50 backdrop-blur-sm text-white px-3 py-2 rounded-full text-sm">
-                  Day {event.day}
+                  Day {event?.day || 'TBD'}
                 </span>
               </div>
-              {event.featured && (
+              {event?.featured && (
                 <div className="absolute bottom-6 left-6">
                   <span className="bg-yellow-500 text-black px-3 py-2 rounded-full text-sm font-medium">
                     ⭐ Featured Event
@@ -180,11 +205,11 @@ const EventDetailPage = () => {
             {/* Event Info */}
             <div>
               <h1 className="text-3xl lg:text-4xl font-display font-bold text-white mb-4">
-                {event.title}
+                {event?.title || 'Event Title'}
               </h1>
               
               <p className="text-white/80 text-lg mb-6 leading-relaxed">
-                {event.shortDescription}
+                {event?.shortDescription || 'Event description not available.'}
               </p>
 
               {/* Event Details Grid */}
@@ -195,10 +220,10 @@ const EventDetailPage = () => {
                     <div>
                       <p className="text-white/60 text-sm">Date & Time</p>
                       <p className="text-white font-medium">
-                        {formatDate(event.date, 'long')}
+                        {event?.date ? formatDate(event.date, 'long') : 'Date TBD'}
                       </p>
                       <p className="text-white/80 text-sm">
-                        {event.startTime} - {event.endTime}
+                        {event?.startTime && event?.endTime ? `${event.startTime} - ${event.endTime}` : 'Time TBD'}
                       </p>
                     </div>
                   </div>
@@ -209,7 +234,7 @@ const EventDetailPage = () => {
                     <MapPin className="w-5 h-5 text-secondary-400" />
                     <div>
                       <p className="text-white/60 text-sm">Venue</p>
-                      <p className="text-white font-medium">{event.venue}</p>
+                      <p className="text-white font-medium">{event?.venue || 'Venue TBD'}</p>
                     </div>
                   </div>
                 </div>
@@ -220,11 +245,11 @@ const EventDetailPage = () => {
                     <div>
                       <p className="text-white/60 text-sm">Participation</p>
                       <p className="text-white font-medium">
-                        {event.participationType === 'team' ? 'Team Event' : 'Solo Event'}
+                        {event?.participationType === 'team' ? 'Team Event' : 'Solo Event'}
                       </p>
-                      {event.participationType === 'team' && (
+                      {event?.participationType === 'team' && (
                         <p className="text-white/80 text-sm">
-                          {event.minTeamSize}-{event.maxTeamSize} members
+                          {event?.minTeamSize}-{event?.maxTeamSize} members
                         </p>
                       )}
                     </div>
@@ -237,7 +262,7 @@ const EventDetailPage = () => {
                     <div>
                       <p className="text-white/60 text-sm">Entry Fee</p>
                       <p className="text-white font-medium">
-                        {event.entryFee > 0 ? formatCurrency(event.entryFee) : 'Free'}
+                        {event?.entryFee > 0 ? formatCurrency(event.entryFee) : 'Free'}
                       </p>
                     </div>
                   </div>
@@ -252,14 +277,14 @@ const EventDetailPage = () => {
                     <div>
                       <p className="text-white font-medium">{getStatusText()}</p>
                       <p className="text-white/60 text-sm">
-                        {event.currentRegistrations} / {event.maxRegistrations} registered
+                        {event?.currentRegistrations || 0} / {event?.maxRegistrations || 0} registered
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-white/60 text-sm">Registration closes</p>
                     <p className="text-white font-medium">
-                      {getRelativeTime(event.registrationDeadline)}
+                      {event?.registrationDeadline ? getRelativeTime(event.registrationDeadline) : 'TBD'}
                     </p>
                   </div>
                 </div>
@@ -268,7 +293,7 @@ const EventDetailPage = () => {
                     <div 
                       className="bg-primary-500 h-2 rounded-full transition-all duration-300"
                       style={{ 
-                        width: `${Math.min((event.currentRegistrations / event.maxRegistrations) * 100, 100)}%` 
+                        width: `${Math.min(((event?.currentRegistrations || 0) / (event?.maxRegistrations || 1)) * 100, 100)}%` 
                       }}
                     />
                   </div>
@@ -278,7 +303,7 @@ const EventDetailPage = () => {
               {/* Registration Button */}
               {isRegistrationOpen ? (
                 <Link
-                  to={`/registration/${event._id}`}
+                  to={`/registration/${event?._id}`}
                   className="btn-primary w-full text-center text-lg py-4 mb-4"
                 >
                   Register Now
@@ -307,7 +332,7 @@ const EventDetailPage = () => {
             <div className="glass p-8 rounded-2xl mb-8">
               <div className="prose prose-invert max-w-none">
                 <p className="text-white/80 leading-relaxed text-lg">
-                  {event.fullDescription}
+                  {event?.fullDescription || 'Full description not available.'}
                 </p>
               </div>
             </div>
@@ -315,7 +340,7 @@ const EventDetailPage = () => {
             {/* Rules and Eligibility */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Rules */}
-              {event.rules && event.rules.length > 0 && (
+              {event?.rules && event.rules.length > 0 && (
                 <div className="glass p-6 rounded-xl">
                   <h3 className="text-xl font-bold text-white mb-4">Rules & Guidelines</h3>
                   <ul className="space-y-2">
@@ -333,12 +358,12 @@ const EventDetailPage = () => {
               <div className="space-y-6">
                 <div className="glass p-6 rounded-xl">
                   <h3 className="text-xl font-bold text-white mb-4">Eligibility</h3>
-                  <p className="text-white/80">{event.eligibility}</p>
+                  <p className="text-white/80">{event?.eligibility || 'Eligibility criteria not specified.'}</p>
                 </div>
 
                 <div className="glass p-6 rounded-xl">
                   <h3 className="text-xl font-bold text-white mb-4">Prizes</h3>
-                  <p className="text-white/80">{event.prizeDetails}</p>
+                  <p className="text-white/80">{event?.prizeDetails || 'Prize details not available.'}</p>
                 </div>
               </div>
             </div>
@@ -360,27 +385,27 @@ const EventDetailPage = () => {
               </div>
               
               <h3 className="text-xl font-bold text-white mb-2">
-                {event.coordinatorName}
+                {event?.coordinatorName || 'Event Coordinator'}
               </h3>
               
               <div className="space-y-3">
                 <div className="flex items-center justify-center space-x-3">
                   <Phone className="w-4 h-4 text-white/60" />
                   <a
-                    href={`tel:+91${event.coordinatorPhone}`}
+                    href={`tel:+91${event?.coordinatorPhone || ''}`}
                     className="text-primary-400 hover:text-primary-300 transition-colors duration-200"
                   >
-                    +91 {event.coordinatorPhone}
+                    +91 {event?.coordinatorPhone || 'N/A'}
                   </a>
                 </div>
                 
                 <div className="flex items-center justify-center space-x-3">
                   <Mail className="w-4 h-4 text-white/60" />
                   <a
-                    href={`mailto:${event.coordinatorEmail}`}
+                    href={`mailto:${event?.coordinatorEmail || ''}`}
                     className="text-primary-400 hover:text-primary-300 transition-colors duration-200"
                   >
-                    {event.coordinatorEmail}
+                    {event?.coordinatorEmail || 'N/A'}
                   </a>
                 </div>
               </div>

@@ -10,6 +10,8 @@ const StatCard = ({ value, label, icon, suffix = '', prefix = '', decimals = 0, 
     <motion.div 
       ref={ref} 
       variants={scaleUp}
+      initial="hidden"
+      animate={inView ? "visible" : "hidden"}
       className="glass-panel rounded-xl border border-white/10 glow-border p-8 text-center transition-all duration-300"
     >
       {icon && (

@@ -50,10 +50,12 @@ const RegistrationPage = () => {
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
 
   // Fetch event details
-  const { data: event, isLoading: eventLoading } = useQuery({
+  const { data: event, isLoading: eventLoading, error: eventError } = useQuery({
     queryKey: ['event', eventId],
     queryFn: () => eventsService.getEventById(eventId!),
     enabled: !!eventId,
+    retry: 1, // Only retry once to avoid excessive requests
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Form for each step
@@ -190,6 +192,37 @@ const RegistrationPage = () => {
     return (
       <div className="min-h-screen pt-20 flex items-center justify-center">
         <div className="text-white">Loading event details...</div>
+      </div>
+    );
+  }
+
+  if (eventError) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="glass p-8 rounded-2xl">
+            <h1 className="text-2xl font-bold text-red-400 mb-4">Unable to Load Event</h1>
+            <p className="text-white/80 mb-6">
+              The backend server might not be running. Please check the development guide for setup instructions.
+            </p>
+            <div className="space-y-3">
+              <button 
+                onClick={() => window.location.reload()}
+                className="btn-primary w-full"
+              >
+                Retry
+              </button>
+              <Link to="/events" className="btn-secondary w-full">
+                Back to Events
+              </Link>
+            </div>
+            <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <p className="text-yellow-400 text-sm">
+                <strong>Developer Note:</strong> Run <code>npm run dev</code> in the backend folder to start the API server.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

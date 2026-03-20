@@ -1,8 +1,13 @@
 import { VALIDATION_RULES, FILE_UPLOAD } from '../constants';
 
 // Date and Time Utilities
-export const formatDate = (date: string | Date, format: 'short' | 'long' | 'time' = 'short'): string => {
+export const formatDate = (date: string | Date | null | undefined, format: 'short' | 'long' | 'time' = 'short'): string => {
+  if (!date) return 'N/A';
+  
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  // Check if date is valid
+  if (isNaN(dateObj.getTime())) return 'Invalid Date';
   
   if (format === 'time') {
     return dateObj.toLocaleTimeString('en-IN', {
@@ -28,8 +33,14 @@ export const formatDate = (date: string | Date, format: 'short' | 'long' | 'time
   });
 };
 
-export const formatDateTime = (date: string | Date): string => {
+export const formatDateTime = (date: string | Date | null | undefined): string => {
+  if (!date) return 'N/A';
+  
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  // Check if date is valid
+  if (isNaN(dateObj.getTime())) return 'Invalid Date';
+  
   return dateObj.toLocaleString('en-IN', {
     year: 'numeric',
     month: 'short',
@@ -40,8 +51,14 @@ export const formatDateTime = (date: string | Date): string => {
   });
 };
 
-export const getRelativeTime = (date: string | Date): string => {
+export const getRelativeTime = (date: string | Date | null | undefined): string => {
+  if (!date) return 'N/A';
+  
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  // Check if date is valid
+  if (isNaN(dateObj.getTime())) return 'Invalid Date';
+  
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
   

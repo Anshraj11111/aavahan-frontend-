@@ -17,13 +17,13 @@ const SchedulePage = () => {
 
   // Group events by day
   const allEvents = scheduleData?.data || [];
-  const schedule = allEvents.reduce((acc, event) => {
+  const schedule = Array.isArray(allEvents) ? allEvents.reduce((acc, event) => {
     if (!acc[event.day]) {
       acc[event.day] = [];
     }
     acc[event.day].push(event);
     return acc;
-  }, {} as { [key: number]: any[] });
+  }, {} as { [key: number]: any[] }) : {};
   
   const dayEvents = schedule[selectedDay] || [];
 

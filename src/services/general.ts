@@ -32,11 +32,6 @@ export const generalService = {
   async subscribeNewsletter(email: string): Promise<ApiResponse<{ success: boolean }>> {
     return apiService.post<{ success: boolean }>('/public/newsletter/subscribe', { email });
   },
-
-  // Health check
-  async healthCheck(): Promise<ApiResponse<{ status: string; timestamp: string }>> {
-    return apiService.get<{ status: string; timestamp: string }>('/health');
-  },
 };
 
 export default generalService;
