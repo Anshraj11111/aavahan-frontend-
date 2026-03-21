@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { 
   Users, 
@@ -15,51 +14,15 @@ import {
   MapPin,
   Calendar
 } from 'lucide-react';
-import { adminService } from '../../services/admin';
+import { useRegistrations } from '../../contexts/RegistrationContext';
 
 const RegistrationsList = () => {
-  const queryClient = useQueryClient();
+  const { registrations: allRegistrations, updateRegistration } = useRegistrations();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRegistration, setSelectedRegistration] = useState(null);
 
-  // Fetch registrations from backend
-  const { data: registrationsData, isLoading } = useQuery({
-    queryKey: ['admin-registrations', statusFilter],
-    queryFn: () => adminService.getAllRegistrations({
-      status: statusFilter !== 'all' ? statusFilter : undefined,
-    }),
-    staleTime: 30 * 1000, // 30 seconds
-    refetchInterval: 60 * 1000, // Refetch every minute
-  });
-
-  const registrations = registrationsData?.data || [];
-
-  // Approve mutation
-  const approveMutation = useMutation({
-    mutationFn: (registrationId) => adminService.approveRegistration(registrationId),
-    onSuccess: () => {
-      toast.success('Registration approved successfully!');
-      queryClient.invalidateQueries({ queryKey: ['admin-registrations'] });
-      setSelectedRegistration(null);
-    },
-    onError: (error) => {
-      toast.error(error.error || 'Failed to approve registration');
-    },
-  });
-
-  // Reject mutation
-  const rejectMutation = useMutation({
-    mutationFn: (registrationId) => adminService.rejectRegistration(registrationId),
-    onSuccess: () => {
-      toast.success('Registration rejected');
-      queryClient.invalidateQueries({ queryKey: ['admin-registrations'] });
-      setSelectedRegistration(null);
-    },
-    onError: (error) => {
-      toast.error(error.error || 'Failed to reject registration');
-    },
-  });
+  const registrations = allRegistrations || [];
 
   const filteredRegistrations = registrations.filter(reg => {
     const matchesSearch = reg.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -92,24 +55,31 @@ const RegistrationsList = () => {
   };
 
   const handleApproveRegistration = (registrationId) => {
-    approveMutation.mutate(registrationId);
+    updateRegistration(registrationId, {
+      registrationStatus: 'approved',
+      paymentStatus: 'paid',
+      approvedAt: new Date().toISOString()
+    });
+    toast.success('Registration approved successfully!');
+    setSelectedRegistration(null);
   };
 
   const handleVerifyPayment = (registrationId) => {
-    approveMutation.mutate(registrationId);
+    updateRegistration(registrationId, {
+      paymentStatus: 'paid',
+      verifiedAt: new Date().toISOString()
+    });
+    toast.success('Payment verified successfully!');
   };
 
   const handleRejectRegistration = (registrationId) => {
-    rejectMutation.mutate(registrationId);
+    updateRegistration(registrationId, {
+      registrationStatus: 'rejected',
+      paymentStatus: 'failed'
+    });
+    toast.success('Registration rejected');
+    setSelectedRegistration(null);
   };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="text-white text-center py-12">Loading registrations...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

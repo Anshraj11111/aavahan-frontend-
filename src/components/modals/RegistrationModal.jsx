@@ -34,10 +34,16 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = event?.entryFee > 0 ? 3 : 2;
 
-  // Scroll modal to top when it opens
+  // Scroll to top when modal opens
   useEffect(() => {
-    if (isOpen && modalContentRef.current) {
-      modalContentRef.current.scrollTop = 0;
+    if (isOpen) {
+      // Immediately scroll page to top
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      
+      // Scroll modal content to top
+      if (modalContentRef.current) {
+        modalContentRef.current.scrollTop = 0;
+      }
     }
   }, [isOpen]);
 
@@ -67,60 +73,30 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
     }
   }, [isOpen, event?.entryFee]);
 
-  // Memoize QR code URL to prevent regeneration on every render
+  // Generate QR code URL - uses backend config or fallback to defaults
   const qrCodeUrl = useMemo(() => {
-    console.log('Generating QR code URL...');
-    console.log('Event entry fee:', event?.entryFee);
-    console.log('Payment config:', paymentConfig);
+    if (!event?.entryFee) return '';
     
-    if (!event?.entryFee || !paymentConfig) {
-      console.log('Missing event fee or payment config, returning empty QR URL');
-      return '';
-    }
+    const upiId = paymentConfig?.upiId || '8269858259@ybl';
+    const merchantName = paymentConfig?.payeeName || 'Aavhaan 2026';
     
-    try {
-      const upiId = paymentConfig.upiId || '8839076135@ybl';
-      const merchantName = paymentConfig.payeeName || 'Aavhaan 2026';
-      
-      console.log('Using UPI ID:', upiId);
-      console.log('Using Merchant Name:', merchantName);
-      
-      // Create UPI payment string
-      const upiString = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&cu=INR&am=${event.entryFee}`;
-      
-      // Use QR code API with proper encoding
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiString)}&format=png`;
-      
-      console.log('QR Code URL generated:', qrUrl);
-      console.log('UPI String:', upiString);
-      
-      return qrUrl;
-    } catch (error) {
-      console.error('QR code generation error:', error);
-      return '';
-    }
+    const params = new URLSearchParams({
+      pa: upiId,
+      pn: merchantName,
+      cu: 'INR',
+      am: event.entryFee.toString()
+    });
+    
+    const upiString = `upi://pay?${params.toString()}`;
+    const url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
+    console.log('Generated QR URL:', url);
+    return url;
   }, [event?.entryFee, paymentConfig]);
 
-  const upiDetails = useMemo(() => {
-    console.log('Computing upiDetails...');
-    console.log('Payment config in upiDetails:', paymentConfig);
-    
-    if (!paymentConfig) {
-      console.log('No payment config, using fallback');
-      return {
-        upiId: '8839076135@ybl',
-        phone: '8839076135'
-      };
-    }
-    
-    const details = {
-      upiId: paymentConfig.upiId || '8839076135@ybl',
-      phone: paymentConfig.upiId?.split('@')[0] || '8839076135'
-    };
-    
-    console.log('Computed UPI details:', details);
-    return details;
-  }, [paymentConfig]);
+  const upiDetails = {
+    upiId: paymentConfig?.upiId || '8269858259@ybl',
+    phone: paymentConfig?.upiId?.split('@')[0] || '8269858259'
+  };
 
   // Auto-scroll to top when step changes
   useEffect(() => {
@@ -351,13 +327,13 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   return (
     <AnimatePresence mode="wait">
       {isOpen && (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-24 sm:pt-28 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="modal-backdrop absolute inset-0 bg-black/80"
+          className="modal-backdrop fixed inset-0 bg-black/80"
           onClick={onClose}
         />
 
@@ -367,7 +343,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="registration-modal-content relative w-full max-w-4xl max-h-[90vh] overflow-y-auto glass-panel rounded-xl md:rounded-2xl border border-white/20 shadow-2xl mx-2 md:mx-0 z-10"
+          className="registration-modal-content relative w-full max-w-4xl max-h-[90vh] overflow-y-auto glass-panel rounded-xl md:rounded-2xl border border-white/20 shadow-2xl mx-2 md:mx-0 z-10 my-4"
         >
           <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10">
             <div className="flex-1 min-w-0">
@@ -606,39 +582,28 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                       <QrCode className="w-4 h-4 md:w-5 md:h-5 mr-2 text-blue-400" />
                       Scan QR Code to Pay
                     </h4>
-                    <div className="bg-white p-3 md:p-4 rounded-xl inline-block relative qr-code-container">
-                      {!qrLoaded && qrCodeUrl && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-white rounded-xl z-10">
-                          <div className="w-6 h-6 md:w-8 md:h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-                        </div>
-                      )}
-                      {qrCodeUrl ? (
-                        <img
-                          src={qrCodeUrl}
-                          alt="Payment QR Code"
-                          className="w-48 h-48 md:w-56 md:h-56 object-contain"
-                          onLoad={() => {
-                            console.log('QR code loaded successfully');
-                            setQrLoaded(true);
-                          }}
-                          onError={(e) => {
-                            console.error('QR code load error');
-                            setQrLoaded(true);
-                            // Show fallback icon instead
-                            e.target.style.display = 'none';
-                            e.target.parentElement.querySelector('.qr-fallback').style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div className="qr-fallback w-48 h-48 md:w-56 md:h-56 hidden items-center justify-center bg-gray-100 rounded">
-                        <div className="text-center">
-                          <QrCode className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mx-auto mb-2" />
-                          <p className="text-gray-600 text-xs md:text-sm">QR Code</p>
-                        </div>
-                      </div>
+                    
+                    <div className="bg-white p-4 rounded-lg inline-block">
+                      <img
+                        src={qrCodeUrl}
+                        alt="Payment QR Code"
+                        className="w-48 h-48 object-contain"
+                        onLoad={() => {
+                          console.log('QR Code loaded successfully:', qrCodeUrl);
+                          setQrLoaded(true);
+                        }}
+                        onError={(e) => {
+                          console.error('QR Code failed to load:', qrCodeUrl);
+                          e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzBWMTMwTTcwIDEwMEgxMzAiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+';
+                        }}
+                      />
                     </div>
-                    <p className="text-gray-400 text-xs md:text-sm mt-2 md:mt-3 px-2">
+                    <p className="text-gray-400 text-sm mt-3">
                       UPI ID: {upiDetails.upiId} | Phone: {upiDetails.phone}
+                    </p>
+                    <p className="text-green-400 text-xs mt-2 flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      QR Code automatically generated from UPI ID
                     </p>
                   </div>
 

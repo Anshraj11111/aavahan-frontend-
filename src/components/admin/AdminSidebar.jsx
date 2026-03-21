@@ -84,8 +84,7 @@ const AdminSidebar = ({ activeView, setActiveView, onLogout }) => {
       <motion.div
         initial={{ width: isCollapsed ? 80 : 280 }}
         animate={{ 
-          width: isCollapsed ? 80 : 280,
-          x: isMobileMenuOpen ? 0 : '-100%'
+          width: isCollapsed ? 80 : 280
         }}
         transition={{ duration: 0.3 }}
         className={`h-screen bg-gray-900 border-r border-gray-700 flex flex-col fixed lg:relative z-40 ${
