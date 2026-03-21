@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, Key, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { STORAGE_KEYS } from '../../constants';
 import { authService } from '../../services/auth';
@@ -9,7 +9,8 @@ import toast from 'react-hot-toast';
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    adminCode: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -31,8 +32,15 @@ const AdminLogin = () => {
     setError('');
 
     // Simple validation
-    if (!formData.email || !formData.password) {
+    if (!formData.email || !formData.password || !formData.adminCode) {
       setError('All fields are required');
+      setIsLoading(false);
+      return;
+    }
+
+    // Check admin code first (frontend validation)
+    if (formData.adminCode !== 'A5x') {
+      setError('Invalid admin code. Please check your credentials.');
       setIsLoading(false);
       return;
     }
@@ -140,6 +148,23 @@ const AdminLogin = () => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+            </div>
+
+            {/* Admin Code */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                <Key size={16} className="inline mr-2" />
+                Admin Code
+              </label>
+              <input
+                type="password"
+                name="adminCode"
+                value={formData.adminCode}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                placeholder="Enter admin code"
+              />
             </div>
 
             {/* Submit Button */}
