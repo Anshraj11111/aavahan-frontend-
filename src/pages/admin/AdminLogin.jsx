@@ -47,23 +47,32 @@ const AdminLogin = () => {
 
     try {
       // Call backend login API
+      console.log('Attempting login with:', formData.email);
       const response = await authService.login({
         email: formData.email,
         password: formData.password
       });
 
+      console.log('Login response:', response);
+
       if (response.success && response.data) {
         const { token, admin } = response.data;
+        
+        console.log('Storing token and admin data...');
         
         // Store admin session with correct token keys
         localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token); // For API requests
         localStorage.setItem('adminToken', token); // For dashboard auth check
         localStorage.setItem('adminUser', JSON.stringify(admin));
         
+        console.log('Token stored, redirecting to dashboard...');
+        
         toast.success('Login successful!');
         
-        // Redirect to admin dashboard
-        navigate('/admin/dashboard');
+        // Small delay to ensure localStorage is written
+        setTimeout(() => {
+          window.location.href = '/admin/dashboard';
+        }, 100);
       } else {
         setError('Login failed. Please try again.');
       }
