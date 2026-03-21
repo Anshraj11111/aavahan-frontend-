@@ -24,17 +24,37 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('AdminDashboard: Checking authentication...');
+    
     // Check if user is authenticated
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    const adminToken = localStorage.getItem('adminToken');
     const user = localStorage.getItem('adminUser');
     
-    if (!token) {
-      navigate('/admin/login');
+    console.log('AUTH_TOKEN exists:', !!token);
+    console.log('adminToken exists:', !!adminToken);
+    console.log('adminUser exists:', !!user);
+    
+    // If no token at all, redirect to login
+    if (!token && !adminToken) {
+      console.log('No token found, redirecting to login...');
+      navigate('/admin/login', { replace: true });
       return;
     }
 
+    console.log('Token found, loading dashboard...');
+    
     if (user) {
-      setAdminUser(JSON.parse(user));
+      try {
+        setAdminUser(JSON.parse(user));
+        console.log('Admin user loaded successfully');
+      } catch (e) {
+        console.error('Error parsing admin user:', e);
+        setAdminUser({ email: 'Admin' }); // Fallback
+      }
+    } else {
+      // Set a default admin user if not found
+      setAdminUser({ email: 'Admin' });
     }
   }, [navigate]);
 

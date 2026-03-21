@@ -1,14 +1,29 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { STORAGE_KEYS } from '../../constants';
 
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const location = useLocation();
 
   useEffect(() => {
+    console.log('ProtectedRoute: Checking authentication...');
+    console.log('Current location:', location.pathname);
+    
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-    setIsAuthenticated(!!token); // Check if token exists
-  }, []);
+    const adminToken = localStorage.getItem('adminToken');
+    
+    console.log('AUTH_TOKEN:', token);
+    console.log('adminToken:', adminToken);
+    console.log('AUTH_TOKEN exists:', !!token);
+    console.log('adminToken exists:', !!adminToken);
+    
+    // Check if either token exists
+    const isAuth = !!(token || adminToken);
+    console.log('Is authenticated:', isAuth);
+    
+    setIsAuthenticated(isAuth);
+  }, [location.pathname]);
 
   if (isAuthenticated === null) {
     // Loading state
@@ -20,9 +35,11 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
+    console.log('Not authenticated, redirecting to login...');
     return <Navigate to="/admin/login" replace />;
   }
 
+  console.log('Authenticated, rendering protected content');
   return children;
 };
 

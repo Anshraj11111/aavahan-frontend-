@@ -15,7 +15,7 @@ const ContactPage = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formErrors, setFormErrors] = useState({});
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -31,7 +31,7 @@ const ContactPage = () => {
 
   // Real-time form validation
   const validateField = (name: string, value: string) => {
-    const errors = { ...formErrors };
+    const errors: Record<string, string> = { ...formErrors };
     
     switch (name) {
       case 'name':

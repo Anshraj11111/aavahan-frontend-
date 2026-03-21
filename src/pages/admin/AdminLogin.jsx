@@ -48,6 +48,8 @@ const AdminLogin = () => {
     try {
       // Call backend login API
       console.log('Attempting login with:', formData.email);
+      console.log('API Base URL:', import.meta.env.VITE_API_BASE_URL);
+      
       const response = await authService.login({
         email: formData.email,
         password: formData.password
@@ -65,21 +67,39 @@ const AdminLogin = () => {
         localStorage.setItem('adminToken', token); // For dashboard auth check
         localStorage.setItem('adminUser', JSON.stringify(admin));
         
-        console.log('Token stored, redirecting to dashboard...');
+        console.log('Token stored successfully');
+        console.log('Stored AUTH_TOKEN:', localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN));
+        console.log('Stored adminToken:', localStorage.getItem('adminToken'));
         
         toast.success('Login successful!');
         
-        // Small delay to ensure localStorage is written
+        // Small delay to ensure localStorage is written before navigation
         setTimeout(() => {
-          window.location.href = '/admin/dashboard';
+          console.log('Redirecting to dashboard...');
+          navigate('/admin/dashboard', { replace: true });
         }, 100);
       } else {
+        console.error('Login failed - response not successful:', response);
         setError('Login failed. Please try again.');
+        setIsLoading(false);
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setError(error?.error || 'Invalid email or password. Please check your credentials.');
-    } finally {
+      console.error('Login error details:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error keys:', error ? Object.keys(error) : 'null');
+      
+      // Better error message extraction
+      let errorMessage = 'Invalid email or password. Please check your credentials.';
+      
+      if (error?.error) {
+        errorMessage = error.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      setError(errorMessage);
       setIsLoading(false);
     }
   };

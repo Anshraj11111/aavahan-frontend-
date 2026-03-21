@@ -3,11 +3,13 @@ import { X, User, Users, Upload, QrCode, CheckCircle, AlertCircle, CreditCard, F
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useRegistrations } from '../../contexts/RegistrationContext';
+import { paymentService } from '../../services/payment';
 
 const RegistrationModal = ({ isOpen, onClose, event }) => {
   const { addRegistration } = useRegistrations();
   const modalContentRef = useRef(null);
   const [qrLoaded, setQrLoaded] = useState(false);
+  const [paymentConfig, setPaymentConfig] = useState(null);
   const [formData, setFormData] = useState({
     teamName: '',
     teamLeader: {
@@ -32,14 +34,32 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = event?.entryFee > 0 ? 3 : 2;
 
+  // Fetch payment config from backend
+  useEffect(() => {
+    const fetchPaymentConfig = async () => {
+      try {
+        const response = await paymentService.getPaymentConfig();
+        if (response.success && response.data?.config) {
+          setPaymentConfig(response.data.config);
+          console.log('Payment config loaded:', response.data.config);
+        }
+      } catch (error) {
+        console.error('Failed to fetch payment config:', error);
+      }
+    };
+
+    if (isOpen && event?.entryFee > 0) {
+      fetchPaymentConfig();
+    }
+  }, [isOpen, event?.entryFee]);
+
   // Memoize QR code URL to prevent regeneration on every render
   const qrCodeUrl = useMemo(() => {
-    if (!event?.entryFee) return '';
+    if (!event?.entryFee || !paymentConfig) return '';
     
     try {
-      const adminSettings = JSON.parse(localStorage.getItem('admin-settings') || '{}');
-      const upiId = adminSettings.paymentQR?.upiId || '8839076135@ybl';
-      const merchantName = adminSettings.paymentQR?.merchantName || 'Aavhaan 2026';
+      const upiId = paymentConfig.upiId || '8839076135@ybl';
+      const merchantName = paymentConfig.payeeName || 'Aavhaan 2026';
       
       // Create UPI payment string
       const upiString = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&cu=INR&am=${event.entryFee}`;
@@ -55,22 +75,20 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
       console.error('QR code generation error:', error);
       return '';
     }
-  }, [event?.entryFee]);
+  }, [event?.entryFee, paymentConfig]);
 
   const upiDetails = useMemo(() => {
-    try {
-      const adminSettings = JSON.parse(localStorage.getItem('admin-settings') || '{}');
-      return {
-        upiId: adminSettings.paymentQR?.upiId || '8839076135@ybl',
-        phone: adminSettings.paymentQR?.phoneNumber || '8839076135'
-      };
-    } catch (error) {
+    if (!paymentConfig) {
       return {
         upiId: '8839076135@ybl',
         phone: '8839076135'
       };
     }
-  }, []);
+    return {
+      upiId: paymentConfig.upiId || '8839076135@ybl',
+      phone: paymentConfig.upiId?.split('@')[0] || '8839076135'
+    };
+  }, [paymentConfig]);
 
   // Auto-scroll to top when step changes
   useEffect(() => {
