@@ -2,11 +2,10 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { X, User, Users, Upload, QrCode, CheckCircle, AlertCircle, CreditCard, FileText, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { useRegistrations } from '../../contexts/RegistrationContext';
 import { paymentService } from '../../services/payment';
+import { registrationsService } from '../../services/registrations';
 
 const RegistrationModal = ({ isOpen, onClose, event }) => {
-  const { addRegistration } = useRegistrations();
   const modalContentRef = useRef(null);
   const [qrLoaded, setQrLoaded] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState(null);
@@ -26,8 +25,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
       { fullName: '', email: '', phone: '', college: '', branch: '', semester: '' }
     ],
     paymentScreenshot: null,
-    transactionId: '',
-    extractedOcrText: ''
+    transactionId: ''
   });
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -133,8 +131,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
           { fullName: '', email: '', phone: '', college: '', branch: '', semester: '' }
         ],
         paymentScreenshot: null,
-        transactionId: '',
-        extractedOcrText: ''
+        transactionId: ''
       });
     }
   }, [isOpen]);
@@ -173,65 +170,104 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
     
     if (file.size > 5 * 1024 * 1024) {
       toast.error('File size should be less than 5MB');
-      e.target.value = ''; // Reset input
+      e.target.value = '';
       return;
     }
     
-    // Immediately set the file
+    // Set the file - backend will handle OCR verification
     setFormData(prev => ({
       ...prev,
-      paymentScreenshot: file,
-      extractedOcrText: '' // Will be populated by OCR
+      paymentScreenshot: file
     }));
     
     toast.success('Payment screenshot uploaded!');
-    
-    // Run OCR in background (non-blocking)
-    try {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        try {
-          const base64Image = event.target.result.split(',')[1];
-          
-          const formData = new FormData();
-          formData.append('base64Image', base64Image);
-          formData.append('language', 'eng');
-          formData.append('isOverlayRequired', 'false');
-          
-          const ocrResponse = await fetch('https://api.ocr.space/parse/image', {
-            method: 'POST',
-            headers: {
-              'apikey': 'K87899142388957'
-            },
-            body: formData
-          });
-          
-          const ocrData = await ocrResponse.json();
-          
-          if (!ocrData.IsErroredOnProcessing && ocrData.ParsedResults?.[0]?.ParsedText) {
-            const extractedText = ocrData.ParsedResults[0].ParsedText;
-            setFormData(prev => ({
-              ...prev,
-              extractedOcrText: extractedText
-            }));
-            console.log('OCR extracted text:', extractedText);
-          }
-        } catch (error) {
-          console.error('OCR Error:', error);
-          // OCR failure doesn't block upload
-        }
-      };
-      
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error('File read error:', error);
-      // File read error doesn't block upload
-    }
   };
 
-  const handleNext = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
+  const handleNext = async () => {
+    // If moving from payment step (step 2) to confirmation (step 3), verify payment first
+    if (currentStep === 2 && event?.entryFee > 0) {
+      // Validate transaction ID and screenshot are present
+      if (!formData.transactionId || !formData.transactionId.trim()) {
+        toast.error('Please enter transaction ID before proceeding');
+        return;
+      }
+      
+      if (!formData.paymentScreenshot) {
+        toast.error('Please upload payment screenshot before proceeding');
+        return;
+      }
+      
+      // Show loading toast
+      const loadingToast = toast.loading('Verifying payment details... This may take 10-15 seconds.');
+      
+      try {
+        // Prepare FormData for verification
+        const verificationData = new FormData();
+        verificationData.append('transactionId', formData.transactionId.trim());
+        verificationData.append('screenshot', formData.paymentScreenshot);
+        
+        // Call backend OCR verification API with longer timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
+        
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'}/registrations/verify-payment`, {
+          method: 'POST',
+          body: verificationData,
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        const result = await response.json();
+        
+        toast.dismiss(loadingToast);
+        
+        if (!response.ok || !result.success) {
+          toast.error(result.message || 'Payment verification failed. Transaction ID does not match screenshot.', {
+            duration: 6000
+          });
+          return;
+        }
+        
+        // Verification successful
+        toast.success('Payment verified successfully!');
+        setCurrentStep(currentStep + 1);
+        
+        // Auto scroll to top after step change
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          if (modalContentRef.current) {
+            modalContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 100);
+        
+      } catch (error) {
+        toast.dismiss(loadingToast);
+        
+        if (error.name === 'AbortError') {
+          toast.error('Verification timeout. Please try again with a clearer screenshot.', {
+            duration: 6000
+          });
+        } else {
+          console.error('Payment verification error:', error);
+          toast.error('Failed to verify payment. Please check your details and try again.', {
+            duration: 6000
+          });
+        }
+        return;
+      }
+    } else {
+      // For other steps, just move forward
+      if (currentStep < totalSteps) {
+        setCurrentStep(currentStep + 1);
+        
+        // Auto scroll to top after step change
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          if (modalContentRef.current) {
+            modalContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 100);
+      }
     }
   };
 
@@ -243,81 +279,83 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validation for paid events - STRICT ENFORCEMENT
-    if (event?.entryFee > 0) {
-      if (!formData.transactionId || !formData.transactionId.trim()) {
-        toast.error('Transaction ID is required. Please enter your transaction ID to proceed.');
-        setIsSubmitting(false);
-        return;
-      }
-      if (!formData.paymentScreenshot) {
-        toast.error('Payment screenshot is required. Please upload your payment screenshot.');
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Verify transaction ID matches the screenshot (OCR validation)
-      if (formData.extractedOcrText) {
-        const enteredId = formData.transactionId.trim().toLowerCase();
-        const extractedText = formData.extractedOcrText.toLowerCase();
-        
-        // Check if the entered transaction ID exists in the extracted text
-        if (!extractedText.includes(enteredId)) {
-          toast.error('Transaction ID does not match the payment screenshot. Please verify and try again.');
-          setIsSubmitting(false);
-          return;
-        }
-      }
-    }
-    
     setIsSubmitting(true);
 
     try {
+      // Prepare FormData for backend API
+      const formDataToSend = new FormData();
       
-      // Prepare registration data for context
-      const registrationData = {
-        fullName: formData.teamLeader.fullName,
-        email: formData.teamLeader.email,
-        phone: formData.teamLeader.phone,
-        instituteName: formData.teamLeader.college,
-        department: formData.teamLeader.branch,
-        yearOrSemester: formData.teamLeader.semester,
-        city: 'Not specified', // Could be added to form later
-        eventTitle: event?.title,
-        eventDay: event?.day,
-        participationType: event?.participationType === 'team' ? 'team' : 'solo',
-        teamName: formData.teamName || null,
-        teamMembers: formData.teamMembers
-          .filter(member => member.fullName.trim() !== '')
-          .map(member => ({
-            name: member.fullName,
-            email: member.email,
-            phone: member.phone
-          })),
-        amountExpected: event?.entryFee || 0,
-        amountPaid: event?.entryFee || 0,
-        paymentScreenshot: formData.paymentScreenshot?.name || null,
-        transactionId: formData.transactionId
-      };
-
-      // Add registration to context
-      const newRegistration = addRegistration(registrationData);
+      // Basic info
+      formDataToSend.append('fullName', formData.teamLeader.fullName);
+      formDataToSend.append('email', formData.teamLeader.email);
+      formDataToSend.append('phone', formData.teamLeader.phone);
+      formDataToSend.append('instituteName', formData.teamLeader.college);
+      formDataToSend.append('department', formData.teamLeader.branch);
+      formDataToSend.append('yearOrSemester', formData.teamLeader.semester);
+      formDataToSend.append('city', 'Not specified');
+      formDataToSend.append('gender', 'Not specified');
+      formDataToSend.append('eventId', event._id);
       
-      console.log('Registration submitted:', newRegistration);
-      
-      // Show success message based on payment verification
-      if (newRegistration.paymentStatus === 'paid') {
-        toast.success('Registration submitted and payment automatically verified! You will receive a confirmation email shortly.');
-      } else {
-        toast.success('Registration submitted successfully! Payment verification may take 24-48 hours.');
+      // Team info (if team event)
+      if (event?.participationType === 'team') {
+        formDataToSend.append('teamName', formData.teamName);
+        
+        // Add team members (only non-empty ones)
+        const validMembers = formData.teamMembers.filter(member => member.fullName.trim() !== '');
+        formDataToSend.append('teamMembers', JSON.stringify(validMembers.map(member => ({
+          fullName: member.fullName,
+          email: member.email,
+          phone: member.phone,
+          college: member.college || formData.teamLeader.college,
+          branch: member.branch || formData.teamLeader.branch,
+          semester: member.semester || formData.teamLeader.semester
+        }))));
       }
       
-      onClose();
+      // Payment info (if paid event)
+      if (event?.entryFee > 0) {
+        if (!formData.transactionId || !formData.transactionId.trim()) {
+          toast.error('Transaction ID is required for paid events');
+          setIsSubmitting(false);
+          return;
+        }
+        
+        if (!formData.paymentScreenshot) {
+          toast.error('Payment screenshot is required for paid events');
+          setIsSubmitting(false);
+          return;
+        }
+        
+        formDataToSend.append('transactionId', formData.transactionId.trim());
+        formDataToSend.append('screenshot', formData.paymentScreenshot);
+      }
+      
+      // Submit to backend API
+      const response = await registrationsService.submitRegistration(formDataToSend);
+      
+      if (response.success) {
+        toast.success('Thank you for registering! You will receive more information via email shortly.', {
+          duration: 5000,
+          icon: '✅'
+        });
+        onClose();
+      } else {
+        // Backend returned error in response
+        toast.error(response.message || 'Registration failed. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+      
     } catch (error) {
-      toast.error('Failed to submit registration. Please try again.');
-    } finally {
+      console.error('Registration error:', error);
+      
+      // Show specific error message from backend
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to submit registration. Please try again.';
+      toast.error(errorMessage, { duration: 6000 });
       setIsSubmitting(false);
+      
+      // Don't close modal or proceed - stay on current step so user can fix the issue
+      return;
     }
   };
 
@@ -629,26 +667,13 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                         minLength={1}
                       />
                       <p className="text-gray-400 text-sm mt-2">
-                        Enter the transaction ID from your UPI payment app (e.g., 123456789012). This must match your screenshot.
+                        Enter the transaction ID from your UPI payment app (e.g., 123456789012). Backend will verify it matches your screenshot.
                       </p>
                       {!formData.transactionId && (
                         <p className="text-red-400 text-sm mt-1 flex items-center">
                           <AlertCircle className="w-4 h-4 mr-1" />
                           Transaction ID is mandatory for registration
                         </p>
-                      )}
-                      {formData.transactionId && formData.extractedOcrText && (
-                        formData.extractedOcrText.toLowerCase().includes(formData.transactionId.trim().toLowerCase()) ? (
-                          <p className="text-green-400 text-sm mt-1 flex items-center">
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Transaction ID verified in screenshot
-                          </p>
-                        ) : (
-                          <p className="text-red-400 text-sm mt-1 flex items-center">
-                            <AlertCircle className="w-4 h-4 mr-1" />
-                            Transaction ID not found in screenshot. Please verify.
-                          </p>
-                        )
                       )}
                     </div>
 
