@@ -1201,7 +1201,7 @@ const PremiumHomePage = () => {
                 }}
               >
                 <motion.span
-                  className="block relative text-white mb-4"
+                  className="block relative text-white mb-0"
                   style={{
                     x: mouseXSpring,
                     y: mouseYSpring,
@@ -1229,7 +1229,7 @@ const PremiumHomePage = () => {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 1, delay: 0.6, type: "spring", bounce: 0.4 }}
-                  className="flex justify-center my-3"
+                  className="flex justify-center my-0"
                 >
                   <motion.div
                     className="relative"
@@ -1249,7 +1249,7 @@ const PremiumHomePage = () => {
                     <img 
                       src={aavhaanLogo} 
                       alt="Aavhaan Logo" 
-                      className="relative w-24 h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 object-contain drop-shadow-2xl"
+                      className="relative w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 xl:w-56 xl:h-56 object-contain drop-shadow-2xl"
                       style={{
                         filter: "drop-shadow(0 0 20px rgba(59,130,246,0.5)) drop-shadow(0 0 40px rgba(139,92,246,0.3))"
                       }}

@@ -47,23 +47,38 @@ const Navbar = () => {
   ];
 
   return (
-    <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled 
-          ? 'glass-panel border-b border-white/10 shadow-lg' 
-          : 'bg-transparent'
-      }`}
-    >
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 md:h-20">
+    <>
+      {/* Backdrop blur overlay - only visible when mobile menu is open */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-md z-40 lg:hidden"
+            onClick={() => setIsMenuOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <header 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+          isScrolled 
+            ? 'glass-panel border-b border-white/10 shadow-lg' 
+            : 'bg-transparent'
+        }`}
+      >
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo - Left */}
           <Link 
             to="/" 
-            className="flex items-center gap-3 group relative z-10"
+            className="flex items-center gap-2 sm:gap-3 group relative"
           >
             {/* Shri Ram Group Logo - Actual Image */}
-            <div className="relative">
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300 relative overflow-hidden bg-white shadow-lg">
+            <div className="relative flex-shrink-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300 relative overflow-hidden bg-white shadow-lg">
                 <img 
                   src={logoImage} 
                   alt="Shri Ram Group Logo" 
@@ -72,20 +87,22 @@ const Navbar = () => {
               </div>
             </div>
             
-            <div className="hidden md:block">
-              <p className="text-gray-300 text-xs font-medium whitespace-nowrap mb-0.5" 
+            {/* Text - Always visible on all devices */}
+            <div>
+              <p className="text-gray-300 text-[10px] sm:text-xs lg:text-sm font-medium whitespace-nowrap" 
                  style={{ 
                    fontFamily: "'Inter', sans-serif",
                    textShadow: "1px 1px 2px rgba(0,0,0,0.6)"
                  }}>
                 Shri Ram Group, Jabalpur
               </p>
-              <h1 className="text-white font-black text-lg lg:text-xl whitespace-nowrap" 
+              <h1 className="text-white font-black text-base sm:text-xl md:text-2xl lg:text-3xl whitespace-nowrap" 
                   style={{ 
                     fontFamily: "'Space Grotesk', system-ui, sans-serif",
                     fontWeight: 900,
                     textShadow: "2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.4)",
-                    color: "#ffffff"
+                    color: "#ffffff",
+                    letterSpacing: "0.02em"
                   }}>
                 Aavhaan 2026
               </h1>
@@ -93,7 +110,7 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation - Center */}
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = isActiveRoute(item.path);
@@ -104,12 +121,12 @@ const Navbar = () => {
                   to={item.path}
                   className="relative group"
                 >
-                  <div className={`flex items-center gap-2 py-2 text-sm font-medium transition-all duration-300 ${
+                  <div className={`flex items-center gap-2 py-2 text-sm xl:text-base font-medium transition-all duration-300 ${
                     isActive 
                       ? 'text-blue-400' 
                       : 'text-gray-300 hover:text-white'
                   }`}>
-                    <Icon size={16} />
+                    <Icon size={16} className="xl:w-5 xl:h-5" />
                     <span>{item.label}</span>
                   </div>
                   
@@ -130,19 +147,20 @@ const Navbar = () => {
           </nav>
 
           {/* Desktop CTA - Right */}
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-3 xl:gap-4">
             <Link
               to="/my-tickets"
-              className="flex items-center gap-2 text-gray-300 hover:text-white font-medium transition-colors duration-300"
+              className="flex items-center gap-2 text-gray-300 hover:text-white font-medium transition-colors duration-300 text-sm xl:text-base"
             >
-              <Ticket size={18} />
+              <Ticket size={18} className="xl:w-5 xl:h-5" />
               <span>My Tickets</span>
             </Link>
             <PremiumButton 
               variant="primary" 
               size="md" 
-              icon={<Sparkles size={18} />}
+              icon={<Sparkles size={18} className="xl:w-5 xl:h-5" />}
               onClick={() => setIsRegistrationModalOpen(true)}
+              className="text-sm xl:text-base"
             >
               Register Now
             </PremiumButton>
@@ -151,125 +169,66 @@ const Navbar = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-2 text-white hover:text-blue-400 transition-colors duration-300 relative z-10"
+            className="lg:hidden p-2 text-white hover:text-blue-400 transition-colors duration-300"
             aria-label="Toggle menu"
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
-        {/* Mobile Navigation - Drawer from right */}
+        {/* Mobile Navigation */}
         <AnimatePresence>
           {isMenuOpen && (
-            <>
-              {/* Backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsMenuOpen(false)}
-                className="fixed inset-0 bg-black/80 backdrop-blur-sm lg:hidden"
-                style={{ top: 0 }}
-              />
-              
-              {/* Drawer */}
-              <motion.div
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] glass-panel border-l border-white/10 shadow-2xl lg:hidden overflow-y-auto"
-              >
-                <div className="p-6">
-                  {/* Close button */}
-                  <button
-                    onClick={() => setIsMenuOpen(false)}
-                    className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <X size={24} />
-                  </button>
+            <motion.nav
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="lg:hidden overflow-hidden"
+            >
+              <div className="py-4 space-y-3">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = isActiveRoute(item.path);
                   
-                  {/* Logo */}
-                  <div className="mb-8 pt-2">
-                    <div className="flex items-center gap-3">
-                      {/* Shri Ram Group Logo - Actual Image */}
-                      <div className="w-12 h-12 rounded-lg flex items-center justify-center relative overflow-hidden bg-white shadow-lg">
-                        <img 
-                          src={logoImage} 
-                          alt="Shri Ram Group Logo" 
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                      
-                      <div>
-                        <p className="text-gray-300 text-xs font-medium mb-0.5">Shri Ram Group, Jabalpur</p>
-                        <h2 className="text-white font-black text-lg" 
-                            style={{ 
-                              fontFamily: "'Space Grotesk', system-ui, sans-serif",
-                              fontWeight: 900,
-                              textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
-                              color: "#ffffff"
-                            }}>
-                          Aavhaan 2026
-                        </h2>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Nav items - staggered animation */}
-                  <nav className="space-y-2 mb-6">
-                    {navItems.map((item, index) => {
-                      const Icon = item.icon;
-                      const isActive = isActiveRoute(item.path);
-                      
-                      return (
-                        <motion.div
-                          key={item.path}
-                          initial={{ x: 50, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: index * 0.1 }}
-                        >
-                          <Link
-                            to={item.path}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-                              isActive
-                                ? 'bg-gradient-to-r from-blue-600/20 to-cyan-500/20 text-blue-400 border border-blue-500/30'
-                                : 'text-gray-300 hover:text-white hover:bg-white/5'
-                            }`}
-                          >
-                            <Icon size={20} />
-                            <span className="font-medium">{item.label}</span>
-                          </Link>
-                        </motion.div>
-                      );
-                    })}
-                  </nav>
-                  
-                  {/* CTA buttons */}
-                  <div className="pt-6 border-t border-white/10 space-y-3">
-                    <Link to="/my-tickets" className="block">
-                      <PremiumButton 
-                        variant="ghost" 
-                        size="md" 
-                        icon={<Ticket size={18} />}
-                        className="w-full justify-center"
-                      >
-                        My Tickets
-                      </PremiumButton>
-                    </Link>
-                    <PremiumButton 
-                      variant="primary" 
-                      size="md" 
-                      icon={<Sparkles size={18} />}
-                      className="w-full justify-center"
-                      onClick={() => setIsRegistrationModalOpen(true)}
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                        isActive 
+                          ? 'bg-blue-500/20 text-blue-400' 
+                          : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                      }`}
                     >
-                      Register Now
-                    </PremiumButton>
-                  </div>
+                      <Icon size={20} />
+                      <span className="font-medium">{item.label}</span>
+                    </Link>
+                  );
+                })}
+                
+                <div className="pt-3 space-y-2">
+                  <Link to="/my-tickets" className="block">
+                    <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-all duration-300">
+                      <Ticket size={18} />
+                      My Tickets
+                    </button>
+                  </Link>
+                  <PremiumButton 
+                    variant="primary" 
+                    size="md" 
+                    icon={<Sparkles size={18} />}
+                    onClick={() => {
+                      setIsRegistrationModalOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full"
+                  >
+                    Register Now
+                  </PremiumButton>
                 </div>
-              </motion.div>
-            </>
+              </div>
+            </motion.nav>
           )}
         </AnimatePresence>
       </div>
@@ -281,6 +240,7 @@ const Navbar = () => {
         event={{ title: 'General Registration', description: 'Register for Aavhaan 2026' }}
       />
     </header>
+    </>
   );
 };
 

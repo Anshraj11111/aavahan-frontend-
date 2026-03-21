@@ -2,39 +2,60 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Settings, 
-  QrCode, 
   Save, 
-  Phone,
   User,
-  Mail,
   AlertCircle,
   CheckCircle,
   CreditCard
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { paymentService } from '../../services/payment';
 
 const AdminSettings = () => {
-  const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem('admin-settings');
-    return saved ? JSON.parse(saved) : {
-      paymentQR: {
-        upiId: 'techfest2026@paytm',
-        phoneNumber: '9876543210',
-        merchantName: 'Tech Fest 2026'
-      },
-      adminInfo: {
-        name: 'Admin',
-        email: 'admin@techfest.com',
-        phone: '9876543210'
+  const [settings, setSettings] = useState({
+    paymentQR: {
+      upiId: '',
+      phoneNumber: '',
+      merchantName: ''
+    },
+    adminInfo: {
+      name: 'Admin',
+      email: 'admin@techfest.com',
+      phone: '9876543210'
+    }
+  });
+  const [configId, setConfigId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
+
+  // Fetch payment config from backend on mount
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await paymentService.getAdminPaymentConfig();
+        if (response.success && response.data?.config) {
+          const config = response.data.config;
+          setConfigId(config._id);
+          setSettings(prev => ({
+            ...prev,
+            paymentQR: {
+              upiId: config.upiId || '',
+              phoneNumber: config.upiId?.split('@')[0] || '',
+              merchantName: config.payeeName || ''
+            }
+          }));
+          console.log('Payment config loaded from backend:', config);
+        }
+      } catch (error) {
+        console.error('Failed to fetch payment config:', error);
+        toast.error('Failed to load payment settings');
+      } finally {
+        setIsFetching(false);
       }
     };
-  });
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    localStorage.setItem('admin-settings', JSON.stringify(settings));
-  }, [settings]);
+    fetchConfig();
+  }, []);
 
   const handleInputChange = (section, field, value) => {
     setSettings(prev => ({
@@ -65,15 +86,28 @@ const AdminSettings = () => {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Save to localStorage (in real app, this would be an API call)
-      localStorage.setItem('admin-settings', JSON.stringify(settings));
-      
-      toast.success('Settings saved successfully!');
+      const updateData = {
+        upiId: settings.paymentQR.upiId,
+        payeeName: settings.paymentQR.merchantName,
+        note: 'Pay registration fee via UPI',
+        active: true
+      };
+
+      if (configId) {
+        // Update existing config
+        await paymentService.updatePaymentConfig(configId, updateData);
+        toast.success('Payment settings updated successfully!');
+      } else {
+        // Create new config
+        const response = await paymentService.createPaymentConfig(updateData);
+        if (response.success && response.data?.config) {
+          setConfigId(response.data.config._id);
+        }
+        toast.success('Payment settings created successfully!');
+      }
     } catch (error) {
-      toast.error('Failed to save settings');
+      console.error('Failed to save settings:', error);
+      toast.error('Failed to save settings. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -97,6 +131,17 @@ const AdminSettings = () => {
   };
 
   const qrCodeUrl = generateQRCodeUrl(settings.paymentQR.upiId, settings.paymentQR.merchantName);
+
+  if (isFetching) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

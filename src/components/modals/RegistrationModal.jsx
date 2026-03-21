@@ -38,10 +38,17 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   useEffect(() => {
     const fetchPaymentConfig = async () => {
       try {
+        console.log('Fetching payment config from backend...');
         const response = await paymentService.getPaymentConfig();
+        console.log('Payment config response:', response);
+        
         if (response.success && response.data?.config) {
           setPaymentConfig(response.data.config);
           console.log('Payment config loaded:', response.data.config);
+          console.log('UPI ID:', response.data.config.upiId);
+          console.log('Payee Name:', response.data.config.payeeName);
+        } else {
+          console.warn('No payment config found in response');
         }
       } catch (error) {
         console.error('Failed to fetch payment config:', error);
@@ -55,11 +62,21 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
 
   // Memoize QR code URL to prevent regeneration on every render
   const qrCodeUrl = useMemo(() => {
-    if (!event?.entryFee || !paymentConfig) return '';
+    console.log('Generating QR code URL...');
+    console.log('Event entry fee:', event?.entryFee);
+    console.log('Payment config:', paymentConfig);
+    
+    if (!event?.entryFee || !paymentConfig) {
+      console.log('Missing event fee or payment config, returning empty QR URL');
+      return '';
+    }
     
     try {
       const upiId = paymentConfig.upiId || '8839076135@ybl';
       const merchantName = paymentConfig.payeeName || 'Aavhaan 2026';
+      
+      console.log('Using UPI ID:', upiId);
+      console.log('Using Merchant Name:', merchantName);
       
       // Create UPI payment string
       const upiString = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&cu=INR&am=${event.entryFee}`;
@@ -78,16 +95,24 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   }, [event?.entryFee, paymentConfig]);
 
   const upiDetails = useMemo(() => {
+    console.log('Computing upiDetails...');
+    console.log('Payment config in upiDetails:', paymentConfig);
+    
     if (!paymentConfig) {
+      console.log('No payment config, using fallback');
       return {
         upiId: '8839076135@ybl',
         phone: '8839076135'
       };
     }
-    return {
+    
+    const details = {
       upiId: paymentConfig.upiId || '8839076135@ybl',
       phone: paymentConfig.upiId?.split('@')[0] || '8839076135'
     };
+    
+    console.log('Computed UPI details:', details);
+    return details;
   }, [paymentConfig]);
 
   // Auto-scroll to top when step changes
@@ -335,40 +360,41 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="registration-modal-content relative w-full max-w-4xl max-h-[90vh] overflow-y-auto glass-panel rounded-2xl border border-white/20 shadow-2xl"
+          className="registration-modal-content relative w-full max-w-4xl max-h-[90vh] overflow-y-auto glass-panel rounded-xl md:rounded-2xl border border-white/20 shadow-2xl mx-2 md:mx-0"
         >
-          <div className="flex items-center justify-between p-6 border-b border-white/10">
-            <div>
-              <h2 className="text-3xl font-bold text-white flex items-center">
-                <FileText className="w-8 h-8 mr-3 text-blue-400" />
-                Event Registration
+          <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl md:text-3xl font-bold text-white flex items-center">
+                <FileText className="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3 text-blue-400 flex-shrink-0" />
+                <span className="truncate">Event Registration</span>
               </h2>
               {event && (
-                <p className="text-gray-400 mt-1 text-lg">{event.title}</p>
+                <p className="text-gray-400 mt-1 text-sm md:text-lg truncate">{event.title}</p>
               )}
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors flex-shrink-0 ml-2"
             >
-              <X size={24} />
+              <X size={20} className="md:hidden" />
+              <X size={24} className="hidden md:block" />
             </button>
           </div>
 
-          <div className="px-6 py-4 border-b border-white/10">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-gray-400">Step {currentStep} of {totalSteps}</span>
-              <span className="text-sm text-gray-400">{Math.round((currentStep / totalSteps) * 100)}%</span>
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-white/10">
+            <div className="flex items-center justify-between mb-2 md:mb-3">
+              <span className="text-xs md:text-sm text-gray-400">Step {currentStep} of {totalSteps}</span>
+              <span className="text-xs md:text-sm text-gray-400">{Math.round((currentStep / totalSteps) * 100)}%</span>
             </div>
-            <div className="w-full bg-white/10 rounded-full h-3">
+            <div className="w-full bg-white/10 rounded-full h-2 md:h-3">
               <div 
-                className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 md:h-3 rounded-full transition-all duration-500"
                 style={{ width: `${(currentStep / totalSteps) * 100}%` }}
               />
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6">
+          <form onSubmit={handleSubmit} className="p-4 md:p-6">
             {/* Step 1: Team/Participant Information */}
             {currentStep === 1 && (
               <div className="modal-form-section space-y-6">
@@ -562,28 +588,28 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                   Payment Information
                 </h3>
                 
-                <div className="glass-panel p-6 rounded-xl text-center">
-                  <div className="mb-6">
-                    <h4 className="text-xl font-bold text-white mb-2">Entry Fee</h4>
-                    <div className="text-3xl font-bold text-green-400">₹{event.entryFee}</div>
+                <div className="glass-panel p-4 md:p-6 rounded-xl text-center">
+                  <div className="mb-4 md:mb-6">
+                    <h4 className="text-lg md:text-xl font-bold text-white mb-2">Entry Fee</h4>
+                    <div className="text-2xl md:text-3xl font-bold text-green-400">₹{event.entryFee}</div>
                   </div>
 
-                  <div className="mb-6">
-                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center justify-center">
-                      <QrCode className="w-5 h-5 mr-2 text-blue-400" />
+                  <div className="mb-4 md:mb-6">
+                    <h4 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4 flex items-center justify-center">
+                      <QrCode className="w-4 h-4 md:w-5 md:h-5 mr-2 text-blue-400" />
                       Scan QR Code to Pay
                     </h4>
-                    <div className="bg-white p-4 rounded-xl inline-block relative qr-code-container">
+                    <div className="bg-white p-3 md:p-4 rounded-xl inline-block relative qr-code-container">
                       {!qrLoaded && qrCodeUrl && (
                         <div className="absolute inset-0 flex items-center justify-center bg-white rounded-xl z-10">
-                          <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+                          <div className="w-6 h-6 md:w-8 md:h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
                         </div>
                       )}
                       {qrCodeUrl ? (
                         <img
                           src={qrCodeUrl}
                           alt="Payment QR Code"
-                          className="w-56 h-56 object-contain"
+                          className="w-48 h-48 md:w-56 md:h-56 object-contain"
                           onLoad={() => {
                             console.log('QR code loaded successfully');
                             setQrLoaded(true);
@@ -597,14 +623,14 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                           }}
                         />
                       ) : null}
-                      <div className="qr-fallback w-56 h-56 hidden items-center justify-center bg-gray-100 rounded">
+                      <div className="qr-fallback w-48 h-48 md:w-56 md:h-56 hidden items-center justify-center bg-gray-100 rounded">
                         <div className="text-center">
-                          <QrCode className="w-16 h-16 text-gray-400 mx-auto mb-2" />
-                          <p className="text-gray-600 text-sm">QR Code</p>
+                          <QrCode className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mx-auto mb-2" />
+                          <p className="text-gray-600 text-xs md:text-sm">QR Code</p>
                         </div>
                       </div>
                     </div>
-                    <p className="text-gray-400 text-sm mt-3">
+                    <p className="text-gray-400 text-xs md:text-sm mt-2 md:mt-3 px-2">
                       UPI ID: {upiDetails.upiId} | Phone: {upiDetails.phone}
                     </p>
                   </div>

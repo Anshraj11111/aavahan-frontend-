@@ -143,9 +143,9 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-gray-900 border-b border-gray-700 px-6 py-4">
-          <div>
-            <h1 className="text-2xl font-bold text-white">
+        <header className="bg-gray-900 border-b border-gray-700 px-4 md:px-6 py-4">
+          <div className="pl-12 lg:pl-0">
+            <h1 className="text-xl md:text-2xl font-bold text-white">
               {activeView === 'dashboard' ? 'Dashboard' : 
                activeView === 'registrations' ? 'Registrations' : 
                activeView === 'events' ? 'Event Management' : 
@@ -153,12 +153,12 @@ const AdminDashboard = () => {
                activeView === 'analytics' ? 'Analytics' :
                activeView === 'notifications' ? 'Send Notifications' : 'Dashboard'}
             </h1>
-            <p className="text-gray-400">Welcome back, {adminUser.email}</p>
+            <p className="text-gray-400 text-sm md:text-base">Welcome back, {adminUser.email}</p>
           </div>
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
         {activeView === 'dashboard' && (
           <>
             {/* Stats Grid */}
