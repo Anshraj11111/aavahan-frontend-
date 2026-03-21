@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { STORAGE_KEYS } from '../../constants';
 
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    setIsAuthenticated(token === 'admin-authenticated');
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    setIsAuthenticated(!!token); // Check if token exists
   }, []);
 
   if (isAuthenticated === null) {
