@@ -10,6 +10,7 @@ import { fadeInUp, staggerContainer, scaleUp, slideInLeft, slideInRight } from '
 import RegistrationModal from '../../components/modals/RegistrationModal';
 import { useRegistrations } from '../../contexts/RegistrationContext';
 import { useEvents } from '../../contexts/EventsContext';
+import LightweightBackground from '../../components/backgrounds/LightweightBackground';
 
 // Mock events data with realistic registration numbers and images
 const mockEvents: Event[] = [
@@ -329,12 +330,8 @@ const EventsPage = () => {
 
   return (
     <div className="min-h-screen pt-20 bg-navy-950 relative overflow-hidden" ref={containerRef}>
-      {/* Background Effects */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-32 left-20 w-96 h-96 bg-blue-500 rounded-full blur-[150px] animate-pulse" />
-        <div className="absolute top-64 right-32 w-80 h-80 bg-purple-500 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-32 left-1/3 w-72 h-72 bg-cyan-500 rounded-full blur-[140px] animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
+      {/* Premium Animated Background */}
+      <LightweightBackground />
 
       {/* Header */}
       <motion.section 

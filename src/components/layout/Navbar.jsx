@@ -4,6 +4,7 @@ import { Menu, X, Calendar, Ticket, Home, Info, Phone, Sparkles } from 'lucide-r
 import { motion, AnimatePresence } from 'framer-motion';
 import PremiumButton from '../common/PremiumButton';
 import RegistrationModal from '../modals/RegistrationModal';
+import logoImage from '../../assets/images/Screenshot 2026-03-21 125551.png';
 
 /**
  * Navbar Component
@@ -60,19 +61,34 @@ const Navbar = () => {
             to="/" 
             className="flex items-center gap-3 group relative z-10"
           >
+            {/* Shri Ram Group Logo - Actual Image */}
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-glow">
-                <span className="text-white font-bold text-xl">TF</span>
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300 relative overflow-hidden bg-white shadow-lg">
+                <img 
+                  src={logoImage} 
+                  alt="Shri Ram Group Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full animate-pulse" />
             </div>
-            <div className="hidden sm:block">
-              <h1 className="text-white font-display font-bold text-xl gradient-text">
-                Tech Fest 2026
-              </h1>
-              <p className="text-gray-400 text-xs">
+            
+            <div className="hidden md:block">
+              <p className="text-gray-300 text-xs font-medium whitespace-nowrap mb-0.5" 
+                 style={{ 
+                   fontFamily: "'Inter', sans-serif",
+                   textShadow: "1px 1px 2px rgba(0,0,0,0.6)"
+                 }}>
                 Shri Ram Group, Jabalpur
               </p>
+              <h1 className="text-white font-black text-lg lg:text-xl whitespace-nowrap" 
+                  style={{ 
+                    fontFamily: "'Space Grotesk', system-ui, sans-serif",
+                    fontWeight: 900,
+                    textShadow: "2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.4)",
+                    color: "#ffffff"
+                  }}>
+                Aavhaan 2026
+              </h1>
             </div>
           </Link>
 
@@ -176,12 +192,26 @@ const Navbar = () => {
                   {/* Logo */}
                   <div className="mb-8 pt-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-lg">TF</span>
+                      {/* Shri Ram Group Logo - Actual Image */}
+                      <div className="w-12 h-12 rounded-lg flex items-center justify-center relative overflow-hidden bg-white shadow-lg">
+                        <img 
+                          src={logoImage} 
+                          alt="Shri Ram Group Logo" 
+                          className="w-full h-full object-contain"
+                        />
                       </div>
+                      
                       <div>
-                        <h2 className="text-white font-display font-bold">Tech Fest 2026</h2>
-                        <p className="text-gray-400 text-xs">Shri Ram Group</p>
+                        <p className="text-gray-300 text-xs font-medium mb-0.5">Shri Ram Group, Jabalpur</p>
+                        <h2 className="text-white font-black text-lg" 
+                            style={{ 
+                              fontFamily: "'Space Grotesk', system-ui, sans-serif",
+                              fontWeight: 900,
+                              textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+                              color: "#ffffff"
+                            }}>
+                          Aavhaan 2026
+                        </h2>
                       </div>
                     </div>
                   </div>
@@ -248,7 +278,7 @@ const Navbar = () => {
       <RegistrationModal
         isOpen={isRegistrationModalOpen}
         onClose={() => setIsRegistrationModalOpen(false)}
-        event={{ title: 'General Registration', description: 'Register for Tech Fest 2026' }}
+        event={{ title: 'General Registration', description: 'Register for Aavhaan 2026' }}
       />
     </header>
   );

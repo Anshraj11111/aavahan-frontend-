@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Key, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { STORAGE_KEYS } from '../../constants';
+import { authService } from '../../services/auth';
+import toast from 'react-hot-toast';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    adminCode: ''
+    password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -29,29 +31,40 @@ const AdminLogin = () => {
     setError('');
 
     // Simple validation
-    if (!formData.email || !formData.password || !formData.adminCode) {
+    if (!formData.email || !formData.password) {
       setError('All fields are required');
       setIsLoading(false);
       return;
     }
 
-    // Check admin credentials
-    if (formData.adminCode === 'A5x') {
-      // Store admin session
-      localStorage.setItem('adminToken', 'admin-authenticated');
-      localStorage.setItem('adminUser', JSON.stringify({
+    try {
+      // Call backend login API
+      const response = await authService.login({
         email: formData.email,
-        role: 'admin',
-        loginTime: new Date().toISOString()
-      }));
-      
-      // Redirect to admin dashboard
-      navigate('/admin/dashboard');
-    } else {
-      setError('Invalid admin code. Please check your credentials.');
-    }
+        password: formData.password
+      });
 
-    setIsLoading(false);
+      if (response.success && response.data) {
+        const { token, admin } = response.data;
+        
+        // Store admin session with correct token keys
+        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token); // For API requests
+        localStorage.setItem('adminToken', token); // For dashboard auth check
+        localStorage.setItem('adminUser', JSON.stringify(admin));
+        
+        toast.success('Login successful!');
+        
+        // Redirect to admin dashboard
+        navigate('/admin/dashboard');
+      } else {
+        setError('Login failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error?.error || 'Invalid email or password. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -70,7 +83,7 @@ const AdminLogin = () => {
               <Lock className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">Admin Login</h1>
-            <p className="text-gray-400">Access the Tech Fest 2026 admin panel</p>
+            <p className="text-gray-400">Access the Aavhaan 2026 admin panel</p>
           </div>
 
           {/* Error Message */}
@@ -127,23 +140,6 @@ const AdminLogin = () => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-            </div>
-
-            {/* Admin Code */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                <Key size={16} className="inline mr-2" />
-                Admin Code
-              </label>
-              <input
-                type="text"
-                name="adminCode"
-                value={formData.adminCode}
-                onChange={handleInputChange}
-                required
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                placeholder="Enter admin code (A5x)"
-              />
             </div>
 
             {/* Submit Button */}

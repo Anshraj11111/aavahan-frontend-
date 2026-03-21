@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { registrationsService } from '../services/registrations';
 
 // Initial registration data that matches what's in RegistrationsList
 const initialRegistrations = [];
@@ -16,44 +17,85 @@ export const useRegistrations = () => {
 export const RegistrationProvider = ({ children }) => {
   const [registrations, setRegistrations] = useState(() => {
     // Load existing registrations from localStorage
-    const saved = localStorage.getItem('techfest-registrations');
+    const saved = localStorage.getItem('aavhaan-registrations');
     return saved ? JSON.parse(saved) : initialRegistrations;
   });
 
   // Save to localStorage whenever registrations change
   useEffect(() => {
-    localStorage.setItem('techfest-registrations', JSON.stringify(registrations));
+    localStorage.setItem('aavhaan-registrations', JSON.stringify(registrations));
   }, [registrations]);
 
-  const addRegistration = (registrationData) => {
-    const newRegistration = {
-      ...registrationData,
-      _id: Date.now().toString(),
-      uniqueRegistrationId: `TF2026-${String(registrations.length + 1).padStart(3, '0')}`,
-      paymentStatus: 'pending_verification',
-      registrationStatus: 'pending',
-      createdAt: new Date().toISOString()
-    };
+  const addRegistration = useCallback(async (registrationData) => {
+    try {
+      // Prepare FormData for multipart/form-data submission
+      const formData = new FormData();
+      
+      // Add all registration fields
+      Object.keys(registrationData).forEach(key => {
+        if (key === 'teamMembers' && registrationData[key]) {
+          // Stringify team members array
+          formData.append(key, JSON.stringify(registrationData[key]));
+        } else if (key === 'screenshot' && registrationData[key]) {
+          // Add screenshot file if present
+          formData.append(key, registrationData[key]);
+        } else if (registrationData[key] !== undefined && registrationData[key] !== null) {
+          formData.append(key, registrationData[key]);
+        }
+      });
 
-    setRegistrations(prev => [newRegistration, ...prev]);
-    return newRegistration;
-  };
+      // Submit to backend API
+      const response = await registrationsService.submitRegistration(formData);
 
-  const updateRegistration = (id, updates) => {
+      // Backend returns the created registration
+      const newRegistration = response.data;
+
+      // Also save to localStorage as cache/fallback
+      setRegistrations(prev => [newRegistration, ...prev]);
+      
+      return newRegistration;
+    } catch (error) {
+      console.error('Failed to submit registration to backend:', error);
+      
+      // Fallback to localStorage only if backend fails
+      const paymentStatus = registrationData.transactionId && registrationData.transactionId.trim() 
+        ? 'paid' 
+        : 'pending_verification';
+      
+      const registrationStatus = paymentStatus === 'paid' ? 'approved' : 'pending';
+
+      const newRegistration = {
+        ...registrationData,
+        _id: Date.now().toString(),
+        uniqueRegistrationId: `TF2026-${String(registrations.length + 1).padStart(3, '0')}`,
+        paymentStatus,
+        registrationStatus,
+        createdAt: new Date().toISOString(),
+        verifiedAt: paymentStatus === 'paid' ? new Date().toISOString() : null
+      };
+
+      setRegistrations(prev => [newRegistration, ...prev]);
+      
+      // Re-throw error so UI can handle it
+      throw error;
+    }
+  }, [registrations]);
+
+  const updateRegistration = useCallback((id, updates) => {
     setRegistrations(prev => 
       prev.map(reg => reg._id === id ? { ...reg, ...updates } : reg)
     );
-  };
+  }, []);
 
-  const deleteRegistration = (id) => {
+  const deleteRegistration = useCallback((id) => {
     setRegistrations(prev => prev.filter(reg => reg._id !== id));
-  };
+  }, []);
 
-  const getRegistrationsByEvent = (eventTitle) => {
+  const getRegistrationsByEvent = useCallback((eventTitle) => {
     return registrations.filter(reg => reg.eventTitle === eventTitle);
-  };
+  }, [registrations]);
 
-  const getRegistrationStats = () => {
+  const getRegistrationStats = useCallback(() => {
     const total = registrations.length;
     const approved = registrations.filter(r => r.registrationStatus === 'approved').length;
     const pending = registrations.filter(r => r.registrationStatus === 'pending').length;
@@ -65,9 +107,9 @@ export const RegistrationProvider = ({ children }) => {
       pending,
       totalRevenue
     };
-  };
+  }, [registrations]);
 
-  const addSampleData = () => {
+  const addSampleData = useCallback(() => {
     const sampleRegistrations = [
       {
         fullName: 'Rahul Sharma',
@@ -105,9 +147,9 @@ export const RegistrationProvider = ({ children }) => {
     ];
 
     sampleRegistrations.forEach(data => addRegistration(data));
-  };
+  }, [addRegistration]);
 
-  const value = {
+  const value = useMemo(() => ({
     registrations,
     addRegistration,
     updateRegistration,
@@ -115,7 +157,7 @@ export const RegistrationProvider = ({ children }) => {
     getRegistrationsByEvent,
     getRegistrationStats,
     addSampleData
-  };
+  }), [registrations, addRegistration, updateRegistration, deleteRegistration, getRegistrationsByEvent, getRegistrationStats, addSampleData]);
 
   return (
     <RegistrationContext.Provider value={value}>

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FEST_INFO } from '../constants';
 import { fadeInUp, staggerContainer, scaleUp, slideInLeft, slideInRight, fadeIn } from '../lib/animations';
 import toast from 'react-hot-toast';
+import LightweightBackground from '../components/backgrounds/LightweightBackground';
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -127,13 +128,8 @@ const ContactPage = () => {
 
   return (
     <div className="min-h-screen pt-20 bg-navy-950 relative overflow-hidden">
-      {/* Enhanced Background Effects */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute top-40 right-20 w-96 h-96 bg-purple-500 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-cyan-500 rounded-full blur-[130px] animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '3s' }} />
-      </div>
+      {/* Premium Animated Background */}
+      <LightweightBackground />
 
       {/* Interactive Mouse Follower */}
       <motion.div

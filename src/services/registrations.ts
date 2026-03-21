@@ -3,8 +3,12 @@ import { Registration, RegistrationFormData, ApiResponse } from '../types';
 
 export const registrationsService = {
   // Submit new registration
-  async submitRegistration(eventId: string, data: RegistrationFormData): Promise<ApiResponse<Registration>> {
-    return apiService.post<Registration>(`/registrations/${eventId}`, data);
+  async submitRegistration(data: FormData): Promise<ApiResponse<Registration>> {
+    return apiService.post<Registration>('/registrations', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   },
 
   // Upload payment screenshot

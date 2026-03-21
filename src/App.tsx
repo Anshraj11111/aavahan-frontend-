@@ -12,7 +12,7 @@ import { RegistrationProvider } from './contexts/RegistrationContext';
 import { EventsProvider } from './contexts/EventsContext';
 
 // Pages
-import HomePage from './pages/home/NewHomePage';
+import HomePage from './pages/home/PremiumHomePage';
 import EventsPage from './pages/events/EventsPage';
 import EventDetailPage from './pages/events/EventDetailPage';
 import SchedulePage from './pages/events/SchedulePage';

@@ -2,6 +2,7 @@ import { Calendar, MapPin, Users, Trophy, Phone, Mail, Globe, Star, Zap, Heart, 
 import { motion } from 'framer-motion';
 import { FEST_INFO, DAY_INFO } from '../constants';
 import { fadeInUp, staggerContainer, scaleUp } from '../lib/animations';
+import LightweightBackground from '../components/backgrounds/LightweightBackground';
 
 const AboutPage = () => {
   const stats = [
@@ -52,12 +53,8 @@ const AboutPage = () => {
 
   return (
     <div className="min-h-screen pt-20 bg-navy-950 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute top-40 right-20 w-96 h-96 bg-purple-500 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-cyan-500 rounded-full blur-[130px] animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
+      {/* Premium Animated Background */}
+      <LightweightBackground />
 
       {/* Hero Section */}
       <motion.section 

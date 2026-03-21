@@ -15,6 +15,7 @@ import RegistrationsList from '../../components/admin/RegistrationsList';
 import EventManagement from '../../components/admin/EventManagement';
 import AdminSettings from '../../components/admin/AdminSettings';
 import { useRegistrations } from '../../contexts/RegistrationContext';
+import { STORAGE_KEYS } from '../../constants';
 
 const AdminDashboard = () => {
   const [adminUser, setAdminUser] = useState(null);
@@ -24,10 +25,10 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     // Check if user is authenticated
-    const token = localStorage.getItem('adminToken');
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     const user = localStorage.getItem('adminUser');
     
-    if (!token || token !== 'admin-authenticated') {
+    if (!token) {
       navigate('/admin/login');
       return;
     }
@@ -40,6 +41,7 @@ const AdminDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN); // Clear API auth token
     navigate('/admin/login');
   };
 
@@ -89,7 +91,7 @@ const AdminDashboard = () => {
           amount: `₹${reg.amountPaid}`
         }))
     : [
-        { id: 1, action: 'No recent activities', user: 'System', event: 'Welcome to Tech Fest 2026', time: 'Just now', amount: '₹0' }
+        { id: 1, action: 'No recent activities', user: 'System', event: 'Welcome to Aavhaan 2026', time: 'Just now', amount: '₹0' }
       ];
 
   const eventRegistrations = [

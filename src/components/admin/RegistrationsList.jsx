@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { 
   Users, 
   Search, 
@@ -13,13 +15,51 @@ import {
   MapPin,
   Calendar
 } from 'lucide-react';
-import { useRegistrations } from '../../contexts/RegistrationContext';
+import { adminService } from '../../services/admin';
 
 const RegistrationsList = () => {
-  const { registrations, updateRegistration } = useRegistrations();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRegistration, setSelectedRegistration] = useState(null);
+
+  // Fetch registrations from backend
+  const { data: registrationsData, isLoading } = useQuery({
+    queryKey: ['admin-registrations', statusFilter],
+    queryFn: () => adminService.getAllRegistrations({
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+    }),
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 60 * 1000, // Refetch every minute
+  });
+
+  const registrations = registrationsData?.data || [];
+
+  // Approve mutation
+  const approveMutation = useMutation({
+    mutationFn: (registrationId) => adminService.approveRegistration(registrationId),
+    onSuccess: () => {
+      toast.success('Registration approved successfully!');
+      queryClient.invalidateQueries({ queryKey: ['admin-registrations'] });
+      setSelectedRegistration(null);
+    },
+    onError: (error) => {
+      toast.error(error.error || 'Failed to approve registration');
+    },
+  });
+
+  // Reject mutation
+  const rejectMutation = useMutation({
+    mutationFn: (registrationId) => adminService.rejectRegistration(registrationId),
+    onSuccess: () => {
+      toast.success('Registration rejected');
+      queryClient.invalidateQueries({ queryKey: ['admin-registrations'] });
+      setSelectedRegistration(null);
+    },
+    onError: (error) => {
+      toast.error(error.error || 'Failed to reject registration');
+    },
+  });
 
   const filteredRegistrations = registrations.filter(reg => {
     const matchesSearch = reg.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -52,19 +92,24 @@ const RegistrationsList = () => {
   };
 
   const handleApproveRegistration = (registrationId) => {
-    updateRegistration(registrationId, { 
-      registrationStatus: 'approved',
-      paymentStatus: 'paid'
-    });
-    setSelectedRegistration(null);
+    approveMutation.mutate(registrationId);
+  };
+
+  const handleVerifyPayment = (registrationId) => {
+    approveMutation.mutate(registrationId);
   };
 
   const handleRejectRegistration = (registrationId) => {
-    updateRegistration(registrationId, { 
-      registrationStatus: 'rejected'
-    });
-    setSelectedRegistration(null);
+    rejectMutation.mutate(registrationId);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-white text-center py-12">Loading registrations...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -164,6 +209,7 @@ const RegistrationsList = () => {
                 <th className="text-left p-4 text-gray-300 font-medium">Event</th>
                 <th className="text-left p-4 text-gray-300 font-medium">Registration</th>
                 <th className="text-left p-4 text-gray-300 font-medium">Payment</th>
+                <th className="text-left p-4 text-gray-300 font-medium">Transaction</th>
                 <th className="text-left p-4 text-gray-300 font-medium">Status</th>
                 <th className="text-left p-4 text-gray-300 font-medium">Actions</th>
               </tr>
@@ -178,7 +224,9 @@ const RegistrationsList = () => {
                     <div>
                       <p className="text-white font-medium">{registration.fullName}</p>
                       <p className="text-gray-400 text-sm">{registration.email}</p>
+                      <p className="text-gray-500 text-xs">{registration.phone}</p>
                       <p className="text-gray-500 text-xs">{registration.instituteName}</p>
+                      <p className="text-gray-500 text-xs">{registration.department} - {registration.yearOrSemester}</p>
                     </div>
                   </td>
                   <td className="p-4">
@@ -203,6 +251,26 @@ const RegistrationsList = () => {
                       <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(registration.paymentStatus)}`}>
                         {registration.paymentStatus.replace('_', ' ')}
                       </span>
+                      {registration.verifiedAt && (
+                        <p className="text-green-400 text-xs mt-1">
+                          Verified: {new Date(registration.verifiedAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div>
+                      {registration.transactionId ? (
+                        <>
+                          <p className="text-white font-medium text-sm">{registration.transactionId}</p>
+                          <p className="text-green-400 text-xs">Transaction ID provided</p>
+                        </>
+                      ) : (
+                        <p className="text-gray-500 text-sm">No transaction ID</p>
+                      )}
+                      {registration.paymentScreenshot && (
+                        <p className="text-blue-400 text-xs mt-1">Screenshot uploaded</p>
+                      )}
                     </div>
                   </td>
                   <td className="p-4">
@@ -278,6 +346,25 @@ const RegistrationsList = () => {
                     </div>
                   </div>
                 </div>
+                
+                {/* Academic Information */}
+                <div className="mt-4 p-4 bg-gray-800/30 rounded-lg">
+                  <h5 className="text-white font-medium mb-2">Academic Details</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-400">Institution</p>
+                      <p className="text-white">{selectedRegistration.instituteName}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Department</p>
+                      <p className="text-white">{selectedRegistration.department}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Year/Semester</p>
+                      <p className="text-white">{selectedRegistration.yearOrSemester}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Team Members */}
@@ -317,13 +404,65 @@ const RegistrationsList = () => {
                 </div>
               </div>
 
+              {/* Payment Information */}
+              <div>
+                <h4 className="text-lg font-semibold text-white mb-3">Payment Information</h4>
+                <div className="bg-gray-800/30 p-4 rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-gray-400 text-sm">Amount</p>
+                      <p className="text-white font-medium">₹{selectedRegistration.amountPaid} / ₹{selectedRegistration.amountExpected}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Payment Status</p>
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(selectedRegistration.paymentStatus)}`}>
+                        {selectedRegistration.paymentStatus.replace('_', ' ')}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {selectedRegistration.transactionId && (
+                    <div className="mb-4">
+                      <p className="text-gray-400 text-sm">Transaction ID</p>
+                      <p className="text-white font-mono bg-gray-700 px-3 py-2 rounded text-sm">
+                        {selectedRegistration.transactionId}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {selectedRegistration.paymentScreenshotUrl && (
+                    <div className="mb-4">
+                      <p className="text-gray-400 text-sm">Payment Screenshot</p>
+                      <p className="text-green-400 text-sm">✓ Screenshot uploaded</p>
+                    </div>
+                  )}
+                  
+                  {selectedRegistration.verifiedAt && (
+                    <div>
+                      <p className="text-gray-400 text-sm">Verified At</p>
+                      <p className="text-green-400 text-sm">
+                        {new Date(selectedRegistration.verifiedAt).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-gray-700">
+                {selectedRegistration.paymentStatus !== 'paid' && (
+                  <button 
+                    onClick={() => handleVerifyPayment(selectedRegistration._id)}
+                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    Verify Payment
+                  </button>
+                )}
                 <button 
                   onClick={() => handleApproveRegistration(selectedRegistration._id)}
                   className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                 >
-                  Approve Registration
+                  {selectedRegistration.registrationStatus === 'approved' ? 'Already Approved' : 'Approve Registration'}
                 </button>
                 <button 
                   onClick={() => handleRejectRegistration(selectedRegistration._id)}

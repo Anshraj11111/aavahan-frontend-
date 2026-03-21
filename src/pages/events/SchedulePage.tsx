@@ -7,6 +7,7 @@ import { DAY_INFO } from '../../constants';
 import { formatDate, formatCurrency } from '../../utils';
 import { Link } from 'react-router-dom';
 import { fadeInUp, staggerContainer, scaleUp, slideInLeft } from '../../lib/animations';
+import LightweightBackground from '../../components/backgrounds/LightweightBackground';
 
 const SchedulePage = () => {
   const [selectedDay, setSelectedDay] = useState<number>(1);
@@ -36,12 +37,8 @@ const SchedulePage = () => {
 
   return (
     <div className="min-h-screen pt-20 bg-navy-950 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-32 left-20 w-96 h-96 bg-blue-500 rounded-full blur-[150px] animate-pulse" />
-        <div className="absolute top-64 right-32 w-80 h-80 bg-purple-500 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-32 left-1/3 w-72 h-72 bg-cyan-500 rounded-full blur-[140px] animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
+      {/* Premium Animated Background */}
+      <LightweightBackground />
 
       {/* Header */}
       <motion.section 
@@ -53,7 +50,8 @@ const SchedulePage = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <motion.div variants={fadeInUp} className="mb-8">
-              <span className="inline-block px-6 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full text-purple-400 font-medium mb-6">
+              <span className="inline-block px-6 py-3 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 border border-blue-500/30 rounded-full text-blue-300 font-semibold mb-6 backdrop-blur-xl">
+                <Calendar className="inline w-5 h-5 mr-2 -mt-1" />
                 Tech Fest 2026 Schedule
               </span>
             </motion.div>
@@ -61,9 +59,12 @@ const SchedulePage = () => {
             <motion.h1 
               variants={fadeInUp}
               className="text-5xl lg:text-7xl font-display font-bold text-white mb-8 leading-tight"
+              style={{
+                textShadow: "3px 3px 6px rgba(0,0,0,0.9), 0 0 30px rgba(59,130,246,0.5)"
+              }}
             >
               Event 
-              <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mt-2">
                 Schedule
               </span>
             </motion.h1>
@@ -76,47 +77,79 @@ const SchedulePage = () => {
               Three days of innovation, culture, and celebration await you.
             </motion.p>
           </div>
-          {/* Day Selector */}
+          
+          {/* Enhanced Day Selector with Premium Design */}
           <motion.div 
             variants={fadeInUp}
             className="flex justify-center mb-16"
           >
-            <div className="glass-panel p-3 rounded-2xl">
-              <div className="flex space-x-3">
+            <div className="glass-panel p-2 rounded-3xl border border-white/20 backdrop-blur-xl">
+              <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3">
                 {Object.entries(DAY_INFO).map(([day, info], index) => (
                   <motion.button
                     key={day}
                     onClick={() => setSelectedDay(Number(day))}
-                    className={`px-8 py-4 rounded-xl font-medium transition-all duration-300 relative overflow-hidden ${
+                    className={`px-8 py-6 rounded-2xl font-medium transition-all duration-300 relative overflow-hidden min-w-[200px] ${
                       selectedDay === Number(day)
-                        ? 'text-white'
+                        ? 'text-white shadow-2xl'
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }`}
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: 1.05, y: -5 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     {selectedDay === Number(day) && (
                       <motion.div
                         layoutId="activeDay"
-                        className={`absolute inset-0 bg-gradient-to-r ${
-                          index === 0 ? 'from-blue-500 to-cyan-500' :
-                          index === 1 ? 'from-purple-500 to-pink-500' :
-                          'from-green-500 to-emerald-500'
-                        } rounded-xl`}
+                        className={`absolute inset-0 bg-gradient-to-br ${
+                          index === 0 ? 'from-blue-500 via-blue-600 to-cyan-500' :
+                          index === 1 ? 'from-purple-500 via-purple-600 to-pink-500' :
+                          'from-green-500 via-emerald-600 to-teal-500'
+                        } rounded-2xl shadow-lg`}
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      />
+                      >
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent"
+                          animate={{
+                            opacity: [0.3, 0.6, 0.3]
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                      </motion.div>
                     )}
                     <div className="relative z-10 text-center">
-                      <div className="font-bold text-lg">Day {day}</div>
-                      <div className="text-sm opacity-80">{info.title}</div>
+                      <div className="font-bold text-2xl mb-1">Day {day}</div>
+                      <div className="text-sm opacity-90 font-medium">{info.title}</div>
+                      <div className="text-xs opacity-70 mt-1">
+                        {new Date(info.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </div>
                     </div>
+                    
+                    {/* Decorative corner accent */}
+                    {selectedDay === Number(day) && (
+                      <motion.div
+                        className="absolute top-2 right-2 w-3 h-3 bg-white/30 rounded-full"
+                        animate={{
+                          scale: [1, 1.5, 1],
+                          opacity: [0.5, 1, 0.5]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      />
+                    )}
                   </motion.button>
                 ))}
               </div>
             </div>
           </motion.div>
 
-          {/* Day Info */}
+          {/* Enhanced Day Info Card */}
           <AnimatePresence mode="wait">
             <motion.div 
               key={selectedDay}
@@ -124,41 +157,114 @@ const SchedulePage = () => {
               initial="hidden"
               animate="visible"
               exit="hidden"
-              className="glass-panel p-8 md:p-12 rounded-2xl mb-16 text-center relative overflow-hidden"
+              className="glass-panel p-10 md:p-16 rounded-3xl mb-16 text-center relative overflow-hidden border border-white/20 backdrop-blur-xl"
             >
-              {/* Background Decoration */}
-              <div className={`absolute inset-0 bg-gradient-to-r ${
-                selectedDay === 1 ? 'from-blue-500/10 to-cyan-500/10' :
-                selectedDay === 2 ? 'from-purple-500/10 to-pink-500/10' :
-                'from-green-500/10 to-emerald-500/10'
-              } rounded-2xl`} />
+              {/* Animated Background Gradient */}
+              <motion.div 
+                className={`absolute inset-0 bg-gradient-to-br ${
+                  selectedDay === 1 ? 'from-blue-500/20 via-cyan-500/10 to-transparent' :
+                  selectedDay === 2 ? 'from-purple-500/20 via-pink-500/10 to-transparent' :
+                  'from-green-500/20 via-emerald-500/10 to-transparent'
+                } rounded-3xl`}
+                animate={{
+                  scale: [1, 1.05, 1],
+                  opacity: [0.5, 0.8, 0.5]
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              {/* Decorative Elements */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-white/5 to-transparent rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-white/5 to-transparent rounded-full blur-2xl" />
               
               <div className="relative z-10 max-w-4xl mx-auto">
-                <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r ${
-                  selectedDay === 1 ? 'from-blue-500 to-cyan-500' :
-                  selectedDay === 2 ? 'from-purple-500 to-pink-500' :
-                  'from-green-500 to-emerald-500'
-                } mb-6`}>
-                  <span className="text-white font-bold text-2xl">{selectedDay}</span>
+                {/* Day Badge */}
+                <motion.div 
+                  className={`inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-gradient-to-br ${
+                    selectedDay === 1 ? 'from-blue-500 to-cyan-500' :
+                    selectedDay === 2 ? 'from-purple-500 to-pink-500' :
+                    'from-green-500 to-emerald-500'
+                  } mb-8 shadow-2xl relative overflow-hidden`}
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  animate={{
+                    boxShadow: [
+                      '0 10px 40px rgba(59,130,246,0.3)',
+                      '0 10px 60px rgba(139,92,246,0.5)',
+                      '0 10px 40px rgba(59,130,246,0.3)'
+                    ]
+                  }}
+                  transition={{
+                    boxShadow: {
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }
+                  }}
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent"
+                    animate={{
+                      opacity: [0.3, 0.6, 0.3]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity
+                    }}
+                  />
+                  <span className="text-white font-black text-4xl relative z-10">{selectedDay}</span>
+                </motion.div>
+                
+                <motion.h2 
+                  className="text-4xl lg:text-5xl font-bold text-white mb-4"
+                  style={{
+                    textShadow: "2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.3)"
+                  }}
+                  animate={{
+                    textShadow: [
+                      "2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.3)",
+                      "2px 2px 4px rgba(0,0,0,0.8), 0 0 30px rgba(59,130,246,0.5)",
+                      "2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.3)"
+                    ]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  Day {selectedDay}: {DAY_INFO[selectedDay as keyof typeof DAY_INFO].title}
+                </motion.h2>
+                
+                <motion.p 
+                  className={`font-bold mb-6 text-2xl ${
+                    selectedDay === 1 ? 'text-blue-400' :
+                    selectedDay === 2 ? 'text-purple-400' :
+                    'text-green-400'
+                  }`}
+                  animate={{
+                    scale: [1, 1.05, 1]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  {DAY_INFO[selectedDay as keyof typeof DAY_INFO].theme}
+                </motion.p>
+                
+                <div className="glass-panel px-6 py-3 rounded-xl inline-block mb-6 border border-white/20">
+                  <p className="text-white font-semibold text-lg flex items-center">
+                    <Calendar className="w-5 h-5 mr-2" />
+                    {formatDate(DAY_INFO[selectedDay as keyof typeof DAY_INFO].date, 'long')}
+                  </p>
                 </div>
                 
-                <h2 className="text-3xl lg:text-4xl font-bold text-white mb-3">
-                  Day {selectedDay}: {DAY_INFO[selectedDay as keyof typeof DAY_INFO].title}
-                </h2>
-                
-                <p className={`font-semibold mb-4 text-lg ${
-                  selectedDay === 1 ? 'text-blue-400' :
-                  selectedDay === 2 ? 'text-purple-400' :
-                  'text-green-400'
-                }`}>
-                  {DAY_INFO[selectedDay as keyof typeof DAY_INFO].theme}
-                </p>
-                
-                <p className="text-gray-300 mb-6 text-lg">
-                  {formatDate(DAY_INFO[selectedDay as keyof typeof DAY_INFO].date, 'long')}
-                </p>
-                
-                <p className="text-gray-400 leading-relaxed max-w-2xl mx-auto">
+                <p className="text-gray-300 leading-relaxed text-lg max-w-3xl mx-auto">
                   {DAY_INFO[selectedDay as keyof typeof DAY_INFO].description}
                 </p>
               </div>
@@ -166,6 +272,7 @@ const SchedulePage = () => {
           </AnimatePresence>
         </div>
       </motion.section>
+
       {/* Schedule Timeline */}
       <section className="pb-20 relative z-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -217,12 +324,24 @@ const SchedulePage = () => {
               animate="visible"
               className="relative"
             >
-              {/* Timeline Line */}
+              {/* Timeline Line with Gradient */}
               <div className={`absolute left-12 top-0 bottom-0 w-1 bg-gradient-to-b ${
-                selectedDay === 1 ? 'from-blue-500 to-cyan-500' :
-                selectedDay === 2 ? 'from-purple-500 to-pink-500' :
-                'from-green-500 to-emerald-500'
-              } hidden lg:block rounded-full`} />
+                selectedDay === 1 ? 'from-blue-500 via-cyan-500 to-blue-500' :
+                selectedDay === 2 ? 'from-purple-500 via-pink-500 to-purple-500' :
+                'from-green-500 via-emerald-500 to-green-500'
+              } hidden lg:block rounded-full shadow-lg`}>
+                <motion.div
+                  className="absolute inset-0 bg-white/30 rounded-full"
+                  animate={{
+                    y: ['-100%', '100%']
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
+                />
+              </div>
 
               <div className="space-y-8">
                 <AnimatePresence>
@@ -232,106 +351,199 @@ const SchedulePage = () => {
                       variants={slideInLeft}
                       className="relative"
                     >
-                      {/* Timeline Dot */}
-                      <div className={`absolute left-8 w-8 h-8 bg-gradient-to-r ${
-                        selectedDay === 1 ? 'from-blue-500 to-cyan-500' :
-                        selectedDay === 2 ? 'from-purple-500 to-pink-500' :
-                        'from-green-500 to-emerald-500'
-                      } rounded-full border-4 border-navy-950 hidden lg:block z-10 shadow-lg`} />
-
-                      {/* Event Card */}
+                      {/* Timeline Dot with Pulse Effect */}
                       <motion.div 
-                        className="lg:ml-20 glass-panel p-8 rounded-2xl group hover:scale-[1.02] transition-all duration-300 relative overflow-hidden"
-                        whileHover={{ y: -5 }}
+                        className={`absolute left-8 w-8 h-8 bg-gradient-to-br ${
+                          selectedDay === 1 ? 'from-blue-500 to-cyan-500' :
+                          selectedDay === 2 ? 'from-purple-500 to-pink-500' :
+                          'from-green-500 to-emerald-500'
+                        } rounded-full border-4 border-navy-950 hidden lg:block z-10 shadow-2xl`}
+                        animate={{
+                          scale: [1, 1.2, 1],
+                          boxShadow: [
+                            '0 0 20px rgba(59,130,246,0.5)',
+                            '0 0 40px rgba(139,92,246,0.8)',
+                            '0 0 20px rgba(59,130,246,0.5)'
+                          ]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: index * 0.2
+                        }}
+                      >
+                        <motion.div
+                          className="absolute inset-0 bg-white/30 rounded-full"
+                          animate={{
+                            scale: [1, 1.5, 1],
+                            opacity: [0.5, 0, 0.5]
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeOut"
+                          }}
+                        />
+                      </motion.div>
+
+                      {/* Event Card with Enhanced Design */}
+                      <motion.div 
+                        className="lg:ml-20 glass-panel p-8 rounded-2xl group hover:scale-[1.02] transition-all duration-300 relative overflow-hidden border border-white/20 backdrop-blur-xl"
+                        whileHover={{ y: -8, boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}
                       >
                         {/* Background Gradient on Hover */}
-                        <div className={`absolute inset-0 bg-gradient-to-r ${
-                          event.category === 'cultural' 
-                            ? 'from-pink-500/10 to-purple-500/10' 
-                            : 'from-blue-500/10 to-cyan-500/10'
-                        } opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl`} />
+                        <motion.div 
+                          className={`absolute inset-0 bg-gradient-to-br ${
+                            event.category === 'cultural' 
+                              ? 'from-pink-500/20 via-purple-500/10 to-transparent' 
+                              : 'from-blue-500/20 via-cyan-500/10 to-transparent'
+                          } opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl`}
+                          animate={{
+                            scale: [1, 1.05, 1]
+                          }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                        
+                        {/* Decorative Corner Glow */}
+                        <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl ${
+                          selectedDay === 1 ? 'from-blue-500/20' :
+                          selectedDay === 2 ? 'from-purple-500/20' :
+                          'from-green-500/20'
+                        } to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
                         
                         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-                          {/* Time */}
+                          {/* Time with Enhanced Design */}
                           <div className="text-center lg:text-left">
-                            <div className={`inline-block glass-panel px-6 py-4 rounded-xl bg-gradient-to-r ${
-                              selectedDay === 1 ? 'from-blue-500/20 to-cyan-500/20 border-blue-500/30' :
-                              selectedDay === 2 ? 'from-purple-500/20 to-pink-500/20 border-purple-500/30' :
-                              'from-green-500/20 to-emerald-500/20 border-green-500/30'
-                            } border`}>
+                            <motion.div 
+                              className={`inline-block glass-panel px-6 py-5 rounded-2xl bg-gradient-to-br ${
+                                selectedDay === 1 ? 'from-blue-500/30 to-cyan-500/20 border-blue-400/40' :
+                                selectedDay === 2 ? 'from-purple-500/30 to-pink-500/20 border-purple-400/40' :
+                                'from-green-500/30 to-emerald-500/20 border-green-400/40'
+                              } border-2 backdrop-blur-xl shadow-lg relative overflow-hidden`}
+                              whileHover={{ scale: 1.05 }}
+                            >
+                              <motion.div
+                                className="absolute inset-0 bg-white/10"
+                                animate={{
+                                  opacity: [0, 0.2, 0]
+                                }}
+                                transition={{
+                                  duration: 2,
+                                  repeat: Infinity,
+                                  ease: "easeInOut"
+                                }}
+                              />
                               <div className={`flex items-center space-x-2 mb-2 ${
-                                selectedDay === 1 ? 'text-blue-400' :
-                                selectedDay === 2 ? 'text-purple-400' :
-                                'text-green-400'
-                              }`}>
-                                <Clock size={18} />
-                                <span className="font-bold text-lg">{event.startTime}</span>
+                                selectedDay === 1 ? 'text-blue-300' :
+                                selectedDay === 2 ? 'text-purple-300' :
+                                'text-green-300'
+                              } relative z-10`}>
+                                <Clock size={20} />
+                                <span className="font-black text-xl">{event.startTime}</span>
                               </div>
-                              <div className="text-gray-400 text-sm">
+                              <div className="text-gray-300 text-sm font-medium relative z-10">
                                 to {event.endTime}
                               </div>
-                            </div>
+                            </motion.div>
                           </div>
-                          {/* Event Details */}
+
+                          {/* Event Details with Enhanced Typography */}
                           <div className="lg:col-span-3">
-                            <div className="flex items-start space-x-3 mb-4">
-                              <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                                event.category === 'cultural' 
-                                  ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' 
-                                  : 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
-                              }`}>
-                                {event.category === 'cultural' ? 'Cultural' : 'Technical'}
-                              </span>
+                            <div className="flex flex-wrap items-start gap-3 mb-5">
+                              <motion.span 
+                                className={`px-5 py-2 rounded-full text-sm font-bold shadow-lg ${
+                                  event.category === 'cultural' 
+                                    ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' 
+                                    : 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+                                }`}
+                                whileHover={{ scale: 1.1, rotate: 2 }}
+                              >
+                                {event.category === 'cultural' ? '🎭 Cultural' : '💻 Technical'}
+                              </motion.span>
                               {event.featured && (
-                                <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-2 rounded-full text-sm font-semibold flex items-center">
-                                  <Star size={14} className="mr-1" />
+                                <motion.span 
+                                  className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center shadow-lg"
+                                  whileHover={{ scale: 1.1 }}
+                                  animate={{
+                                    boxShadow: [
+                                      '0 0 20px rgba(251,191,36,0.5)',
+                                      '0 0 30px rgba(251,191,36,0.8)',
+                                      '0 0 20px rgba(251,191,36,0.5)'
+                                    ]
+                                  }}
+                                  transition={{
+                                    duration: 2,
+                                    repeat: Infinity
+                                  }}
+                                >
+                                  <Star size={16} className="mr-1" fill="currentColor" />
                                   Featured
-                                </span>
+                                </motion.span>
                               )}
                             </div>
 
-                            <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-white transition-colors duration-300">
+                            <h3 className="text-2xl lg:text-3xl font-bold text-white mb-4 group-hover:text-white transition-colors duration-300"
+                                style={{
+                                  textShadow: "2px 2px 4px rgba(0,0,0,0.8)"
+                                }}>
                               {event.title}
                             </h3>
                             
-                            <p className="text-gray-300 mb-6 line-clamp-2 leading-relaxed">
+                            <p className="text-gray-300 mb-6 line-clamp-2 leading-relaxed text-base">
                               {event.shortDescription}
                             </p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                              <div className="flex items-center space-x-3 text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                              <motion.div 
+                                className="flex items-center space-x-3 text-gray-400 group-hover:text-gray-300 transition-colors duration-300 glass-panel px-4 py-3 rounded-xl"
+                                whileHover={{ scale: 1.05, x: 5 }}
+                              >
                                 <MapPin size={18} className="text-blue-400" />
-                                <span>{event.venue}</span>
-                              </div>
+                                <span className="font-medium">{event.venue}</span>
+                              </motion.div>
                               
-                              <div className="flex items-center space-x-3 text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                              <motion.div 
+                                className="flex items-center space-x-3 text-gray-400 group-hover:text-gray-300 transition-colors duration-300 glass-panel px-4 py-3 rounded-xl"
+                                whileHover={{ scale: 1.05, x: 5 }}
+                              >
                                 <Users size={18} className="text-purple-400" />
-                                <span>
-                                  {event.participationType === 'team' ? 'Team Event' : 'Solo Event'}
+                                <span className="font-medium">
+                                  {event.participationType === 'team' ? '👥 Team Event' : '👤 Solo Event'}
                                 </span>
-                              </div>
+                              </motion.div>
                               
-                              <div className="flex items-center space-x-3 text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                              <motion.div 
+                                className="flex items-center space-x-3 text-gray-400 group-hover:text-gray-300 transition-colors duration-300 glass-panel px-4 py-3 rounded-xl"
+                                whileHover={{ scale: 1.05, x: 5 }}
+                              >
                                 <Trophy size={18} className="text-yellow-400" />
-                                <span>
-                                  {event.entryFee > 0 ? formatCurrency(event.entryFee) : 'Free Entry'}
+                                <span className="font-medium">
+                                  {event.entryFee > 0 ? `💰 ${formatCurrency(event.entryFee)}` : '🎉 Free Entry'}
                                 </span>
-                              </div>
+                              </motion.div>
                               
-                              <div className="flex items-center space-x-3 text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                              <motion.div 
+                                className="flex items-center space-x-3 text-gray-400 group-hover:text-gray-300 transition-colors duration-300 glass-panel px-4 py-3 rounded-xl"
+                                whileHover={{ scale: 1.05, x: 5 }}
+                              >
                                 <Award size={18} className="text-green-400" />
-                                <span>
+                                <span className="font-medium">
                                   {event.currentRegistrations}/{event.maxRegistrations} registered
                                 </span>
-                              </div>
+                              </motion.div>
                             </div>
                           </div>
 
-                          {/* Actions */}
-                          <div className="flex flex-col space-y-4">
+                          {/* Actions with Enhanced Buttons */}
+                          <div className="flex flex-col space-y-3">
                             <Link
                               to={`/events/${event.slug}`}
-                              className="glass-panel px-6 py-3 text-center text-white font-medium rounded-xl hover:bg-white/10 transition-all duration-300 border border-white/20 hover:border-white/40"
+                              className="glass-panel px-6 py-3 text-center text-white font-semibold rounded-xl hover:bg-white/10 transition-all duration-300 border-2 border-white/30 hover:border-white/50 hover:shadow-lg"
                             >
                               View Details
                             </Link>
@@ -339,17 +551,19 @@ const SchedulePage = () => {
                             {event.status === 'published' && 
                              event.currentRegistrations < event.maxRegistrations &&
                              new Date(event.registrationDeadline) > new Date() && (
-                              <Link
-                                to={`/registration/${event._id}`}
-                                className={`bg-gradient-to-r ${
-                                  selectedDay === 1 ? 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' :
-                                  selectedDay === 2 ? 'from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' :
-                                  'from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
-                                } text-white font-semibold py-3 px-6 rounded-xl text-center transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2`}
-                              >
-                                <Plus size={16} />
-                                <span>Register Now</span>
-                              </Link>
+                              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                <Link
+                                  to={`/registration/${event._id}`}
+                                  className={`block bg-gradient-to-r ${
+                                    selectedDay === 1 ? 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' :
+                                    selectedDay === 2 ? 'from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' :
+                                    'from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
+                                  } text-white font-bold py-3 px-6 rounded-xl text-center transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center space-x-2`}
+                                >
+                                  <Plus size={18} />
+                                  <span>Register Now</span>
+                                </Link>
+                              </motion.div>
                             )}
                           </div>
                         </div>
@@ -362,6 +576,7 @@ const SchedulePage = () => {
           )}
         </div>
       </section>
+
       {/* Download Schedule */}
       <motion.section 
         className="py-20 relative z-10"

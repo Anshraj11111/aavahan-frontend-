@@ -38,7 +38,7 @@ const teamInfoSchema = z.object({
 });
 
 const paymentSchema = z.object({
-  transactionId: z.string().optional(),
+  transactionId: z.string().min(1, 'Transaction ID is required'),
   paymentScreenshot: z.instanceof(File).optional(),
 });
 
@@ -49,13 +49,17 @@ const RegistrationPage = () => {
   const [formData, setFormData] = useState<Partial<RegistrationFormData>>({});
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
 
-  // Fetch event details
+  // Fetch event details with optimized caching
   const { data: event, isLoading: eventLoading, error: eventError } = useQuery({
     queryKey: ['event', eventId],
     queryFn: () => eventsService.getEventById(eventId!),
     enabled: !!eventId,
-    retry: 1, // Only retry once to avoid excessive requests
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+    staleTime: 30 * 60 * 1000, // 30 minutes cache (increased from 10)
+    gcTime: 60 * 60 * 1000, // Keep in cache for 60 minutes (increased from 15)
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false, // Don't refetch on reconnect
   });
 
   // Form for each step
@@ -87,38 +91,36 @@ const RegistrationPage = () => {
 
   // Registration mutation
   const registrationMutation = useMutation({
-    mutationFn: (data: RegistrationFormData) => 
-      registrationsService.submitRegistration(eventId!, data),
-    onSuccess: (response) => {
-      toast.success('Registration submitted successfully!');
-      if (paymentFile) {
-        uploadPaymentMutation.mutate({
-          registrationId: response.data._id,
-          file: paymentFile,
-          transactionId: paymentForm.getValues('transactionId'),
-        });
-      } else {
-        navigate('/my-tickets');
-      }
-    },
-    onError: (error: any) => {
-      toast.error(error.error || 'Registration failed');
-    },
-  });
+    mutationFn: async (data: RegistrationFormData) => {
+      // Prepare FormData for multipart/form-data submission
+      const formData = new FormData();
+      
+      // Add all registration fields
+      Object.keys(data).forEach(key => {
+        if (key === 'teamMembers' && data[key]) {
+          formData.append(key, JSON.stringify(data[key]));
+        } else if (key === 'paymentScreenshot' && paymentFile) {
+          formData.append('screenshot', paymentFile);
+        } else if (data[key] !== undefined && data[key] !== null) {
+          formData.append(key, String(data[key]));
+        }
+      });
 
-  // Payment upload mutation
-  const uploadPaymentMutation = useMutation({
-    mutationFn: ({ registrationId, file, transactionId }: {
-      registrationId: string;
-      file: File;
-      transactionId?: string;
-    }) => registrationsService.uploadPaymentScreenshot(registrationId, file, transactionId),
-    onSuccess: () => {
-      toast.success('Payment screenshot uploaded successfully!');
+      return registrationsService.submitRegistration(formData);
+    },
+    onSuccess: (response) => {
+      toast.success('Registration submitted successfully! Check your email for confirmation.');
       navigate('/my-tickets');
     },
     onError: (error: any) => {
-      toast.error(error.error || 'Payment upload failed');
+      // Handle specific error cases
+      if (error.error && error.error.includes('transaction ID')) {
+        toast.error('This transaction ID has already been used. Please verify your transaction ID.');
+      } else if (error.error && error.error.includes('duplicate')) {
+        toast.error('You have already registered for this event.');
+      } else {
+        toast.error(error.error || 'Registration failed. Please try again.');
+      }
     },
   });
 
@@ -145,18 +147,25 @@ const RegistrationPage = () => {
         }
         break;
       case 3:
-        // Final submission
-        handleSubmit();
+        // Validate payment form before submission
+        isValid = await paymentForm.trigger();
+        if (isValid) {
+          handleSubmit();
+        }
         return;
     }
 
     if (isValid) {
       setCurrentStep(prev => prev + 1);
+      // Smooth scroll to top of page
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePrevStep = () => {
     setCurrentStep(prev => prev - 1);
+    // Smooth scroll to top of page
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = () => {
@@ -164,6 +173,8 @@ const RegistrationPage = () => {
       ...formData,
       ...personalForm.getValues(),
       ...teamForm.getValues(),
+      ...paymentForm.getValues(), // Include transaction ID from payment form
+      eventId: eventId!, // Ensure eventId is included
     } as RegistrationFormData;
 
     registrationMutation.mutate(finalData);
@@ -190,17 +201,20 @@ const RegistrationPage = () => {
 
   if (eventLoading) {
     return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <div className="text-white">Loading event details...</div>
+      <div className="min-h-screen pt-20 flex items-center justify-center bg-gradient-to-br from-navy-950 via-slate-900 to-black">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
+          <div className="text-white text-lg">Loading event details...</div>
+        </div>
       </div>
     );
   }
 
   if (eventError) {
     return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
+      <div className="min-h-screen pt-20 flex items-center justify-center bg-gradient-to-br from-navy-950 via-slate-900 to-black">
         <div className="text-center max-w-md mx-auto px-4">
-          <div className="glass p-8 rounded-2xl">
+          <div className="bg-slate-900/80 backdrop-blur-sm border border-white/10 p-8 rounded-2xl shadow-xl">
             <h1 className="text-2xl font-bold text-red-400 mb-4">Unable to Load Event</h1>
             <p className="text-white/80 mb-6">
               The backend server might not be running. Please check the development guide for setup instructions.
@@ -229,7 +243,7 @@ const RegistrationPage = () => {
 
   if (!event) {
     return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
+      <div className="min-h-screen pt-20 flex items-center justify-center bg-gradient-to-br from-navy-950 via-slate-900 to-black">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-4">Event Not Found</h1>
           <Link to="/events" className="btn-primary">
@@ -241,9 +255,13 @@ const RegistrationPage = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-20 bg-gradient-to-br from-navy-950 via-slate-900 to-black relative overflow-hidden">
+      {/* Lightweight Background - No Heavy Animations */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent" />
+      
       {/* Back Button */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
         <Link
           to={`/events/${event.slug}`}
           className="inline-flex items-center text-white/70 hover:text-white transition-colors duration-200"
@@ -254,7 +272,7 @@ const RegistrationPage = () => {
       </div>
 
       {/* Header */}
-      <section className="py-8">
+      <section className="py-8 relative z-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">
@@ -305,10 +323,10 @@ const RegistrationPage = () => {
       </section>
 
       {/* Form Content */}
-      <section className="pb-16">
+      <section className="pb-16 relative z-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto">
-            <div className="glass p-8 rounded-2xl">
+            <div className="bg-slate-900/80 backdrop-blur-sm border border-white/10 p-8 rounded-2xl shadow-xl">
               {/* Step 1: Personal Information */}
               {currentStep === 1 && (
                 <div className="space-y-6">
@@ -527,12 +545,17 @@ const RegistrationPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-white font-medium mb-2">Transaction ID (Optional)</label>
+                    <label className="block text-white font-medium mb-2">Transaction ID *</label>
                     <input
                       {...paymentForm.register('transactionId')}
                       className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-primary-400 focus:ring-1 focus:ring-primary-400"
-                      placeholder="Enter transaction ID if available"
+                      placeholder="Enter transaction ID (Required)"
                     />
+                    {paymentForm.formState.errors.transactionId && (
+                      <p className="text-red-400 text-sm mt-1">
+                        {paymentForm.formState.errors.transactionId.message}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -557,10 +580,10 @@ const RegistrationPage = () => {
                     </div>
                   </div>
 
-                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
-                    <p className="text-yellow-400 text-sm">
-                      <strong>Note:</strong> You can submit the registration now and upload payment screenshot later 
-                      from the "My Tickets" page. Your registration will be pending until payment is verified.
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                    <p className="text-blue-400 text-sm">
+                      <strong>Important:</strong> Transaction ID is mandatory for registration. Please complete the payment 
+                      and enter your transaction ID to proceed. Payment screenshot is optional but recommended for faster verification.
                     </p>
                   </div>
                 </div>
@@ -581,7 +604,7 @@ const RegistrationPage = () => {
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  disabled={registrationMutation.isPending || uploadPaymentMutation.isPending}
+                  disabled={registrationMutation.isPending}
                   className="btn-primary flex items-center"
                 >
                   {currentStep === 3 ? (

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 // Initial events data that matches EventsPage
 const initialEvents = [
@@ -29,7 +29,7 @@ const initialEvents = [
     prizeDetails: '1st: ₹5,000, 2nd: ₹3,000, 3rd: ₹2,000',
     coordinatorName: 'Dr. Rajesh Kumar',
     coordinatorPhone: '9876543210',
-    coordinatorEmail: 'rajesh@techfest.com',
+    coordinatorEmail: 'rajesh@aavhaan.com',
     bannerImage: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=400&fit=crop',
     posterImage: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=600&fit=crop',
     tags: ['AI', 'Machine Learning', 'Hackathon', 'Programming'],
@@ -63,7 +63,7 @@ const initialEvents = [
     prizeDetails: '1st: ₹5,000, 2nd: ₹3,000, 3rd: ₹2,000',
     coordinatorName: 'Prof. Meera Sharma',
     coordinatorPhone: '9876543211',
-    coordinatorEmail: 'meera@techfest.com',
+    coordinatorEmail: 'meera@aavhaan.com',
     bannerImage: 'https://images.unsplash.com/photo-1504609813442-a8924e83f76e?w=800&h=400&fit=crop',
     posterImage: 'https://images.unsplash.com/photo-1504609813442-a8924e83f76e?w=400&h=600&fit=crop',
     tags: ['Dance', 'Cultural', 'Traditional', 'Performance'],
@@ -97,7 +97,7 @@ const initialEvents = [
     prizeDetails: '1st: ₹5,000, 2nd: ₹3,000, 3rd: ₹2,000',
     coordinatorName: 'Dr. Amit Patel',
     coordinatorPhone: '9876543212',
-    coordinatorEmail: 'amit@techfest.com',
+    coordinatorEmail: 'amit@aavhaan.com',
     bannerImage: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=400&fit=crop',
     posterImage: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=600&fit=crop',
     tags: ['Robotics', 'Engineering', 'Automation', 'Competition'],
@@ -131,7 +131,7 @@ const initialEvents = [
     prizeDetails: '1st: ₹5,000, 2nd: ₹3,000, 3rd: ₹2,000',
     coordinatorName: 'Ms. Priya Singh',
     coordinatorPhone: '9876543213',
-    coordinatorEmail: 'priya@techfest.com',
+    coordinatorEmail: 'priya@aavhaan.com',
     bannerImage: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&h=400&fit=crop',
     posterImage: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&h=600&fit=crop',
     tags: ['Photography', 'Art', 'Creative', 'Visual'],
@@ -165,7 +165,7 @@ const initialEvents = [
     prizeDetails: '1st: ₹5,000, 2nd: ₹3,000, 3rd: ₹2,000',
     coordinatorName: 'Mr. Vikash Gupta',
     coordinatorPhone: '9876543214',
-    coordinatorEmail: 'vikash@techfest.com',
+    coordinatorEmail: 'vikash@aavhaan.com',
     bannerImage: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=400&fit=crop',
     posterImage: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=400&h=600&fit=crop',
     tags: ['Startup', 'Entrepreneurship', 'Business', 'Innovation'],
@@ -199,7 +199,7 @@ const initialEvents = [
     prizeDetails: '1st: ₹5,000, 2nd: ₹3,000, 3rd: ₹2,000',
     coordinatorName: 'Mr. Rohit Sharma',
     coordinatorPhone: '9876543215',
-    coordinatorEmail: 'rohit@techfest.com',
+    coordinatorEmail: 'rohit@aavhaan.com',
     bannerImage: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&h=400&fit=crop',
     posterImage: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=600&fit=crop',
     tags: ['Gaming', 'Esports', 'Competition', 'Technology'],
@@ -221,13 +221,13 @@ export const useEvents = () => {
 export const EventsProvider = ({ children }) => {
   const [events, setEvents] = useState(() => {
     // Load existing events from localStorage
-    const saved = localStorage.getItem('techfest-events');
+    const saved = localStorage.getItem('aavhaan-events');
     return saved ? JSON.parse(saved) : initialEvents;
   });
 
   // Save to localStorage whenever events change
   useEffect(() => {
-    localStorage.setItem('techfest-events', JSON.stringify(events));
+    localStorage.setItem('aavhaan-events', JSON.stringify(events));
   }, [events]);
 
   const addEvent = (eventData) => {
@@ -304,7 +304,7 @@ export const EventsProvider = ({ children }) => {
     };
   };
 
-  const value = {
+  const value = useMemo(() => ({
     events,
     addEvent,
     updateEvent,
@@ -315,7 +315,7 @@ export const EventsProvider = ({ children }) => {
     getEventsByDay,
     getFeaturedEvents,
     getEventStats
-  };
+  }), [events]);
 
   return (
     <EventsContext.Provider value={value}>
