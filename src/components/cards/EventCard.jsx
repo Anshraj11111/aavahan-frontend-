@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Users, MapPin, Trophy } from 'lucide-react';
+import { Calendar, Clock, Users, MapPin, Trophy, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cardHover } from '../../lib/animations';
 import GlassCard from '../common/GlassCard';
@@ -22,53 +22,95 @@ const EventCard = ({ event, featured = false }) => {
     endTime,
     venue,
     teamSize,
-    registrationFee,
-    prizePool,
-    description,
-    registrationCount = 0,
-    maxParticipants
+    entryFee,
+    prizeDetails,
+    shortDescription,
+    currentRegistrations = 0,
+    maxRegistrations,
+    bannerImage,
+    featured: isFeatured
   } = event;
 
   const categoryColors = {
-    'Technical': 'blue',
-    'Cultural': 'purple',
-    'Sports': 'cyan',
-    'Workshop': 'gold'
+    'technical': 'blue',
+    'cultural': 'purple',
+    'sports': 'cyan',
+    'workshop': 'gold'
   };
 
   const dayColors = {
-    'Day 1': 'blue',
-    'Day 2': 'cyan',
-    'Day 3': 'purple'
+    1: 'blue',
+    2: 'cyan', 
+    3: 'purple'
   };
+
+  // Calculate registration percentage
+  const registrationPercentage = maxRegistrations ? (currentRegistrations / maxRegistrations) * 100 : 0;
 
   return (
     <Link to={`/events/${_id}`}>
       <motion.div variants={cardHover} whileHover="hover">
         <GlassCard 
           padding={featured ? 'lg' : 'md'} 
-          glow={featured}
+          glow={featured || isFeatured}
           hover={false}
-          className="h-full group"
+          className="h-full group overflow-hidden"
         >
-          {/* Header */}
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex flex-wrap gap-2">
-              <GradientBadge variant={categoryColors[category] || 'blue'} size="sm">
-                {category}
-              </GradientBadge>
-              <GradientBadge variant={dayColors[day] || 'blue'} size="sm">
-                {day}
-              </GradientBadge>
-            </div>
-            
-            {prizePool && (
-              <div className="flex items-center gap-1 text-yellow-400">
-                <Trophy className="w-4 h-4" />
-                <span className="text-sm font-semibold">₹{prizePool.toLocaleString()}</span>
+          {/* Event Image */}
+          {bannerImage && (
+            <div className="relative mb-4 -mx-6 -mt-6 overflow-hidden">
+              <img 
+                src={bannerImage} 
+                alt={title}
+                className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-navy-900/80 via-transparent to-transparent" />
+              
+              {/* Featured Badge */}
+              {isFeatured && (
+                <div className="absolute top-3 right-3">
+                  <div className="flex items-center gap-1 px-2 py-1 bg-yellow-500/90 text-yellow-900 rounded-full text-xs font-bold">
+                    <Star className="w-3 h-3" />
+                    Featured
+                  </div>
+                </div>
+              )}
+              
+              {/* Category and Day Badges */}
+              <div className="absolute bottom-3 left-3 flex gap-2">
+                <GradientBadge variant={categoryColors[category] || 'blue'} size="sm">
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </GradientBadge>
+                <GradientBadge variant={dayColors[day] || 'blue'} size="sm">
+                  Day {day}
+                </GradientBadge>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Header - Only show badges if no image */}
+          {!bannerImage && (
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="flex flex-wrap gap-2">
+                <GradientBadge variant={categoryColors[category] || 'blue'} size="sm">
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </GradientBadge>
+                <GradientBadge variant={dayColors[day] || 'blue'} size="sm">
+                  Day {day}
+                </GradientBadge>
+              </div>
+              
+              {isFeatured && (
+                <div className="flex items-center gap-1 text-yellow-400">
+                  <Star className="w-4 h-4" />
+                  <span className="text-sm font-semibold">Featured</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Title */}
           <h3 className={`font-display font-bold gradient-text mb-3 group-hover:text-blue-300 transition-colors ${featured ? 'text-2xl' : 'text-xl'}`}>
@@ -76,9 +118,9 @@ const EventCard = ({ event, featured = false }) => {
           </h3>
 
           {/* Description */}
-          {description && (
+          {shortDescription && (
             <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-              {description}
+              {shortDescription}
             </p>
           )}
 
@@ -104,17 +146,36 @@ const EventCard = ({ event, featured = false }) => {
             )}
           </div>
 
+          {/* Registration Progress */}
+          {maxRegistrations && (
+            <div className="mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-gray-400">Registrations</span>
+                <span className="text-sm text-white font-medium">{currentRegistrations}/{maxRegistrations}</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    registrationPercentage >= 90 ? 'bg-red-500' :
+                    registrationPercentage >= 70 ? 'bg-yellow-500' : 'bg-green-500'
+                  }`}
+                  style={{ width: `${registrationPercentage}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Footer */}
           <div className="flex items-center justify-between pt-4 border-t border-white/10">
             <div className="text-sm">
-              <span className="text-gray-400">Fee: </span>
-              <span className="text-white font-semibold">₹{registrationFee}</span>
+              <span className="text-gray-400">Entry Fee: </span>
+              <span className="text-white font-semibold">₹{entryFee}</span>
             </div>
             
-            {maxParticipants && (
-              <div className="text-sm">
-                <span className="text-gray-400">{registrationCount}/{maxParticipants} </span>
-                <span className="text-gray-500">registered</span>
+            {prizeDetails && (
+              <div className="flex items-center gap-1 text-yellow-400">
+                <Trophy className="w-4 h-4" />
+                <span className="text-sm font-semibold">Prizes</span>
               </div>
             )}
           </div>

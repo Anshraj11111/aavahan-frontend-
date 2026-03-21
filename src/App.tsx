@@ -7,6 +7,10 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/NewFooter';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
+// Context Providers
+import { RegistrationProvider } from './contexts/RegistrationContext';
+import { EventsProvider } from './contexts/EventsContext';
+
 // Pages
 import HomePage from './pages/home/NewHomePage';
 import EventsPage from './pages/events/EventsPage';
@@ -43,67 +47,72 @@ const App = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <Router>
-          <div className="min-h-screen bg-navy-950">
-            {/* Main Content */}
-            <div className="relative z-10">
-              <Navbar />
+        <EventsProvider>
+          <RegistrationProvider>
+          <Router>
+            <div className="min-h-screen bg-navy-950">
+              <Routes>
+                {/* Admin Routes - No public navbar */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin/dashboard" element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+                
+                {/* Public Routes - With public navbar and footer */}
+                <Route path="/*" element={
+                  <div className="relative z-10">
+                    <Navbar />
+                    <main className="min-h-screen">
+                      <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/events" element={<EventsPage />} />
+                        <Route path="/events/:slug" element={<EventDetailPage />} />
+                        <Route path="/schedule" element={<SchedulePage />} />
+                        <Route path="/about" element={<AboutPage />} />
+                        <Route path="/contact" element={<ContactPage />} />
+                        <Route path="/registration/:eventId" element={<RegistrationPage />} />
+                        <Route path="/my-tickets" element={<MyTicketsPage />} />
+                        <Route path="/ticket-lookup" element={<TicketLookupPage />} />
+                        <Route path="*" element={<NotFoundPage />} />
+                      </Routes>
+                    </main>
+                    <Footer />
+                  </div>
+                } />
+              </Routes>
               
-              <main className="min-h-screen">
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/events" element={<EventsPage />} />
-                  <Route path="/events/:slug" element={<EventDetailPage />} />
-                  <Route path="/schedule" element={<SchedulePage />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/registration/:eventId" element={<RegistrationPage />} />
-                  <Route path="/my-tickets" element={<MyTicketsPage />} />
-                  <Route path="/ticket-lookup" element={<TicketLookupPage />} />
-                  
-                  {/* Admin Routes */}
-                  <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-                  <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/admin/dashboard" element={
-                    <ProtectedRoute>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </main>
-              
-              <Footer />
+              {/* Toast Notifications */}
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: 'rgba(15, 23, 42, 0.9)',
+                    color: '#fff',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  },
+                  success: {
+                    iconTheme: {
+                      primary: '#10B981',
+                      secondary: '#fff',
+                    },
+                  },
+                  error: {
+                    iconTheme: {
+                      primary: '#EF4444',
+                      secondary: '#fff',
+                    },
+                  },
+                }}
+              />
             </div>
-            
-            {/* Toast Notifications */}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: 'rgba(15, 23, 42, 0.9)',
-                  color: '#fff',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#10B981',
-                    secondary: '#fff',
-                  },
-                },
-                error: {
-                  iconTheme: {
-                    primary: '#EF4444',
-                    secondary: '#fff',
-                  },
-                },
-              }}
-            />
-          </div>
-        </Router>
+          </Router>
+        </RegistrationProvider>
+      </EventsProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

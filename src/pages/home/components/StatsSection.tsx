@@ -3,40 +3,41 @@ import { useQuery } from '@tanstack/react-query';
 import { Users, Calendar, Trophy, MapPin } from 'lucide-react';
 import { generalService } from '../../../services/general';
 import { formatNumber } from '../../../utils';
+import { useRegistrations } from '../../../contexts/RegistrationContext';
 
 const StatsSection: React.FC = () => {
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ['homepage-stats'],
-    queryFn: () => generalService.getHomepageStats(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  const { getRegistrationStats, registrations } = useRegistrations();
+  const registrationStats = getRegistrationStats();
+  
+  // Calculate unique colleges from registrations
+  const uniqueColleges = new Set(registrations.map((reg: any) => reg.instituteName)).size;
 
   const statsData = [
     {
       icon: Calendar,
       label: 'Total Events',
-      value: stats?.data?.totalEvents || 50,
+      value: 6,
       color: 'text-primary-400',
       bgColor: 'bg-primary-500/20',
     },
     {
       icon: Users,
       label: 'Registered Participants',
-      value: stats?.data?.totalRegistrations || 2500,
+      value: registrationStats.total,
       color: 'text-secondary-400',
       bgColor: 'bg-secondary-500/20',
     },
     {
       icon: Trophy,
       label: 'Prize Pool',
-      value: '₹5L+',
+      value: '₹60K+',
       color: 'text-accent-400',
       bgColor: 'bg-accent-500/20',
     },
     {
       icon: MapPin,
       label: 'Participating Colleges',
-      value: 100,
+      value: uniqueColleges,
       color: 'text-purple-400',
       bgColor: 'bg-purple-500/20',
     },
@@ -51,7 +52,7 @@ const StatsSection: React.FC = () => {
             Tech Fest 2026 by the Numbers
           </h2>
           <p className="text-white/70 text-lg max-w-2xl mx-auto">
-            Join thousands of students, innovators, and tech enthusiasts in the biggest 
+            Join hundreds of students, innovators, and tech enthusiasts in the biggest 
             technology festival of Central India.
           </p>
         </div>
@@ -71,11 +72,7 @@ const StatsSection: React.FC = () => {
                 </div>
                 
                 <div className="text-3xl lg:text-4xl font-bold text-white mb-2">
-                  {isLoading ? (
-                    <div className="animate-pulse bg-white/20 h-8 w-16 mx-auto rounded" />
-                  ) : (
-                    typeof stat.value === 'number' ? formatNumber(stat.value) : stat.value
-                  )}
+                  {typeof stat.value === 'number' ? formatNumber(stat.value) : stat.value}
                 </div>
                 
                 <p className="text-white/70 font-medium">{stat.label}</p>

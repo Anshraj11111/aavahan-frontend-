@@ -98,59 +98,10 @@ const EventDetailPage = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <div className="text-white text-center max-w-md mx-auto px-4">
-          <div className="glass p-8 rounded-2xl">
-            <h2 className="text-2xl font-bold text-red-400 mb-4">Unable to Load Event</h2>
-            <p className="text-white/80 mb-6">
-              {error?.message?.includes('404') 
-                ? 'This event was not found. It may have been removed or the URL is incorrect.'
-                : 'The backend server might not be running. Please check the development guide for setup instructions.'
-              }
-            </p>
-            <div className="space-y-3">
-              <button 
-                onClick={() => window.location.reload()}
-                className="btn-primary w-full"
-              >
-                Retry
-              </button>
-              <button 
-                onClick={() => navigate('/events')}
-                className="btn-secondary w-full"
-              >
-                Back to Events
-              </button>
-            </div>
-            {!error?.message?.includes('404') && (
-              <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                <p className="text-yellow-400 text-sm">
-                  <strong>Developer Note:</strong> Run <code>npm run dev</code> in the backend folder to start the API server.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!event) {
-    return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <div className="text-white text-center">
-          <p className="text-white/60 mb-4">Event not found</p>
-          <button 
-            onClick={() => navigate('/events')}
-            className="btn-primary"
-          >
-            Back to Events
-          </button>
-        </div>
-      </div>
-    );
+  if (error || !event) {
+    // Redirect to events page instead of showing error
+    navigate('/events');
+    return null;
   }
 
   const isRegistrationOpen = canRegister();

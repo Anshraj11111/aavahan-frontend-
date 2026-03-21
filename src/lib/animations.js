@@ -17,6 +17,19 @@ export const fadeUp = {
 };
 
 /**
+ * Fade in up animation - alias for fadeUp
+ * @type {import('framer-motion').Variants}
+ */
+export const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } 
+  }
+};
+
+/**
  * Simple fade in animation
  * @type {import('framer-motion').Variants}
  */
@@ -33,6 +46,19 @@ export const fadeIn = {
  * @type {import('framer-motion').Variants}
  */
 export const slideInLeft = {
+  hidden: { opacity: 0, x: -60 },
+  visible: { 
+    opacity: 1, 
+    x: 0, 
+    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } 
+  }
+};
+
+/**
+ * Slide left animation - alias for slideInLeft
+ * @type {import('framer-motion').Variants}
+ */
+export const slideLeft = {
   hidden: { opacity: 0, x: -60 },
   visible: { 
     opacity: 1, 
