@@ -14,13 +14,14 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 import RegistrationsList from '../../components/admin/RegistrationsList';
 import EventManagement from '../../components/admin/EventManagement';
 import AdminSettings from '../../components/admin/AdminSettings';
-import { useRegistrations } from '../../contexts/RegistrationContext';
+import { adminService } from '../../services/admin';
 import { STORAGE_KEYS } from '../../constants';
 
 const AdminDashboard = () => {
   const [adminUser, setAdminUser] = useState(null);
   const [activeView, setActiveView] = useState('dashboard');
-  const { getRegistrationStats, registrations, getRegistrationsByEvent } = useRegistrations();
+  const [registrations, setRegistrations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -58,6 +59,53 @@ const AdminDashboard = () => {
     }
   }, [navigate]);
 
+  // Fetch registrations from backend
+  useEffect(() => {
+    const fetchRegistrations = async () => {
+      try {
+        setLoading(true);
+        console.log('Dashboard: Fetching registrations from backend...');
+        const response = await adminService.getAllRegistrations();
+        console.log('Dashboard registrations full response:', response);
+        console.log('Dashboard response data:', response.data);
+        console.log('Dashboard registrations array:', response.data?.registrations);
+        
+        const regs = response.data?.registrations || [];
+        console.log('Dashboard setting registrations count:', regs.length);
+        
+        // If backend returns empty, try localStorage as fallback
+        if (regs.length === 0) {
+          console.log('Dashboard: Backend returned 0 registrations, checking localStorage...');
+          const localData = localStorage.getItem('aavhaan-registrations');
+          if (localData) {
+            const localRegs = JSON.parse(localData);
+            console.log('Dashboard: Found registrations in localStorage:', localRegs.length);
+            setRegistrations(localRegs);
+          } else {
+            setRegistrations([]);
+          }
+        } else {
+          setRegistrations(regs);
+        }
+      } catch (error) {
+        console.error('Dashboard failed to fetch registrations:', error);
+        console.error('Dashboard error details:', JSON.stringify(error, null, 2));
+        
+        // Fallback to localStorage on error
+        const localData = localStorage.getItem('aavhaan-registrations');
+        if (localData) {
+          const localRegs = JSON.parse(localData);
+          console.log('Dashboard: Using localStorage fallback:', localRegs.length);
+          setRegistrations(localRegs);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRegistrations();
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
@@ -65,8 +113,17 @@ const AdminDashboard = () => {
     navigate('/admin/login');
   };
 
-  // Get real-time stats from context
-  const registrationStats = getRegistrationStats();
+  // Calculate stats from backend data
+  const registrationStats = {
+    total: registrations.length,
+    approved: registrations.filter(r => r.registrationStatus === 'approved').length,
+    pending: registrations.filter(r => r.registrationStatus === 'pending').length,
+    totalRevenue: registrations.reduce((sum, r) => sum + (r.amountPaid || 0), 0)
+  };
+
+  const getRegistrationsByEvent = (eventTitle) => {
+    return registrations.filter(reg => reg.eventTitle === eventTitle);
+  };
 
   const stats = [
     {

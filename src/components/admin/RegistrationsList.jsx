@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { 
@@ -12,17 +12,70 @@ import {
   Mail,
   Phone,
   MapPin,
-  Calendar
+  Calendar,
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
-import { useRegistrations } from '../../contexts/RegistrationContext';
+import { adminService } from '../../services/admin';
 
 const RegistrationsList = () => {
-  const { registrations: allRegistrations, updateRegistration } = useRegistrations();
+  const [registrations, setRegistrations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRegistration, setSelectedRegistration] = useState(null);
+  const [viewingScreenshot, setViewingScreenshot] = useState(null);
 
-  const registrations = allRegistrations || [];
+  // Fetch registrations from backend
+  useEffect(() => {
+    const fetchRegistrations = async () => {
+      try {
+        setLoading(true);
+        console.log('Fetching registrations from backend...');
+        const response = await adminService.getAllRegistrations();
+        console.log('Admin registrations full response:', response);
+        console.log('Response data:', response.data);
+        console.log('Registrations array:', response.data?.registrations);
+        
+        const regs = response.data?.registrations || [];
+        console.log('Setting registrations count:', regs.length);
+        
+        // If backend returns empty, try localStorage as fallback
+        if (regs.length === 0) {
+          console.log('Backend returned 0 registrations, checking localStorage...');
+          const localData = localStorage.getItem('aavhaan-registrations');
+          if (localData) {
+            const localRegs = JSON.parse(localData);
+            console.log('Found registrations in localStorage:', localRegs.length);
+            setRegistrations(localRegs);
+            toast.error('Showing localStorage data. Backend returned empty. Check if registrations are in MongoDB Atlas.');
+          } else {
+            setRegistrations([]);
+          }
+        } else {
+          setRegistrations(regs);
+        }
+      } catch (error) {
+        console.error('Failed to fetch registrations:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        
+        // Fallback to localStorage on error
+        const localData = localStorage.getItem('aavhaan-registrations');
+        if (localData) {
+          const localRegs = JSON.parse(localData);
+          console.log('Using localStorage fallback:', localRegs.length);
+          setRegistrations(localRegs);
+          toast.error('Failed to load from backend. Showing localStorage data.');
+        } else {
+          toast.error('Failed to load registrations from backend');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRegistrations();
+  }, []);
 
   const filteredRegistrations = registrations.filter(reg => {
     const matchesSearch = reg.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -54,35 +107,58 @@ const RegistrationsList = () => {
     }
   };
 
-  const handleApproveRegistration = (registrationId) => {
-    updateRegistration(registrationId, {
-      registrationStatus: 'approved',
-      paymentStatus: 'paid',
-      approvedAt: new Date().toISOString()
-    });
-    toast.success('Registration approved successfully!');
-    setSelectedRegistration(null);
+  const handleApproveRegistration = async (registrationId) => {
+    try {
+      await adminService.approveRegistration(registrationId);
+      // Refresh the list
+      const response = await adminService.getAllRegistrations();
+      setRegistrations(response.data?.registrations || []);
+      toast.success('Registration approved successfully!');
+      setSelectedRegistration(null);
+    } catch (error) {
+      console.error('Failed to approve registration:', error);
+      toast.error('Failed to approve registration');
+    }
   };
 
-  const handleVerifyPayment = (registrationId) => {
-    updateRegistration(registrationId, {
-      paymentStatus: 'paid',
-      verifiedAt: new Date().toISOString()
-    });
-    toast.success('Payment verified successfully!');
+  const handleVerifyPayment = async (registrationId) => {
+    try {
+      await adminService.editRegistration(registrationId, {
+        paymentStatus: 'paid',
+        verifiedAt: new Date().toISOString()
+      });
+      // Refresh the list
+      const response = await adminService.getAllRegistrations();
+      setRegistrations(response.data?.registrations || []);
+      toast.success('Payment verified successfully!');
+    } catch (error) {
+      console.error('Failed to verify payment:', error);
+      toast.error('Failed to verify payment');
+    }
   };
 
-  const handleRejectRegistration = (registrationId) => {
-    updateRegistration(registrationId, {
-      registrationStatus: 'rejected',
-      paymentStatus: 'failed'
-    });
-    toast.success('Registration rejected');
-    setSelectedRegistration(null);
+  const handleRejectRegistration = async (registrationId) => {
+    try {
+      await adminService.rejectRegistration(registrationId);
+      // Refresh the list
+      const response = await adminService.getAllRegistrations();
+      setRegistrations(response.data?.registrations || []);
+      toast.success('Registration rejected');
+      setSelectedRegistration(null);
+    } catch (error) {
+      console.error('Failed to reject registration:', error);
+      toast.error('Failed to reject registration');
+    }
   };
 
   return (
     <div className="space-y-6">
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        <>
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -238,8 +314,14 @@ const RegistrationsList = () => {
                       ) : (
                         <p className="text-gray-500 text-sm">No transaction ID</p>
                       )}
-                      {registration.paymentScreenshot && (
-                        <p className="text-blue-400 text-xs mt-1">Screenshot uploaded</p>
+                      {registration.paymentScreenshotUrl && (
+                        <button
+                          onClick={() => setViewingScreenshot(registration.paymentScreenshotUrl)}
+                          className="flex items-center gap-1 mt-1 text-blue-400 hover:text-blue-300 text-xs transition-colors"
+                        >
+                          <ImageIcon size={12} />
+                          View Screenshot
+                        </button>
                       )}
                     </div>
                   </td>
@@ -402,8 +484,21 @@ const RegistrationsList = () => {
                   
                   {selectedRegistration.paymentScreenshotUrl && (
                     <div className="mb-4">
-                      <p className="text-gray-400 text-sm">Payment Screenshot</p>
-                      <p className="text-green-400 text-sm">✓ Screenshot uploaded</p>
+                      <p className="text-gray-400 text-sm mb-2">Payment Screenshot</p>
+                      <div 
+                        onClick={() => setViewingScreenshot(selectedRegistration.paymentScreenshotUrl)}
+                        className="relative w-full max-w-xs cursor-pointer group"
+                      >
+                        <img 
+                          src={selectedRegistration.paymentScreenshotUrl} 
+                          alt="Payment Screenshot"
+                          className="w-full h-auto rounded-lg border border-gray-600 group-hover:border-blue-500 transition-colors"
+                        />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                          <Eye className="w-8 h-8 text-white" />
+                        </div>
+                      </div>
+                      <p className="text-gray-500 text-xs mt-1">Click to view full size</p>
                     </div>
                   )}
                   
@@ -444,6 +539,36 @@ const RegistrationsList = () => {
             </div>
           </motion.div>
         </div>
+      )}
+
+      {/* Screenshot Viewer Modal */}
+      {viewingScreenshot && (
+        <div 
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+          onClick={() => setViewingScreenshot(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative max-w-4xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setViewingScreenshot(null)}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors flex items-center gap-2"
+            >
+              <X size={24} />
+              <span>Close</span>
+            </button>
+            <img 
+              src={viewingScreenshot} 
+              alt="Payment Screenshot Full Size"
+              className="w-full h-auto rounded-lg shadow-2xl"
+            />
+          </motion.div>
+        </div>
+      )}
+        </>
       )}
     </div>
   );
