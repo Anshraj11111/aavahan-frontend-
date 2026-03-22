@@ -4,8 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { paymentService } from '../../services/payment';
 import { registrationsService } from '../../services/registrations';
+import { useEvents } from '../../contexts/EventsContext';
 
 const RegistrationModal = ({ isOpen, onClose, event }) => {
+  const { refreshEvents } = useEvents();
   const modalContentRef = useRef(null);
   const [qrLoaded, setQrLoaded] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState(null);
@@ -297,9 +299,21 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
       formDataToSend.append('instituteName', formData.teamLeader.college);
       formDataToSend.append('department', formData.teamLeader.branch);
       formDataToSend.append('yearOrSemester', formData.teamLeader.semester);
-      formDataToSend.append('city', 'Not specified');
-      formDataToSend.append('gender', 'Not specified');
       formDataToSend.append('eventId', event._id);
+      
+      // Log what we're sending
+      console.log('Submitting registration with data:', {
+        fullName: formData.teamLeader.fullName,
+        email: formData.teamLeader.email,
+        phone: formData.teamLeader.phone,
+        instituteName: formData.teamLeader.college,
+        department: formData.teamLeader.branch,
+        yearOrSemester: formData.teamLeader.semester,
+        eventId: event._id,
+        eventIdType: typeof event._id,
+        isTeamEvent: event?.participationType === 'team',
+        entryFee: event?.entryFee
+      });
       
       // Team info (if team event)
       if (event?.participationType === 'team') {
@@ -307,14 +321,15 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         
         // Add team members (only non-empty ones)
         const validMembers = formData.teamMembers.filter(member => member.fullName.trim() !== '');
-        formDataToSend.append('teamMembers', JSON.stringify(validMembers.map(member => ({
-          fullName: member.fullName,
-          email: member.email,
-          phone: member.phone,
-          college: member.college || formData.teamLeader.college,
-          branch: member.branch || formData.teamLeader.branch,
-          semester: member.semester || formData.teamLeader.semester
-        }))));
+        const teamMembersData = validMembers.map(member => ({
+          name: member.fullName, // Backend expects 'name', not 'fullName'
+          email: member.email || '',
+          phone: member.phone || '',
+          college: member.college || formData.teamLeader.college // Use team leader's college as fallback
+        }));
+        
+        console.log('Team members being sent:', teamMembersData);
+        formDataToSend.append('teamMembers', JSON.stringify(teamMembersData));
       }
       
       // Payment info (only for paid events)
@@ -333,6 +348,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         
         formDataToSend.append('transactionId', formData.transactionId.trim());
         formDataToSend.append('screenshot', formData.paymentScreenshot);
+        console.log('Payment info added - Transaction ID:', formData.transactionId.trim());
       }
       
       // Submit to backend API
@@ -343,6 +359,10 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
           duration: 5000,
           icon: '✅'
         });
+        
+        // Refresh events to update currentRegistrations count
+        await refreshEvents();
+        
         onClose();
       } else {
         // Backend returned error in response
@@ -355,7 +375,19 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
       console.error('Registration error:', error);
       
       // Show specific error message from backend
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to submit registration. Please try again.';
+      let errorMessage = 'Failed to submit registration. Please try again.';
+      
+      // The api service transforms errors, so check the error object directly
+      if (error?.errors && Array.isArray(error.errors)) {
+        // Show validation errors
+        console.error('Validation errors:', error.errors);
+        errorMessage = error.errors.map(e => `${e.field}: ${e.message}`).join(', ');
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.error) {
+        errorMessage = error.error;
+      }
+      
       toast.error(errorMessage, { duration: 6000 });
       setIsSubmitting(false);
       
@@ -365,7 +397,19 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   };
 
   const isTeamEvent = event?.participationType === 'team';
-  const maxTeamSize = event?.maxTeamSize || 4;
+  const maxTeamSize = event?.maxTeamSize && event.maxTeamSize > 0 ? event.maxTeamSize : 4;
+  
+  // Debug log
+  console.log('Event data for registration modal:', { 
+    eventId: event?._id,
+    title: event?.title,
+    participationType: event?.participationType, 
+    maxTeamSize: event?.maxTeamSize,
+    minTeamSize: event?.minTeamSize,
+    calculatedMaxTeamSize: maxTeamSize,
+    isTeamEvent,
+    teamMembersToShow: maxTeamSize - 1
+  });
 
   return (
     <AnimatePresence mode="wait">
@@ -573,7 +617,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                           Member {index + 1} (Optional)
                         </h5>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <input
                             type="text"
                             name="fullName"
@@ -597,6 +641,14 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                             onChange={(e) => handleInputChange(e, 'teamMembers', index)}
                             className="px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
                             placeholder="Phone"
+                          />
+                          <input
+                            type="text"
+                            name="college"
+                            value={member.college}
+                            onChange={(e) => handleInputChange(e, 'teamMembers', index)}
+                            className="px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
+                            placeholder="College Name"
                           />
                         </div>
                       </div>

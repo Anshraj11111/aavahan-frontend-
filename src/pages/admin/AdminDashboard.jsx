@@ -16,6 +16,7 @@ import EventManagement from '../../components/admin/EventManagement';
 import AdminSettings from '../../components/admin/AdminSettings';
 import { adminService } from '../../services/admin';
 import { STORAGE_KEYS } from '../../constants';
+import { useEvents } from '../../contexts/EventsContext';
 
 const AdminDashboard = () => {
   const [adminUser, setAdminUser] = useState(null);
@@ -23,6 +24,7 @@ const AdminDashboard = () => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { events } = useEvents(); // Get events from EventsContext
 
   useEffect(() => {
     console.log('AdminDashboard: Checking authentication...');
@@ -135,7 +137,7 @@ const AdminDashboard = () => {
     },
     {
       title: 'Active Events',
-      value: '6',
+      value: events.length.toString(), // Dynamic from EventsContext
       change: '+2',
       icon: Calendar,
       color: 'from-purple-500 to-pink-500'
@@ -171,14 +173,17 @@ const AdminDashboard = () => {
         { id: 1, action: 'No recent activities', user: 'System', event: 'Welcome to Aavhaan 2026', time: 'Just now', amount: '₹0' }
       ];
 
-  const eventRegistrations = [
-    { event: 'AI & ML Hackathon', registered: getRegistrationsByEvent('AI & Machine Learning Hackathon').length, total: 50, percentage: Math.round((getRegistrationsByEvent('AI & Machine Learning Hackathon').length / 50) * 100) },
-    { event: 'Cultural Dance Competition', registered: getRegistrationsByEvent('Cultural Dance Competition').length, total: 30, percentage: Math.round((getRegistrationsByEvent('Cultural Dance Competition').length / 30) * 100) },
-    { event: 'Photography Contest', registered: getRegistrationsByEvent('Photography Contest').length, total: 100, percentage: Math.round((getRegistrationsByEvent('Photography Contest').length / 100) * 100) },
-    { event: 'Gaming Tournament', registered: getRegistrationsByEvent('Gaming Tournament').length, total: 80, percentage: Math.round((getRegistrationsByEvent('Gaming Tournament').length / 80) * 100) },
-    { event: 'Robotics Championship', registered: getRegistrationsByEvent('Robotics Championship').length, total: 25, percentage: Math.round((getRegistrationsByEvent('Robotics Championship').length / 25) * 100) },
-    { event: 'Startup Pitch Competition', registered: getRegistrationsByEvent('Startup Pitch Competition').length, total: 20, percentage: Math.round((getRegistrationsByEvent('Startup Pitch Competition').length / 20) * 100) },
-  ];
+  // Generate event registrations dynamically from real events
+  const eventRegistrations = events.slice(0, 6).map(event => {
+    const registered = getRegistrationsByEvent(event.title).length;
+    const total = event.maxRegistrations || 50;
+    return {
+      event: event.title,
+      registered,
+      total,
+      percentage: total > 0 ? Math.round((registered / total) * 100) : 0
+    };
+  });
 
   if (!adminUser) {
     return (
@@ -283,34 +288,40 @@ const AdminDashboard = () => {
               >
                 <h2 className="text-xl font-bold text-white mb-6">Event Registration Status</h2>
                 <div className="space-y-4">
-                  {eventRegistrations.map((event, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white text-sm font-medium truncate">{event.event}</span>
-                        <span className="text-gray-400 text-xs">{event.registered}/{event.total}</span>
-                      </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            event.percentage >= 95 ? 'bg-red-500' :
-                            event.percentage >= 80 ? 'bg-yellow-500' : 'bg-green-500'
-                          }`}
-                          style={{ width: `${event.percentage}%` }}
-                        />
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className={`text-xs font-medium ${
-                          event.percentage >= 95 ? 'text-red-400' :
-                          event.percentage >= 80 ? 'text-yellow-400' : 'text-green-400'
-                        }`}>
-                          {event.percentage}% filled
-                        </span>
-                        <span className="text-gray-500 text-xs">
-                          {event.total - event.registered} spots left
-                        </span>
-                      </div>
+                  {eventRegistrations.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400">
+                      No events added yet. Click "Manage Events" to add your first event.
                     </div>
-                  ))}
+                  ) : (
+                    eventRegistrations.map((event, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-white text-sm font-medium truncate">{event.event}</span>
+                          <span className="text-gray-400 text-xs">{event.registered}/{event.total}</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              event.percentage >= 95 ? 'bg-red-500' :
+                              event.percentage >= 80 ? 'bg-yellow-500' : 'bg-green-500'
+                            }`}
+                            style={{ width: `${event.percentage}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className={`text-xs font-medium ${
+                            event.percentage >= 95 ? 'text-red-400' :
+                            event.percentage >= 80 ? 'text-yellow-400' : 'text-green-400'
+                          }`}>
+                            {event.percentage}% filled
+                          </span>
+                          <span className="text-gray-500 text-xs">
+                            {event.total - event.registered} spots left
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </motion.div>
 
@@ -379,35 +390,23 @@ const AdminDashboard = () => {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-white">Prize Pool Breakdown</h3>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-                      <span className="text-gray-300">AI & ML Hackathon</span>
-                      <span className="text-green-400 font-medium">₹10,000</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-                      <span className="text-gray-300">Robotics Championship</span>
-                      <span className="text-green-400 font-medium">₹10,000</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-                      <span className="text-gray-300">Gaming Tournament</span>
-                      <span className="text-green-400 font-medium">₹10,000</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-                      <span className="text-gray-300">Photography Contest</span>
-                      <span className="text-green-400 font-medium">₹10,000</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-                      <span className="text-gray-300">Cultural Dance</span>
-                      <span className="text-green-400 font-medium">₹10,000</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-                      <span className="text-gray-300">Startup Pitch</span>
-                      <span className="text-green-400 font-medium">₹10,000</span>
-                    </div>
+                    {events.length === 0 ? (
+                      <div className="text-center py-8 text-gray-400">
+                        No events added yet
+                      </div>
+                    ) : (
+                      events.slice(0, 6).map((event, index) => (
+                        <div key={index} className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
+                          <span className="text-gray-300 truncate">{event.title}</span>
+                          <span className="text-green-400 font-medium">{event.prizeDetails || '₹10,000'}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                   <div className="border-t border-gray-700 pt-3">
                     <div className="flex justify-between items-center text-lg font-bold">
-                      <span className="text-white">Total Prize Pool</span>
-                      <span className="text-green-400">₹60,000</span>
+                      <span className="text-white">Total Events</span>
+                      <span className="text-green-400">{events.length}</span>
                     </div>
                   </div>
                 </div>
