@@ -23,7 +23,7 @@ const ProtectedRoute = ({ children }) => {
     console.log('Is authenticated:', isAuth);
     
     setIsAuthenticated(isAuth);
-  }, [location.pathname]);
+  }, []); // Only check once on mount, not on every location change
 
   if (isAuthenticated === null) {
     // Loading state

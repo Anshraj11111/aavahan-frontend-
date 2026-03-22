@@ -59,7 +59,7 @@ const AdminDashboard = () => {
       // Set a default admin user if not found
       setAdminUser({ email: 'Admin' });
     }
-  }, [navigate]);
+  }, []); // Empty dependency array - only run once on mount
 
   // Fetch registrations from backend
   useEffect(() => {

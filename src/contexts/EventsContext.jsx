@@ -55,7 +55,8 @@ export const EventsProvider = ({ children }) => {
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only fetch once on mount
 
   const addEvent = async (eventData) => {
     try {
