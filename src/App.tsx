@@ -11,7 +11,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { RegistrationProvider } from './contexts/RegistrationContext';
 import { EventsProvider } from './contexts/EventsContext';
 
-// Pages
+// Pages - Using Premium Landing Page with Full Animations
 import HomePage from './pages/home/PremiumHomePage';
 import EventsPage from './pages/events/EventsPage';
 import EventDetailPage from './pages/events/EventDetailPage';
