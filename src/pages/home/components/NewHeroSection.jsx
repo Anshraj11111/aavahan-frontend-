@@ -14,6 +14,7 @@ const HeroScene = lazy(() => import('../../../components/three/HeroScene'));
  * 100vh hero with Three.js background, animated title, countdown, and CTAs
  */
 const HeroSection = () => {
+  const [isMobile, setIsMobile] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -21,6 +22,20 @@ const HeroSection = () => {
     seconds: 0,
     isExpired: false
   });
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+        navigator.userAgent.toLowerCase()
+      ) || window.innerWidth < 768;
+    };
+    setIsMobile(checkMobile());
+    
+    const handleResize = () => setIsMobile(checkMobile());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Countdown timer
   useEffect(() => {
@@ -58,10 +73,21 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Three.js Background */}
-      <Suspense fallback={null}>
-        <HeroScene />
-      </Suspense>
+      {/* Three.js Background - Only on Desktop */}
+      {!isMobile && (
+        <Suspense fallback={null}>
+          <HeroScene />
+        </Suspense>
+      )}
+      
+      {/* Simple gradient background for mobile */}
+      {isMobile && (
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900" />
+          <div className="absolute top-20 left-10 w-20 h-20 bg-primary-500/20 rounded-full blur-xl animate-pulse" />
+          <div className="absolute bottom-20 right-20 w-32 h-32 bg-purple-500/20 rounded-full blur-xl animate-pulse" />
+        </div>
+      )}
       
       {/* Gradient overlay for text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-navy-950/50 via-navy-950/30 to-navy-950" />

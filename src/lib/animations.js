@@ -1,18 +1,34 @@
 /**
  * Framer Motion Animation Variants Library
  * Centralized animation definitions for consistent motion design
+ * Includes mobile-optimized variants with reduced motion
  */
+
+// Detect if user prefers reduced motion or is on mobile
+const isMobile = () => {
+  if (typeof window === 'undefined') return false;
+  return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+    navigator.userAgent.toLowerCase()
+  ) || window.innerWidth < 768;
+};
+
+const prefersReducedMotion = () => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+
+const shouldReduceMotion = () => isMobile() || prefersReducedMotion();
 
 /**
  * Fade up animation - for sections and content blocks
  * @type {import('framer-motion').Variants}
  */
 export const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: shouldReduceMotion() ? 10 : 40 },
   visible: { 
     opacity: 1, 
     y: 0, 
-    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } 
+    transition: { duration: shouldReduceMotion() ? 0.3 : 0.6, ease: [0.16, 1, 0.3, 1] } 
   }
 };
 
@@ -21,11 +37,11 @@ export const fadeUp = {
  * @type {import('framer-motion').Variants}
  */
 export const fadeInUp = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: shouldReduceMotion() ? 10 : 40 },
   visible: { 
     opacity: 1, 
     y: 0, 
-    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } 
+    transition: { duration: shouldReduceMotion() ? 0.3 : 0.6, ease: [0.16, 1, 0.3, 1] } 
   }
 };
 
@@ -46,11 +62,11 @@ export const fadeIn = {
  * @type {import('framer-motion').Variants}
  */
 export const slideInLeft = {
-  hidden: { opacity: 0, x: -60 },
+  hidden: { opacity: 0, x: shouldReduceMotion() ? -20 : -60 },
   visible: { 
     opacity: 1, 
     x: 0, 
-    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } 
+    transition: { duration: shouldReduceMotion() ? 0.3 : 0.6, ease: [0.16, 1, 0.3, 1] } 
   }
 };
 
@@ -59,11 +75,11 @@ export const slideInLeft = {
  * @type {import('framer-motion').Variants}
  */
 export const slideLeft = {
-  hidden: { opacity: 0, x: -60 },
+  hidden: { opacity: 0, x: shouldReduceMotion() ? -20 : -60 },
   visible: { 
     opacity: 1, 
     x: 0, 
-    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } 
+    transition: { duration: shouldReduceMotion() ? 0.3 : 0.6, ease: [0.16, 1, 0.3, 1] } 
   }
 };
 
@@ -72,11 +88,11 @@ export const slideLeft = {
  * @type {import('framer-motion').Variants}
  */
 export const slideInRight = {
-  hidden: { opacity: 0, x: 60 },
+  hidden: { opacity: 0, x: shouldReduceMotion() ? 20 : 60 },
   visible: { 
     opacity: 1, 
     x: 0, 
-    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } 
+    transition: { duration: shouldReduceMotion() ? 0.3 : 0.6, ease: [0.16, 1, 0.3, 1] } 
   }
 };
 
@@ -89,8 +105,8 @@ export const staggerContainer = {
   visible: {
     opacity: 1,
     transition: { 
-      staggerChildren: 0.1, 
-      delayChildren: 0.1 
+      staggerChildren: shouldReduceMotion() ? 0.05 : 0.1, 
+      delayChildren: shouldReduceMotion() ? 0.05 : 0.1 
     }
   }
 };
@@ -100,11 +116,11 @@ export const staggerContainer = {
  * @type {import('framer-motion').Variants}
  */
 export const scaleUp = {
-  hidden: { opacity: 0, scale: 0.9 },
+  hidden: { opacity: 0, scale: shouldReduceMotion() ? 0.95 : 0.9 },
   visible: { 
     opacity: 1, 
     scale: 1, 
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } 
+    transition: { duration: shouldReduceMotion() ? 0.2 : 0.4, ease: [0.16, 1, 0.3, 1] } 
   }
 };
 
@@ -118,7 +134,7 @@ export const cardHover = {
     boxShadow: '0 4px 24px rgba(0,0,0,0.4)' 
   },
   hover: { 
-    y: -6, 
+    y: shouldReduceMotion() ? -2 : -6, 
     boxShadow: '0 20px 60px rgba(59,130,246,0.3)', 
     transition: { duration: 0.3, ease: 'easeOut' } 
   }
@@ -140,15 +156,15 @@ export const buttonTap = {
 export const heroWord = {
   hidden: { 
     opacity: 0, 
-    y: 50, 
-    filter: 'blur(8px)' 
+    y: shouldReduceMotion() ? 10 : 50, 
+    filter: shouldReduceMotion() ? 'blur(0px)' : 'blur(8px)' 
   },
   visible: { 
     opacity: 1, 
     y: 0, 
     filter: 'blur(0px)',
     transition: { 
-      duration: 0.7, 
+      duration: shouldReduceMotion() ? 0.3 : 0.7, 
       ease: [0.16, 1, 0.3, 1] 
     }
   }
