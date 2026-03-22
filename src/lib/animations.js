@@ -5,6 +5,9 @@
  */
 
 // Detect if user prefers reduced motion or is on mobile
+// Cache the result to prevent repeated checks
+let cachedReduceMotion = null;
+
 const isMobile = () => {
   if (typeof window === 'undefined') return false;
   return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
@@ -17,7 +20,12 @@ const prefersReducedMotion = () => {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 };
 
-const shouldReduceMotion = () => isMobile() || prefersReducedMotion();
+const shouldReduceMotion = () => {
+  if (cachedReduceMotion === null) {
+    cachedReduceMotion = isMobile() || prefersReducedMotion();
+  }
+  return cachedReduceMotion;
+};
 
 /**
  * Fade up animation - for sections and content blocks

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { eventsService } from '../services/events';
 import { adminService } from '../services/admin';
 
@@ -18,7 +18,7 @@ export const EventsProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   // Fetch events from backend MongoDB on mount
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -51,14 +51,13 @@ export const EventsProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Empty deps - function doesn't depend on any external values
 
   useEffect(() => {
     fetchEvents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only fetch once on mount
+  }, [fetchEvents]); // Now safe to include fetchEvents since it's memoized
 
-  const addEvent = async (eventData) => {
+  const addEvent = useCallback(async (eventData) => {
     try {
       // Call backend API to create event in MongoDB
       const response = await adminService.createEvent(eventData);
@@ -72,9 +71,9 @@ export const EventsProvider = ({ children }) => {
       console.error('Failed to create event:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const updateEvent = async (id, updates) => {
+  const updateEvent = useCallback(async (id, updates) => {
     try {
       // Call backend API to update event in MongoDB
       const response = await adminService.updateEvent(id, updates);
@@ -91,9 +90,9 @@ export const EventsProvider = ({ children }) => {
       console.error('Failed to update event:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const deleteEvent = async (id) => {
+  const deleteEvent = useCallback(async (id) => {
     try {
       // Call backend API to delete event from MongoDB
       await adminService.deleteEvent(id);
@@ -104,29 +103,29 @@ export const EventsProvider = ({ children }) => {
       console.error('Failed to delete event:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const getEventById = (id) => {
+  const getEventById = useCallback((id) => {
     return events.find(event => event._id === id);
-  };
+  }, [events]);
 
-  const getEventBySlug = (slug) => {
+  const getEventBySlug = useCallback((slug) => {
     return events.find(event => event.slug === slug);
-  };
+  }, [events]);
 
-  const getEventsByCategory = (category) => {
+  const getEventsByCategory = useCallback((category) => {
     return events.filter(event => event.category === category);
-  };
+  }, [events]);
 
-  const getEventsByDay = (day) => {
+  const getEventsByDay = useCallback((day) => {
     return events.filter(event => event.day === day);
-  };
+  }, [events]);
 
-  const getFeaturedEvents = () => {
+  const getFeaturedEvents = useCallback(() => {
     return events.filter(event => event.featured);
-  };
+  }, [events]);
 
-  const getEventStats = () => {
+  const getEventStats = useCallback(() => {
     const total = events.length;
     const technical = events.filter(e => e.category === 'technical').length;
     const cultural = events.filter(e => e.category === 'cultural').length;
@@ -140,7 +139,7 @@ export const EventsProvider = ({ children }) => {
       featured,
       totalPrizePool
     };
-  };
+  }, [events]);
 
   const value = useMemo(() => ({
     events,
@@ -156,7 +155,7 @@ export const EventsProvider = ({ children }) => {
     getEventsByDay,
     getFeaturedEvents,
     getEventStats
-  }), [events, loading, error]);
+  }), [events, loading, error, addEvent, updateEvent, deleteEvent, fetchEvents, getEventById, getEventBySlug, getEventsByCategory, getEventsByDay, getFeaturedEvents, getEventStats]);
 
   return (
     <EventsContext.Provider value={value}>
