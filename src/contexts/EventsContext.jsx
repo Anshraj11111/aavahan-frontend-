@@ -23,8 +23,12 @@ export const EventsProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
+      // Don't fetch admin events if on login page
+      const currentPath = window.location.pathname;
+      const isOnLoginPage = currentPath.includes('/admin/login');
+      
       // Check if user is admin - use admin API to get ALL events (including drafts)
-      const isAdmin = localStorage.getItem('adminToken') || localStorage.getItem('AUTH_TOKEN');
+      const isAdmin = (localStorage.getItem('adminToken') || localStorage.getItem('AUTH_TOKEN')) && !isOnLoginPage;
       
       let response;
       if (isAdmin) {

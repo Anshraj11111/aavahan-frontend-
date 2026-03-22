@@ -55,9 +55,20 @@ api.interceptors.response.use(
     
     // Handle authentication errors
     if (status === 401) {
-      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-      window.location.href = '/admin/login';
+      // Only redirect if not already on login page
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/admin/login')) {
+        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+        
+        // Only redirect to login if on admin routes
+        if (currentPath.includes('/admin')) {
+          window.location.href = '/admin/login';
+        }
+      }
+      
       return Promise.reject({
         success: false,
         error: ERROR_MESSAGES.UNAUTHORIZED,
