@@ -30,7 +30,11 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const totalSteps = event?.entryFee > 0 ? 3 : 2;
+  
+  // Calculate total steps based on entry fee
+  const totalSteps = useMemo(() => {
+    return event?.entryFee > 0 ? 3 : 2; // 3 steps for paid, 2 for free
+  }, [event?.entryFee]);
 
   // Scroll to top when modal opens
   useEffect(() => {
@@ -185,6 +189,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
 
   const handleNext = async () => {
     // If moving from payment step (step 2) to confirmation (step 3), verify payment first
+    // Only for paid events
     if (currentStep === 2 && event?.entryFee > 0) {
       // Validate transaction ID and screenshot are present
       if (!formData.transactionId || !formData.transactionId.trim()) {
@@ -256,7 +261,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         return;
       }
     } else {
-      // For other steps, just move forward
+      // For free events or step 1, just move forward
       if (currentStep < totalSteps) {
         setCurrentStep(currentStep + 1);
         
@@ -312,7 +317,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         }))));
       }
       
-      // Payment info (if paid event)
+      // Payment info (only for paid events)
       if (event?.entryFee > 0) {
         if (!formData.transactionId || !formData.transactionId.trim()) {
           toast.error('Transaction ID is required for paid events');
