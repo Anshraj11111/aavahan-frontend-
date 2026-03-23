@@ -40,17 +40,28 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
     return event?.entryFee > 0 ? 3 : 2; // 3 steps for paid, 2 for free
   }, [event?.entryFee]);
 
-  // Scroll to top when modal opens
+  // Scroll to top when modal opens and lock body scroll
   useEffect(() => {
     if (isOpen) {
-      // Immediately scroll page to top
+      // IMMEDIATELY scroll to top - no smooth behavior to ensure instant positioning
       window.scrollTo({ top: 0, behavior: 'instant' });
       
-      // Scroll modal content to top
+      // Lock body scroll after scrolling
+      document.body.style.overflow = 'hidden';
+      
+      // Reset modal content scroll position
       if (modalContentRef.current) {
         modalContentRef.current.scrollTop = 0;
       }
+    } else {
+      // Unlock body scroll when modal closes
+      document.body.style.overflow = 'unset';
     }
+    
+    // Cleanup: unlock scroll when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isOpen]);
 
   // Fetch payment config from backend
@@ -631,7 +642,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   return (
     <AnimatePresence mode="wait">
       {isOpen && (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+      <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -647,7 +658,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="registration-modal-content relative w-full max-w-4xl max-h-[90vh] overflow-y-auto glass-panel rounded-xl md:rounded-2xl border border-white/20 shadow-2xl mx-2 md:mx-0 z-10 my-4"
+          className="registration-modal-content relative w-full max-w-4xl max-h-[80vh] overflow-y-auto glass-panel rounded-xl md:rounded-2xl border border-white/20 shadow-2xl mx-2 md:mx-0 z-10 mt-24 mb-6"
         >
           <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10">
             <div className="flex-1 min-w-0">

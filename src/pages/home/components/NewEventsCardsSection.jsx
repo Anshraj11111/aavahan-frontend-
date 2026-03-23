@@ -126,7 +126,7 @@ const NewEventsCardsSection = () => {
                   </div>
 
                   <Link
-                    to={`/events/${event.slug}`}
+                    to="/events"
                     className="block text-center bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 shadow-md shadow-blue-500/50 hover:shadow-lg hover:shadow-blue-500/70 group-hover:scale-105"
                   >
                     View Details

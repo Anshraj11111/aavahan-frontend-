@@ -134,31 +134,31 @@ const NewHeroSection = () => {
             className="text-center lg:text-left"
           >
             <motion.h1 
-              className="text-5xl md:text-6xl lg:text-7xl font-black mb-4 leading-tight"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 leading-tight"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
             >
               {/* Aavhaan Logo and Text */}
-              <div className="flex items-center justify-center lg:justify-start gap-6 mb-2">
+              <div className="flex items-center justify-center lg:justify-start gap-3 sm:gap-4 md:gap-5 lg:gap-6 mb-2 px-4 sm:px-6 md:px-4 lg:px-0">
                 <motion.img 
                   src={aavhaanLogo} 
                   alt="Aavhaan Logo" 
-                  className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-2xl"
+                  className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-2xl flex-shrink-0"
                   animate={{ rotate: [0, 5, -5, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 />
-                <div>
-                  <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 bg-clip-text text-transparent drop-shadow-lg block">
+                <div className="flex-shrink-0">
+                  <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 bg-clip-text text-transparent drop-shadow-lg block text-4xl sm:text-5xl md:text-6xl lg:text-7xl whitespace-nowrap">
                     AAVHAAN
                   </span>
-                  <span className="text-cyan-400 drop-shadow-lg block">2026</span>
+                  <span className="text-cyan-400 drop-shadow-lg block text-4xl sm:text-5xl md:text-6xl lg:text-7xl whitespace-nowrap">2026</span>
                 </div>
               </div>
             </motion.h1>
 
             <motion.p 
-              className="text-xl md:text-2xl text-white font-black mb-8 tracking-wide"
+              className="text-base sm:text-lg md:text-xl lg:text-2xl text-white font-black mb-8 tracking-wide px-6 sm:px-8 md:px-4 lg:px-0"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.5 }}

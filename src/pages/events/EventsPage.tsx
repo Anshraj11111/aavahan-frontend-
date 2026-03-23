@@ -23,7 +23,7 @@ const EventsPage = () => {
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const { getRegistrationStats, getRegistrationsByEvent } = useRegistrations();
-  const { events } = useEvents();
+  const { events, loading } = useEvents();
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Filter events based on search and filters
@@ -177,23 +177,47 @@ const EventsPage = () => {
               onSubmit={handleSearch} 
               className="max-w-3xl mx-auto mb-12"
             >
-              <div className="relative glass-panel rounded-2xl p-2 border-2 border-white/30 backdrop-blur-xl">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search events by name or description..."
-                  className="w-full px-6 py-5 pl-14 bg-transparent text-white placeholder-gray-400 focus:outline-none text-lg"
-                />
-                <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400" />
-                <motion.button
-                  type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Search
-                </motion.button>
+              <div className="glass-panel rounded-2xl p-2 border-2 border-white/30 backdrop-blur-xl">
+                {/* Desktop Layout - Side by side */}
+                <div className="hidden md:flex items-center relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search events by name or description..."
+                    className="w-full px-6 py-5 pl-14 bg-transparent text-white placeholder-gray-400 focus:outline-none text-lg"
+                  />
+                  <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400" />
+                  <motion.button
+                    type="submit"
+                    className="absolute right-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Search
+                  </motion.button>
+                </div>
+
+                {/* Mobile Layout - Stacked */}
+                <div className="md:hidden space-y-3">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search events by name or description..."
+                      className="w-full px-6 py-4 pl-12 bg-transparent text-white placeholder-gray-400 focus:outline-none text-base"
+                    />
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  </div>
+                  <motion.button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Search
+                  </motion.button>
+                </div>
               </div>
             </motion.form>
 
@@ -206,7 +230,13 @@ const EventsPage = () => {
                 <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                   <Trophy className="w-7 h-7 text-white" />
                 </div>
-                <div className="text-4xl font-black text-white mb-2">{filteredEvents.length}</div>
+                <div className="text-4xl font-black text-white mb-2">
+                  {loading ? (
+                    <div className="h-10 bg-white/10 rounded w-16 mx-auto animate-pulse" />
+                  ) : (
+                    filteredEvents.length
+                  )}
+                </div>
                 <div className="text-white text-base font-black uppercase tracking-wide">Total Events</div>
               </div>
               
@@ -215,7 +245,11 @@ const EventsPage = () => {
                   <Star className="w-7 h-7 text-white" />
                 </div>
                 <div className="text-4xl font-black text-white mb-2">
-                  {filteredEvents.filter(event => event.featured).length}
+                  {loading ? (
+                    <div className="h-10 bg-white/10 rounded w-16 mx-auto animate-pulse" />
+                  ) : (
+                    filteredEvents.filter(event => event.featured).length
+                  )}
                 </div>
                 <div className="text-white text-base font-black uppercase tracking-wide">Featured</div>
               </div>
@@ -225,7 +259,11 @@ const EventsPage = () => {
                   <Zap className="w-7 h-7 text-white" />
                 </div>
                 <div className="text-4xl font-black text-white mb-2">
-                  {eventsWithRealCounts.filter(event => canRegisterUpdated(event)).length}
+                  {loading ? (
+                    <div className="h-10 bg-white/10 rounded w-16 mx-auto animate-pulse" />
+                  ) : (
+                    eventsWithRealCounts.filter(event => canRegisterUpdated(event)).length
+                  )}
                 </div>
                 <div className="text-white text-base font-black uppercase tracking-wide">Open</div>
               </div>
@@ -313,7 +351,32 @@ const EventsPage = () => {
         variants={staggerContainer}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          {filteredEvents.length === 0 ? (
+          {loading ? (
+            // Loading Skeleton
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="glass-panel rounded-2xl overflow-hidden animate-pulse">
+                  <div className="h-56 bg-white/10" />
+                  <div className="p-6 space-y-4">
+                    <div className="h-4 bg-white/10 rounded w-1/3" />
+                    <div className="h-8 bg-white/10 rounded w-3/4" />
+                    <div className="h-4 bg-white/10 rounded w-full" />
+                    <div className="h-4 bg-white/10 rounded w-2/3" />
+                    <div className="space-y-2">
+                      <div className="h-4 bg-white/10 rounded w-full" />
+                      <div className="h-4 bg-white/10 rounded w-full" />
+                      <div className="h-4 bg-white/10 rounded w-full" />
+                    </div>
+                    <div className="h-2 bg-white/10 rounded w-full" />
+                    <div className="flex space-x-3">
+                      <div className="flex-1 h-12 bg-white/10 rounded-xl" />
+                      <div className="flex-1 h-12 bg-white/10 rounded-xl" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredEvents.length === 0 ? (
             <motion.div 
               variants={fadeInUp}
               className="text-center py-20"
