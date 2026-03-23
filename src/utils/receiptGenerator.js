@@ -246,3 +246,27 @@ export const downloadReceipt = (registrationData, eventData) => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
+
+/**
+ * Generate receipt from admin panel with simplified data structure
+ */
+export const generateReceipt = (data) => {
+  const registrationData = {
+    fullName: data.participantName,
+    email: data.email,
+    phone: data.phone,
+    instituteName: data.instituteName,
+    teamName: data.teamName,
+    transactionId: data.transactionId,
+    uniqueRegistrationId: data.registrationId,
+    amountExpected: data.amountPaid,
+    createdAt: data.registrationDate
+  };
+
+  const eventData = {
+    title: data.eventName,
+    day: data.eventDay
+  };
+
+  downloadReceipt(registrationData, eventData);
+};

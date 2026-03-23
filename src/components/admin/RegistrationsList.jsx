@@ -14,9 +14,11 @@ import {
   MapPin,
   Calendar,
   Image as ImageIcon,
-  X
+  X,
+  FileText
 } from 'lucide-react';
 import { adminService } from '../../services/admin';
+import { generateReceipt } from '../../utils/receiptGenerator';
 
 const RegistrationsList = () => {
   const [registrations, setRegistrations] = useState([]);
@@ -148,6 +150,37 @@ const RegistrationsList = () => {
     } catch (error) {
       console.error('Failed to reject registration:', error);
       toast.error('Failed to reject registration');
+    }
+  };
+
+  const handleDownloadReceipt = (registration) => {
+    try {
+      const receiptData = {
+        registrationId: registration.uniqueRegistrationId,
+        eventName: registration.eventTitle,
+        eventDay: registration.eventDay,
+        participantName: registration.fullName,
+        email: registration.email,
+        phone: registration.phone,
+        instituteName: registration.instituteName,
+        department: registration.department,
+        yearOrSemester: registration.yearOrSemester,
+        teamName: registration.teamName || 'N/A',
+        participationType: registration.participationType,
+        transactionId: registration.transactionId || 'N/A',
+        amountPaid: registration.amountPaid,
+        registrationDate: new Date(registration.createdAt).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        })
+      };
+      
+      generateReceipt(receiptData);
+      toast.success('Receipt downloaded successfully!');
+    } catch (error) {
+      console.error('Failed to download receipt:', error);
+      toast.error('Failed to download receipt');
     }
   };
 
@@ -514,27 +547,39 @@ const RegistrationsList = () => {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t border-gray-700">
-                {selectedRegistration.paymentStatus !== 'paid' && (
+              <div className="flex flex-col gap-3 pt-4 border-t border-gray-700">
+                {/* Download Receipt Button */}
+                <button 
+                  onClick={() => handleDownloadReceipt(selectedRegistration)}
+                  className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+                >
+                  <FileText size={18} />
+                  Download Receipt
+                </button>
+                
+                {/* Other Actions */}
+                <div className="flex gap-3">
+                  {selectedRegistration.paymentStatus !== 'paid' && (
+                    <button 
+                      onClick={() => handleVerifyPayment(selectedRegistration._id)}
+                      className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    >
+                      Verify Payment
+                    </button>
+                  )}
                   <button 
-                    onClick={() => handleVerifyPayment(selectedRegistration._id)}
-                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    onClick={() => handleApproveRegistration(selectedRegistration._id)}
+                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                   >
-                    Verify Payment
+                    {selectedRegistration.registrationStatus === 'approved' ? 'Already Approved' : 'Approve Registration'}
                   </button>
-                )}
-                <button 
-                  onClick={() => handleApproveRegistration(selectedRegistration._id)}
-                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-                >
-                  {selectedRegistration.registrationStatus === 'approved' ? 'Already Approved' : 'Approve Registration'}
-                </button>
-                <button 
-                  onClick={() => handleRejectRegistration(selectedRegistration._id)}
-                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                >
-                  Reject Registration
-                </button>
+                  <button 
+                    onClick={() => handleRejectRegistration(selectedRegistration._id)}
+                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                  >
+                    Reject Registration
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
