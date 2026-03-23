@@ -544,27 +544,33 @@ const RegistrationsList = () => {
       {/* Screenshot Viewer Modal */}
       {viewingScreenshot && (
         <div 
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/95 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
           onClick={() => setViewingScreenshot(null)}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="relative max-w-4xl w-full"
+            className="relative max-w-5xl w-full max-h-[90vh] overflow-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={() => setViewingScreenshot(null)}
-              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors flex items-center gap-2"
-            >
-              <X size={24} />
-              <span>Close</span>
-            </button>
-            <img 
-              src={viewingScreenshot} 
-              alt="Payment Screenshot Full Size"
-              className="w-full h-auto rounded-lg shadow-2xl"
-            />
+            <div className="sticky top-0 z-10 flex justify-between items-center mb-4 bg-black/50 backdrop-blur-md p-4 rounded-t-lg">
+              <h3 className="text-white text-lg font-semibold">Payment Screenshot</h3>
+              <button
+                onClick={() => setViewingScreenshot(null)}
+                className="text-white hover:text-gray-300 transition-colors flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20"
+              >
+                <X size={20} />
+                <span>Close</span>
+              </button>
+            </div>
+            <div className="bg-white rounded-lg p-4">
+              <img 
+                src={viewingScreenshot} 
+                alt="Payment Screenshot Full Size"
+                className="w-full h-auto rounded-lg shadow-2xl"
+                style={{ maxHeight: '80vh', objectFit: 'contain' }}
+              />
+            </div>
           </motion.div>
         </div>
       )}

@@ -32,6 +32,8 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [registrationData, setRegistrationData] = useState(null);
   
   // Calculate total steps based on entry fee
   const totalSteps = useMemo(() => {
@@ -121,6 +123,8 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
     if (!isOpen) {
       setCurrentStep(1);
       setQrLoaded(false);
+      setRegistrationSuccess(false);
+      setRegistrationData(null);
       setFormData({
         teamName: '',
         teamLeader: {
@@ -190,18 +194,159 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   };
 
   const handleNext = async () => {
-    // If moving from payment step (step 2) to confirmation (step 3), verify payment first
-    // Only for paid events
+    // Step 1 → Step 2: Validate team name for team events
+    if (currentStep === 1 && isTeamEvent) {
+      if (!formData.teamName || !formData.teamName.trim()) {
+        toast.error('Please enter a team name before proceeding', {
+          duration: 5000,
+          style: {
+            background: '#ef4444',
+            color: '#fff',
+            fontWeight: '600',
+            fontSize: '14px',
+            padding: '16px',
+            borderRadius: '12px',
+          },
+          icon: '❌'
+        });
+        return;
+      }
+      
+      // Check if team name is already taken
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'}/registrations/check-team-name`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventId: event._id,
+            teamName: formData.teamName.trim()
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (!result.data?.available) {
+          toast.error(result.message || 'This team name is already taken for this event. Please choose a different name.', {
+            duration: 8000,
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '14px',
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌'
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Team name check failed:', error);
+        // Don't block on network error - let backend handle it at final submission
+      }
+    }
+    
+    // Step 2 → Step 3: Validate payment details for paid events
     if (currentStep === 2 && event?.entryFee > 0) {
       // Validate transaction ID and screenshot are present
       if (!formData.transactionId || !formData.transactionId.trim()) {
-        toast.error('Please enter transaction ID before proceeding');
+        toast.error('Please enter transaction ID before proceeding', {
+          duration: 5000,
+          style: {
+            background: '#ef4444',
+            color: '#fff',
+            fontWeight: '600',
+            fontSize: '14px',
+            padding: '16px',
+            borderRadius: '12px',
+          },
+          icon: '❌'
+        });
         return;
       }
       
       if (!formData.paymentScreenshot) {
-        toast.error('Please upload payment screenshot before proceeding');
+        toast.error('Please upload payment screenshot before proceeding', {
+          duration: 5000,
+          style: {
+            background: '#ef4444',
+            color: '#fff',
+            fontWeight: '600',
+            fontSize: '14px',
+            padding: '16px',
+            borderRadius: '12px',
+          },
+          icon: '❌'
+        });
         return;
+      }
+      
+      // Check if transaction ID is already used
+      try {
+        const txResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'}/registrations/check-transaction`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            transactionId: formData.transactionId.trim()
+          })
+        });
+        
+        const txResult = await txResponse.json();
+        
+        if (!txResult.data?.available) {
+          toast.error(txResult.message || 'This transaction ID has already been used. Please verify your transaction ID.', {
+            duration: 8000,
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '14px',
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌'
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Transaction ID check failed:', error);
+        // Don't block on network error
+      }
+      
+      // Check if screenshot is already used
+      try {
+        const screenshotData = new FormData();
+        screenshotData.append('screenshot', formData.paymentScreenshot);
+        
+        const ssResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'}/registrations/check-screenshot`, {
+          method: 'POST',
+          body: screenshotData
+        });
+        
+        const ssResult = await ssResponse.json();
+        
+        if (!ssResult.data?.available) {
+          toast.error(ssResult.message || 'This payment screenshot has already been used. Please upload a unique screenshot.', {
+            duration: 8000,
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '14px',
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌'
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Screenshot check failed:', error);
+        // Don't block on network error
       }
       
       // Show loading toast
@@ -232,7 +377,16 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         
         if (!response.ok || !result.success) {
           toast.error(result.message || 'Payment verification failed. Transaction ID or amount does not match screenshot.', {
-            duration: 6000
+            duration: 8000,
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '14px',
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌'
           });
           return;
         }
@@ -254,12 +408,30 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         
         if (error.name === 'AbortError') {
           toast.error('Verification timeout. Please try again with a clearer screenshot.', {
-            duration: 6000
+            duration: 8000,
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '14px',
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌'
           });
         } else {
           console.error('Payment verification error:', error);
           toast.error('Failed to verify payment. Please check your details and try again.', {
-            duration: 6000
+            duration: 8000,
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '14px',
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌'
           });
         }
         return;
@@ -283,6 +455,17 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleDownloadReceipt = async () => {
+    try {
+      const { downloadReceipt } = await import('../../utils/receiptGenerator');
+      downloadReceipt(registrationData, event);
+      toast.success('Receipt downloaded successfully!');
+    } catch (error) {
+      console.error('Failed to download receipt:', error);
+      toast.error('Failed to download receipt. Please try again.');
     }
   };
 
@@ -357,6 +540,9 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
       const response = await registrationsService.submitRegistration(formDataToSend);
       
       if (response.success) {
+        setRegistrationSuccess(true);
+        setRegistrationData(response.data);
+        
         toast.success('Thank you for registering! You will receive more information via email shortly.', {
           duration: 5000,
           icon: '✅'
@@ -365,7 +551,18 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         // Refresh events to update currentRegistrations count
         await refreshEvents();
         
-        onClose();
+        // Auto-download receipt
+        try {
+          const { downloadReceipt } = await import('../../utils/receiptGenerator');
+          downloadReceipt(response.data, event);
+          console.log('Receipt auto-downloaded successfully');
+        } catch (error) {
+          console.error('Failed to auto-download receipt:', error);
+          // Don't block the flow if receipt download fails
+        }
+        
+        // Don't close modal immediately - show success message with download button
+        // onClose();
       } else {
         // Backend returned error in response
         toast.error(response.message || 'Registration failed. Please try again.');
@@ -379,18 +576,36 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
       // Show specific error message from backend
       let errorMessage = 'Failed to submit registration. Please try again.';
       
-      // The api service transforms errors, so check the error object directly
-      if (error?.errors && Array.isArray(error.errors)) {
-        // Show validation errors
+      // Backend error response format: { success: false, message: "error text", errors: [...] }
+      if (error?.message) {
+        // Direct error message from backend
+        errorMessage = error.message;
+      } else if (error?.errors && Array.isArray(error.errors)) {
+        // Validation errors array
         console.error('Validation errors:', error.errors);
         errorMessage = error.errors.map(e => `${e.field}: ${e.message}`).join(', ');
-      } else if (error?.message) {
-        errorMessage = error.message;
       } else if (error?.error) {
+        // Generic error field
         errorMessage = error.error;
+      } else if (typeof error === 'string') {
+        // String error
+        errorMessage = error;
       }
       
-      toast.error(errorMessage, { duration: 6000 });
+      // Show error toast with longer duration for important messages
+      toast.error(errorMessage, { 
+        duration: 8000,
+        style: {
+          background: '#ef4444',
+          color: '#fff',
+          fontWeight: '600',
+          fontSize: '14px',
+          padding: '16px',
+          borderRadius: '12px',
+        },
+        icon: '❌'
+      });
+      
       setIsSubmitting(false);
       
       // Don't close modal or proceed - stay on current step so user can fix the issue
@@ -787,127 +1002,219 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
             {/* Step 3: Confirmation */}
             {currentStep === totalSteps && (
               <div className="modal-form-section space-y-6">
-                <h3 className="text-2xl font-semibold text-white mb-6 flex items-center">
-                  <CheckCircle className="w-6 h-6 mr-3 text-green-400" />
-                  Confirm Registration
-                </h3>
-                
-                <div className="glass-panel p-6 rounded-xl space-y-4">
-                  <h4 className="text-lg font-semibold text-white mb-4">Registration Summary</h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-400">Event:</span>
-                      <span className="text-white ml-2 font-medium">{event?.title}</span>
-                    </div>
-                    {isTeamEvent && (
-                      <div>
-                        <span className="text-gray-400">Team Name:</span>
-                        <span className="text-white ml-2 font-medium">{formData.teamName}</span>
-                      </div>
-                    )}
-                    <div>
-                      <span className="text-gray-400">{isTeamEvent ? 'Team Leader:' : 'Name:'}</span>
-                      <span className="text-white ml-2 font-medium">{formData.teamLeader.fullName}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Email:</span>
-                      <span className="text-white ml-2 font-medium">{formData.teamLeader.email}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Phone:</span>
-                      <span className="text-white ml-2 font-medium">{formData.teamLeader.phone}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">College:</span>
-                      <span className="text-white ml-2 font-medium">{formData.teamLeader.college}</span>
-                    </div>
-                    {isTeamEvent && (
-                      <div>
-                        <span className="text-gray-400">Team Size:</span>
-                        <span className="text-white ml-2 font-medium">
-                          {1 + formData.teamMembers.filter(member => member.fullName.trim() !== '').length} members
-                        </span>
-                      </div>
-                    )}
-                    {event?.entryFee > 0 && (
-                      <>
-                        <div>
-                          <span className="text-gray-400">Entry Fee:</span>
-                          <span className="text-green-400 ml-2 font-medium">₹{event.entryFee}</span>
+                {registrationSuccess ? (
+                  // Success State - Show after successful registration
+                  <>
+                    <div className="text-center space-y-4">
+                      <div className="flex justify-center">
+                        <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-12 h-12 text-green-400" />
                         </div>
-                        {formData.transactionId && (
+                      </div>
+                      <h3 className="text-3xl font-bold text-white">Registration Successful!</h3>
+                      <p className="text-gray-300 text-lg">
+                        Your registration has been submitted successfully.
+                      </p>
+                    </div>
+
+                    <div className="glass-panel p-6 rounded-xl space-y-4">
+                      <h4 className="text-lg font-semibold text-white mb-4 text-center">Registration Details</h4>
+                      
+                      {registrationData?.uniqueRegistrationId && (
+                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 text-center">
+                          <p className="text-gray-400 text-sm mb-2">Registration ID</p>
+                          <p className="text-2xl font-bold text-blue-400 tracking-wider">
+                            {registrationData.uniqueRegistrationId}
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-400">Event:</span>
+                          <span className="text-white ml-2 font-medium">{event?.title}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Name:</span>
+                          <span className="text-white ml-2 font-medium">{registrationData?.fullName}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Email:</span>
+                          <span className="text-white ml-2 font-medium">{registrationData?.email}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Status:</span>
+                          <span className="text-yellow-400 ml-2 font-medium">
+                            {event?.entryFee > 0 ? 'Pending Verification' : 'Approved'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                      <div className="flex items-start space-x-3">
+                        <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                        <div className="text-green-400 text-sm">
+                          <p className="font-medium mb-1">What's Next?</p>
+                          <ul className="space-y-1 text-xs">
+                            <li>• Check your email for confirmation and further details</li>
+                            <li>• Save your Registration ID for future reference</li>
+                            <li>• Download your receipt using the button below</li>
+                            {event?.entryFee > 0 && (
+                              <li>• Payment will be verified within 24-48 hours</li>
+                            )}
+                            <li>• Bring valid ID proof on event day</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-center gap-4 pt-4">
+                      <button
+                        type="button"
+                        onClick={handleDownloadReceipt}
+                        className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 flex items-center space-x-2"
+                      >
+                        <FileText className="w-5 h-5" />
+                        <span>Download Receipt</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-300"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  // Confirmation State - Show before submission
+                  <>
+                    <h3 className="text-2xl font-semibold text-white mb-6 flex items-center">
+                      <CheckCircle className="w-6 h-6 mr-3 text-green-400" />
+                      Confirm Registration
+                    </h3>
+                    
+                    <div className="glass-panel p-6 rounded-xl space-y-4">
+                      <h4 className="text-lg font-semibold text-white mb-4">Registration Summary</h4>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-400">Event:</span>
+                          <span className="text-white ml-2 font-medium">{event?.title}</span>
+                        </div>
+                        {isTeamEvent && (
                           <div>
-                            <span className="text-gray-400">Transaction ID:</span>
-                            <span className="text-blue-400 ml-2 font-medium">{formData.transactionId}</span>
+                            <span className="text-gray-400">Team Name:</span>
+                            <span className="text-white ml-2 font-medium">{formData.teamName}</span>
                           </div>
                         )}
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-                  <div className="flex items-start space-x-3">
-                    <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                    <div className="text-blue-400 text-sm">
-                      <p className="font-medium mb-1">Important Notes:</p>
-                      <ul className="space-y-1 text-xs">
-                        <li>• Registration confirmation will be sent to your email</li>
-                        <li>• Transaction ID must be unique and is mandatory for registration</li>
-                        <li>• Payment screenshot is required for verification</li>
-                        <li>• Follow event rules and guidelines</li>
-                        <li>• Bring valid ID proof on event day</li>
-                      </ul>
+                        <div>
+                          <span className="text-gray-400">{isTeamEvent ? 'Team Leader:' : 'Name:'}</span>
+                          <span className="text-white ml-2 font-medium">{formData.teamLeader.fullName}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Email:</span>
+                          <span className="text-white ml-2 font-medium">{formData.teamLeader.email}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Phone:</span>
+                          <span className="text-white ml-2 font-medium">{formData.teamLeader.phone}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">College:</span>
+                          <span className="text-white ml-2 font-medium">{formData.teamLeader.college}</span>
+                        </div>
+                        {isTeamEvent && (
+                          <div>
+                            <span className="text-gray-400">Team Size:</span>
+                            <span className="text-white ml-2 font-medium">
+                              {1 + formData.teamMembers.filter(member => member.fullName.trim() !== '').length} members
+                            </span>
+                          </div>
+                        )}
+                        {event?.entryFee > 0 && (
+                          <>
+                            <div>
+                              <span className="text-gray-400">Entry Fee:</span>
+                              <span className="text-green-400 ml-2 font-medium">₹{event.entryFee}</span>
+                            </div>
+                            {formData.transactionId && (
+                              <div>
+                                <span className="text-gray-400">Transaction ID:</span>
+                                <span className="text-blue-400 ml-2 font-medium">{formData.transactionId}</span>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+                      <div className="flex items-start space-x-3">
+                        <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                        <div className="text-blue-400 text-sm">
+                          <p className="font-medium mb-1">Important Notes:</p>
+                          <ul className="space-y-1 text-xs">
+                            <li>• Registration confirmation will be sent to your email</li>
+                            <li>• Transaction ID must be unique and is mandatory for registration</li>
+                            <li>• Payment screenshot is required for verification</li>
+                            <li>• Follow event rules and guidelines</li>
+                            <li>• Bring valid ID proof on event day</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
-            <div className="flex justify-between mt-8 pt-6 border-t border-white/10">
-              <button
-                type="button"
-                onClick={handlePrevious}
-                disabled={currentStep === 1}
-                className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-              >
-                Previous
-              </button>
-
-              {currentStep < totalSteps ? (
+            {!registrationSuccess && (
+              <div className="flex justify-between mt-8 pt-6 border-t border-white/10">
                 <button
                   type="button"
-                  onClick={handleNext}
-                  disabled={
-                    // Disable Next button on payment step if transaction ID or screenshot is missing
-                    currentStep === 2 && event?.entryFee > 0 && 
-                    (!formData.transactionId || !formData.transactionId.trim() || !formData.paymentScreenshot)
-                  }
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                  onClick={handlePrevious}
+                  disabled={currentStep === 1}
+                  className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                 >
-                  Next
+                  Previous
                 </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={isSubmitting || (event?.entryFee > 0 && (!formData.transactionId || !formData.transactionId.trim() || !formData.paymentScreenshot))}
-                  className="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Submitting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-5 h-5" />
-                      <span>Submit Registration</span>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
+
+                {currentStep < totalSteps ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={
+                      // Disable Next button on payment step if transaction ID or screenshot is missing
+                      currentStep === 2 && event?.entryFee > 0 && 
+                      (!formData.transactionId || !formData.transactionId.trim() || !formData.paymentScreenshot)
+                    }
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || (event?.entryFee > 0 && (!formData.transactionId || !formData.transactionId.trim() || !formData.paymentScreenshot))}
+                    className="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-5 h-5" />
+                        <span>Submit Registration</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
           </form>
         </motion.div>
       </div>
