@@ -25,8 +25,12 @@ const RegistrationsList = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [eventFilter, setEventFilter] = useState('all');
   const [selectedRegistration, setSelectedRegistration] = useState(null);
   const [viewingScreenshot, setViewingScreenshot] = useState(null);
+
+  // Get unique event titles for filter
+  const uniqueEvents = [...new Set(registrations.map(r => r.eventTitle))].sort();
 
   // Fetch registrations from backend
   useEffect(() => {
@@ -86,8 +90,9 @@ const RegistrationsList = () => {
                          reg.uniqueRegistrationId.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || reg.registrationStatus === statusFilter;
+    const matchesEvent = eventFilter === 'all' || reg.eventTitle === eventFilter;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesEvent;
   });
 
   const getStatusColor = (status) => {
@@ -184,6 +189,182 @@ const RegistrationsList = () => {
     }
   };
 
+  const handleExportData = () => {
+    try {
+      // Prepare CSV data
+      const headers = [
+        'Registration ID',
+        'Full Name',
+        'Email',
+        'Phone',
+        'Institution',
+        'Department',
+        'Year/Semester',
+        'Event',
+        'Event Day',
+        'Team Name',
+        'Participation Type',
+        'Amount Paid',
+        'Amount Expected',
+        'Transaction ID',
+        'Payment Status',
+        'Registration Status',
+        'Registration Date'
+      ];
+
+      const csvData = filteredRegistrations.map(reg => [
+        reg.uniqueRegistrationId,
+        reg.fullName,
+        reg.email,
+        reg.phone,
+        reg.instituteName,
+        reg.department,
+        reg.yearOrSemester,
+        reg.eventTitle,
+        reg.eventDay,
+        reg.teamName || 'N/A',
+        reg.participationType,
+        reg.amountPaid,
+        reg.amountExpected,
+        reg.transactionId || 'N/A',
+        reg.paymentStatus,
+        reg.registrationStatus,
+        new Date(reg.createdAt).toLocaleDateString('en-IN')
+      ]);
+
+      // Convert to CSV string
+      const csvContent = [
+        headers.join(','),
+        ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `registrations_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success(`Exported ${filteredRegistrations.length} registrations successfully!`);
+    } catch (error) {
+      console.error('Failed to export data:', error);
+      toast.error('Failed to export data');
+    }
+  };
+
+  const handleExportPDF = () => {
+    try {
+      // Create HTML content for PDF
+      let htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Registrations Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+            h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 10px; margin-bottom: 20px; }
+            .summary { background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+            .summary-item { display: inline-block; margin-right: 30px; margin-bottom: 10px; }
+            .summary-label { font-weight: bold; color: #6b7280; }
+            .summary-value { font-size: 24px; font-weight: bold; color: #1e40af; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 11px; }
+            th { background-color: #1e40af; color: white; padding: 10px 6px; text-align: left; font-weight: bold; }
+            td { padding: 8px 6px; border-bottom: 1px solid #e5e7eb; }
+            tr:nth-child(even) { background-color: #f9fafb; }
+            tr:hover { background-color: #f3f4f6; }
+            .status-approved { color: #10b981; font-weight: bold; }
+            .status-pending { color: #f59e0b; font-weight: bold; }
+            .status-rejected { color: #ef4444; font-weight: bold; }
+            .footer { margin-top: 30px; text-align: center; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 15px; }
+          </style>
+        </head>
+        <body>
+          <h1>Aavhaan 2026 - Registrations Report</h1>
+          <div class="summary">
+            <div class="summary-item">
+              <div class="summary-label">Total Registrations</div>
+              <div class="summary-value">${filteredRegistrations.length}</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Approved</div>
+              <div class="summary-value" style="color: #10b981;">${filteredRegistrations.filter(r => r.registrationStatus === 'approved').length}</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Pending</div>
+              <div class="summary-value" style="color: #f59e0b;">${filteredRegistrations.filter(r => r.registrationStatus === 'pending').length}</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Total Revenue</div>
+              <div class="summary-value" style="color: #10b981;">₹${filteredRegistrations.reduce((sum, r) => sum + r.amountPaid, 0).toLocaleString()}</div>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Reg ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Event</th>
+                <th>Institution</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      filteredRegistrations.forEach(reg => {
+        const statusClass = `status-${reg.registrationStatus}`;
+        htmlContent += `
+          <tr>
+            <td>${reg.uniqueRegistrationId}</td>
+            <td>${reg.fullName}</td>
+            <td>${reg.email}</td>
+            <td>${reg.phone}</td>
+            <td>${reg.eventTitle}</td>
+            <td>${reg.instituteName}</td>
+            <td>₹${reg.amountPaid}</td>
+            <td class="${statusClass}">${reg.registrationStatus.toUpperCase()}</td>
+            <td>${new Date(reg.createdAt).toLocaleDateString('en-IN')}</td>
+          </tr>
+        `;
+      });
+
+      htmlContent += `
+            </tbody>
+          </table>
+          <div class="footer">
+            <p>Generated on ${new Date().toLocaleString('en-IN')} | Aavhaan 2026 - Technical Festival</p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Create a new window and print
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      
+      // Wait for content to load then print
+      printWindow.onload = function() {
+        printWindow.print();
+        toast.success('PDF export initiated! Use Print dialog to save as PDF.');
+      };
+    } catch (error) {
+      console.error('Failed to export PDF:', error);
+      toast.error('Failed to export PDF');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {loading ? (
@@ -198,10 +379,22 @@ const RegistrationsList = () => {
           <h2 className="text-2xl font-bold text-white">Registrations</h2>
           <p className="text-gray-400">Manage event registrations and participant details</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-          <Download size={16} />
-          Export Data
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={handleExportData}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+          >
+            <Download size={16} />
+            Export CSV ({filteredRegistrations.length})
+          </button>
+          <button 
+            onClick={handleExportPDF}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            <FileText size={16} />
+            Export PDF
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -217,6 +410,16 @@ const RegistrationsList = () => {
               className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          <select
+            value={eventFilter}
+            onChange={(e) => setEventFilter(e.target.value)}
+            className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Events</option>
+            {uniqueEvents.map(event => (
+              <option key={event} value={event}>{event}</option>
+            ))}
+          </select>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}

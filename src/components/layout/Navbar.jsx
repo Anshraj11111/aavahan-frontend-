@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Calendar, Ticket, Home, Info, Phone, Sparkles } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, Calendar, Home, Info, Phone, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PremiumButton from '../common/PremiumButton';
-import RegistrationModal from '../modals/RegistrationModal';
 import logoImage from '../../assets/images/logo.png';
 
 /**
@@ -13,8 +12,8 @@ import logoImage from '../../assets/images/logo.png';
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Handle scroll effect (80px threshold)
   useEffect(() => {
@@ -145,18 +144,11 @@ const Navbar = () => {
 
           {/* Desktop CTA - Right */}
           <div className="hidden lg:flex items-center gap-3 xl:gap-4">
-            <Link
-              to="/my-tickets"
-              className="flex items-center gap-2 text-blue-200 hover:text-cyan-400 font-bold transition-colors duration-300 text-sm xl:text-base"
-            >
-              <Ticket size={18} className="xl:w-5 xl:h-5" />
-              <span>My Tickets</span>
-            </Link>
             <PremiumButton 
               variant="primary" 
               size="md" 
               icon={<Sparkles size={18} className="xl:w-5 xl:h-5" />}
-              onClick={() => setIsRegistrationModalOpen(true)}
+              onClick={() => navigate('/events')}
               className="text-sm xl:text-base"
             >
               Register Now
@@ -205,18 +197,12 @@ const Navbar = () => {
                 })}
                 
                 <div className="pt-3 space-y-2">
-                  <Link to="/my-tickets" className="block">
-                    <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500/30 backdrop-blur-md hover:bg-blue-500/40 text-cyan-400 rounded-lg font-semibold transition-all duration-300 border border-blue-400/30">
-                      <Ticket size={18} />
-                      My Tickets
-                    </button>
-                  </Link>
                   <PremiumButton 
                     variant="primary" 
                     size="md" 
                     icon={<Sparkles size={18} />}
                     onClick={() => {
-                      setIsRegistrationModalOpen(true);
+                      navigate('/events');
                       setIsMenuOpen(false);
                     }}
                     className="w-full"
@@ -229,13 +215,6 @@ const Navbar = () => {
           )}
         </AnimatePresence>
       </div>
-
-      {/* Registration Modal */}
-      <RegistrationModal
-        isOpen={isRegistrationModalOpen}
-        onClose={() => setIsRegistrationModalOpen(false)}
-        event={{ title: 'General Registration', description: 'Register for Aavhaan 2026' }}
-      />
     </header>
     </>
   );

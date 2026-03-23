@@ -9,6 +9,8 @@ const EventManagement = () => {
   const { events, addEvent, updateEvent, deleteEvent } = useEvents();
   const { getRegistrationsByEvent } = useRegistrations();
   const [showModal, setShowModal] = useState(false);
+  const [showEventDetailsModal, setShowEventDetailsModal] = useState(false);
+  const [selectedEventForDetails, setSelectedEventForDetails] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
   const [formData, setFormData] = useState({
     title: '', shortDescription: '', fullDescription: '', category: 'technical',
@@ -141,6 +143,11 @@ const EventManagement = () => {
     }
   };
 
+  const handleViewEventDetails = (event) => {
+    setSelectedEventForDetails(event);
+    setShowEventDetailsModal(true);
+  };
+
   const handleInputChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
   const handleArrayChange = (field, index, value) => setFormData(prev => ({
     ...prev, [field]: prev[field].map((item, i) => i === index ? value : item)
@@ -188,6 +195,9 @@ const EventManagement = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <button onClick={() => handleViewEventDetails(event)} className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg" title="View Details">
+                      <Calendar size={16} />
+                    </button>
                     <button onClick={() => handleEdit(event)} className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
                       <Edit size={16} />
                     </button>
@@ -241,139 +251,139 @@ const EventManagement = () => {
                   {/* Left Column */}
                   <div className="space-y-6">
                     {/* Basic Info */}
-                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-blue-500/20 shadow-xl space-y-4">
-                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                        <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-5 rounded-xl border border-blue-500/20 shadow-xl space-y-3">
+                      <h4 className="text-base sm:text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        <div className="w-1 h-5 bg-blue-500 rounded-full"></div>
                         Basic Information
                       </h4>
                       <div>
-                        <label className="block text-white font-medium mb-2">Event Title *</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Event Title *</label>
                         <input type="text" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                           placeholder="Enter event title" required />
                       </div>
                       <div>
-                        <label className="block text-white font-medium mb-2">Short Description</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Short Description</label>
                         <textarea value={formData.shortDescription} onChange={(e) => handleInputChange('shortDescription', e.target.value)}
-                          rows={2} className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                          rows={2} className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                           placeholder="Brief description" />
                       </div>
                       <div>
-                        <label className="block text-white font-medium mb-2">Full Description</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Full Description</label>
                         <textarea value={formData.fullDescription} onChange={(e) => handleInputChange('fullDescription', e.target.value)}
-                          rows={4} className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                          rows={3} className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                           placeholder="Detailed description" />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-white font-medium mb-2">Category *</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Category *</label>
                           <select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" required>
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" required>
                             <option value="technical">Technical</option>
                             <option value="cultural">Cultural</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-white font-medium mb-2">Department</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Department</label>
                           <input type="text" value={formData.department} onChange={(e) => handleInputChange('department', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                             placeholder="Department" />
                         </div>
                       </div>
                     </div>
 
                     {/* Schedule */}
-                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-purple-500/20 shadow-xl space-y-4">
-                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                        <div className="w-1 h-6 bg-purple-500 rounded-full"></div>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-5 rounded-xl border border-purple-500/20 shadow-xl space-y-3">
+                      <h4 className="text-base sm:text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        <div className="w-1 h-5 bg-purple-500 rounded-full"></div>
                         Event Schedule
                       </h4>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-white font-medium mb-2">Day *</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Day *</label>
                           <select value={formData.day} onChange={(e) => handleInputChange('day', parseInt(e.target.value))}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" required>
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" required>
                             <option value={1}>Day 1</option>
                             <option value={2}>Day 2</option>
                             <option value={3}>Day 3</option>
                           </select>
                         </div>
                         <div className="col-span-2">
-                          <label className="block text-white font-medium mb-2">Date *</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Date *</label>
                           <input type="date" value={formData.date} onChange={(e) => handleInputChange('date', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" required />
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" required />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-white font-medium mb-2">Start Time</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Start Time</label>
                           <input type="text" value={formData.startTime} onChange={(e) => handleInputChange('startTime', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                             placeholder="9:00 AM" />
                         </div>
                         <div>
-                          <label className="block text-white font-medium mb-2">End Time</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">End Time</label>
                           <input type="text" value={formData.endTime} onChange={(e) => handleInputChange('endTime', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                             placeholder="6:00 PM" />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-white font-medium mb-2">Venue</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Venue</label>
                         <input type="text" value={formData.venue} onChange={(e) => handleInputChange('venue', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                           placeholder="Event venue" />
                       </div>
                       <div>
-                        <label className="block text-white font-medium mb-2">Registration Deadline</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Registration Deadline</label>
                         <input type="datetime-local" value={formData.registrationDeadline} onChange={(e) => handleInputChange('registrationDeadline', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" />
+                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" />
                         <p className="text-gray-500 text-xs mt-1">Leave empty to auto-set 1 day before event</p>
                       </div>
                     </div>
 
                     {/* Participation */}
-                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-green-500/20 shadow-xl space-y-4">
-                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                        <div className="w-1 h-6 bg-green-500 rounded-full"></div>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-5 rounded-xl border border-green-500/20 shadow-xl space-y-3">
+                      <h4 className="text-base sm:text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        <div className="w-1 h-5 bg-green-500 rounded-full"></div>
                         Participation
                       </h4>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-white font-medium mb-2">Type *</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Type *</label>
                           <select value={formData.participationType} onChange={(e) => handleInputChange('participationType', e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" required>
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" required>
                             <option value="solo">Solo</option>
                             <option value="team">Team</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-white font-medium mb-2">Min Size</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Min Size</label>
                           <input type="number" value={formData.minTeamSize} onChange={(e) => handleInputChange('minTeamSize', parseInt(e.target.value))}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" min="1" />
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" min="1" />
                         </div>
                         <div>
-                          <label className="block text-white font-medium mb-2">Max Size</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Max Size</label>
                           <input type="number" value={formData.maxTeamSize} onChange={(e) => handleInputChange('maxTeamSize', parseInt(e.target.value))}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" min="1" />
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" min="1" />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-white font-medium mb-2">Entry Fee (₹)</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Entry Fee (₹)</label>
                           <input type="number" value={formData.entryFee} onChange={(e) => handleInputChange('entryFee', parseInt(e.target.value))}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" min="0" />
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" min="0" />
                         </div>
                         <div>
-                          <label className="block text-white font-medium mb-2">Max Registrations</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Max Registrations</label>
                           <input type="number" value={formData.maxRegistrations} onChange={(e) => handleInputChange('maxRegistrations', parseInt(e.target.value))}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" min="1" />
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" min="1" />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-white font-medium mb-2">Eligibility</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Eligibility</label>
                         <input type="text" value={formData.eligibility} onChange={(e) => handleInputChange('eligibility', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                           placeholder="Open to all students" />
                       </div>
                     </div>
@@ -382,45 +392,45 @@ const EventManagement = () => {
                   {/* Right Column */}
                   <div className="space-y-6">
                     {/* Prize & Coordinator */}
-                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-yellow-500/20 shadow-xl space-y-4">
-                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                        <div className="w-1 h-6 bg-yellow-500 rounded-full"></div>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-5 rounded-xl border border-yellow-500/20 shadow-xl space-y-3">
+                      <h4 className="text-base sm:text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        <div className="w-1 h-5 bg-yellow-500 rounded-full"></div>
                         Prize & Coordinator
                       </h4>
                       <div>
-                        <label className="block text-white font-medium mb-2">Prize Details</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Prize Details</label>
                         <input type="text" value={formData.prizeDetails} onChange={(e) => handleInputChange('prizeDetails', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                           placeholder="1st: ₹50,000, 2nd: ₹30,000" />
                       </div>
                       <div>
-                        <label className="block text-white font-medium mb-2">Coordinator Name</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Coordinator Name</label>
                         <input type="text" value={formData.coordinatorName} onChange={(e) => handleInputChange('coordinatorName', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                           placeholder="Name" />
                       </div>
                       <div>
-                        <label className="block text-white font-medium mb-2">Coordinator Phone</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Coordinator Phone</label>
                         <input type="tel" value={formData.coordinatorPhone} onChange={(e) => handleInputChange('coordinatorPhone', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                           placeholder="Phone" />
                       </div>
                       <div>
-                        <label className="block text-white font-medium mb-2">Coordinator Email</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Coordinator Email</label>
                         <input type="email" value={formData.coordinatorEmail} onChange={(e) => handleInputChange('coordinatorEmail', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                           placeholder="Email" />
                       </div>
                     </div>
 
                     {/* Media & Settings */}
-                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-cyan-500/20 shadow-xl space-y-4">
-                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                        <div className="w-1 h-6 bg-cyan-500 rounded-full"></div>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-5 rounded-xl border border-cyan-500/20 shadow-xl space-y-3">
+                      <h4 className="text-base sm:text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        <div className="w-1 h-5 bg-cyan-500 rounded-full"></div>
                         Media & Settings
                       </h4>
                       <div>
-                        <label className="block text-white font-medium mb-2">Event Poster Image</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Event Poster Image</label>
                         <div className="space-y-3">
                           {/* File Upload Button */}
                           <div>
@@ -535,16 +545,16 @@ const EventManagement = () => {
                     </div>
 
                     {/* Tags */}
-                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-pink-500/20 shadow-xl space-y-4">
-                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                        <div className="w-1 h-6 bg-pink-500 rounded-full"></div>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-5 rounded-xl border border-pink-500/20 shadow-xl space-y-3">
+                      <h4 className="text-base sm:text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        <div className="w-1 h-5 bg-pink-500 rounded-full"></div>
                         Tags
                       </h4>
                       <div className="space-y-2">
                         {formData.tags.map((tag, index) => (
                           <div key={index} className="flex gap-2">
                             <input type="text" value={tag} onChange={(e) => handleArrayChange('tags', index, e.target.value)}
-                              className="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                              className="flex-1 px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                               placeholder="Tag" />
                             {formData.tags.length > 1 && (
                               <button onClick={() => removeArrayItem('tags', index)} className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">
@@ -558,16 +568,16 @@ const EventManagement = () => {
                     </div>
 
                     {/* Rules */}
-                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-orange-500/20 shadow-xl space-y-4">
-                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                        <div className="w-1 h-6 bg-orange-500 rounded-full"></div>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-5 rounded-xl border border-orange-500/20 shadow-xl space-y-3">
+                      <h4 className="text-base sm:text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        <div className="w-1 h-5 bg-orange-500 rounded-full"></div>
                         Rules
                       </h4>
                       <div className="space-y-2">
                         {formData.rules.map((rule, index) => (
                           <div key={index} className="flex gap-2">
                             <input type="text" value={rule} onChange={(e) => handleArrayChange('rules', index, e.target.value)}
-                              className="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                              className="flex-1 px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                               placeholder="Rule" />
                             {formData.rules.length > 1 && (
                               <button onClick={() => removeArrayItem('rules', index)} className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">
@@ -601,6 +611,176 @@ const EventManagement = () => {
                 </button>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Event Details Modal */}
+      <AnimatePresence>
+        {showEventDetailsModal && selectedEventForDetails && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowEventDetailsModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-gray-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-gray-800 to-gray-900 border-b-2 border-blue-500/30 px-6 py-5 flex justify-between items-center sticky top-0 z-10">
+                <h3 className="text-2xl font-bold text-white">{selectedEventForDetails.title}</h3>
+                <button 
+                  onClick={() => setShowEventDetailsModal(false)} 
+                  className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700 rounded-lg"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-6">
+                {/* Event Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gray-800/50 p-4 rounded-lg">
+                    <p className="text-gray-400 text-sm mb-1">Category</p>
+                    <p className="text-white font-semibold capitalize">{selectedEventForDetails.category}</p>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg">
+                    <p className="text-gray-400 text-sm mb-1">Day</p>
+                    <p className="text-white font-semibold">{selectedEventForDetails.day}</p>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg">
+                    <p className="text-gray-400 text-sm mb-1">Date & Time</p>
+                    <p className="text-white font-semibold">{selectedEventForDetails.date}</p>
+                    <p className="text-gray-400 text-sm">{selectedEventForDetails.startTime} - {selectedEventForDetails.endTime}</p>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg">
+                    <p className="text-gray-400 text-sm mb-1">Venue</p>
+                    <p className="text-white font-semibold">{selectedEventForDetails.venue}</p>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg">
+                    <p className="text-gray-400 text-sm mb-1">Participation Type</p>
+                    <p className="text-white font-semibold capitalize">{selectedEventForDetails.participationType}</p>
+                    {selectedEventForDetails.participationType === 'team' && (
+                      <p className="text-gray-400 text-sm">Team Size: {selectedEventForDetails.minTeamSize}-{selectedEventForDetails.maxTeamSize}</p>
+                    )}
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg">
+                    <p className="text-gray-400 text-sm mb-1">Entry Fee</p>
+                    <p className="text-white font-semibold">₹{selectedEventForDetails.entryFee}</p>
+                  </div>
+                </div>
+
+                {/* Registrations */}
+                <div className="bg-gray-800/50 p-5 rounded-lg">
+                  <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-blue-400" />
+                    Registrations
+                  </h4>
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="bg-gray-700/50 p-3 rounded-lg text-center">
+                      <p className="text-2xl font-bold text-blue-400">{getRegistrationsByEvent(selectedEventForDetails.title).length}</p>
+                      <p className="text-gray-400 text-sm">Current</p>
+                    </div>
+                    <div className="bg-gray-700/50 p-3 rounded-lg text-center">
+                      <p className="text-2xl font-bold text-green-400">{selectedEventForDetails.maxRegistrations}</p>
+                      <p className="text-gray-400 text-sm">Maximum</p>
+                    </div>
+                    <div className="bg-gray-700/50 p-3 rounded-lg text-center">
+                      <p className="text-2xl font-bold text-purple-400">
+                        {selectedEventForDetails.maxRegistrations - getRegistrationsByEvent(selectedEventForDetails.title).length}
+                      </p>
+                      <p className="text-gray-400 text-sm">Available</p>
+                    </div>
+                  </div>
+                  
+                  {/* Registration List */}
+                  {getRegistrationsByEvent(selectedEventForDetails.title).length > 0 ? (
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {getRegistrationsByEvent(selectedEventForDetails.title).map((reg, index) => (
+                        <div key={index} className="bg-gray-700/30 p-3 rounded-lg flex justify-between items-center">
+                          <div>
+                            <p className="text-white font-medium">{reg.fullName}</p>
+                            <p className="text-gray-400 text-sm">{reg.email}</p>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            reg.registrationStatus === 'approved' ? 'bg-green-500/20 text-green-400' :
+                            reg.registrationStatus === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-red-500/20 text-red-400'
+                          }`}>
+                            {reg.registrationStatus}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-400 text-center py-4">No registrations yet</p>
+                  )}
+                </div>
+
+                {/* Coordinator Info */}
+                {selectedEventForDetails.coordinatorName && (
+                  <div className="bg-gray-800/50 p-5 rounded-lg">
+                    <h4 className="text-lg font-semibold text-white mb-3">Coordinator</h4>
+                    <div className="space-y-2">
+                      <p className="text-white">{selectedEventForDetails.coordinatorName}</p>
+                      {selectedEventForDetails.coordinatorPhone && (
+                        <p className="text-gray-400 text-sm">📞 {selectedEventForDetails.coordinatorPhone}</p>
+                      )}
+                      {selectedEventForDetails.coordinatorEmail && (
+                        <p className="text-gray-400 text-sm">✉️ {selectedEventForDetails.coordinatorEmail}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Prize Details */}
+                {selectedEventForDetails.prizeDetails && (
+                  <div className="bg-gray-800/50 p-5 rounded-lg">
+                    <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                      <Trophy className="w-5 h-5 text-yellow-400" />
+                      Prize Details
+                    </h4>
+                    <p className="text-gray-300">{selectedEventForDetails.prizeDetails}</p>
+                  </div>
+                )}
+
+                {/* Rules */}
+                {selectedEventForDetails.rules && selectedEventForDetails.rules.length > 0 && (
+                  <div className="bg-gray-800/50 p-5 rounded-lg">
+                    <h4 className="text-lg font-semibold text-white mb-3">Rules</h4>
+                    <ul className="space-y-2">
+                      {selectedEventForDetails.rules.filter(r => r).map((rule, index) => (
+                        <li key={index} className="text-gray-300 flex items-start gap-2">
+                          <span className="text-blue-400 mt-1">•</span>
+                          <span>{rule}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Tags */}
+                {selectedEventForDetails.tags && selectedEventForDetails.tags.length > 0 && (
+                  <div className="bg-gray-800/50 p-5 rounded-lg">
+                    <h4 className="text-lg font-semibold text-white mb-3">Tags</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedEventForDetails.tags.filter(t => t).map((tag, index) => (
+                        <span key={index} className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

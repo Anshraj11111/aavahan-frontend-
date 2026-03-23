@@ -32,6 +32,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [registrationData, setRegistrationData] = useState(null);
   
@@ -360,8 +361,9 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         // Don't block on network error
       }
       
-      // Show loading toast
-      const loadingToast = toast.loading('Verifying payment details... This may take 10-15 seconds.');
+      // Show detailed loading messages
+      setLoadingMessage('Uploading payment screenshot...');
+      const loadingToast = toast.loading('Uploading payment screenshot...');
       
       try {
         // Prepare FormData for verification
@@ -370,6 +372,13 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         verificationData.append('screenshot', formData.paymentScreenshot);
         verificationData.append('eventId', event._id);
         verificationData.append('expectedAmount', event.entryFee.toString());
+        
+        // Update loading message
+        setTimeout(() => {
+          setLoadingMessage('Analyzing payment screenshot with OCR...');
+          toast.dismiss(loadingToast);
+          toast.loading('Analyzing payment screenshot with OCR... This may take 10-15 seconds.');
+        }, 500);
         
         // Call backend OCR verification API with longer timeout
         const controller = new AbortController();
@@ -382,9 +391,16 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         });
         
         clearTimeout(timeoutId);
+        
+        // Update loading message
+        setLoadingMessage('Verifying transaction details...');
+        toast.dismiss();
+        const verifyingToast = toast.loading('Verifying transaction details...');
+        
         const result = await response.json();
         
-        toast.dismiss(loadingToast);
+        toast.dismiss(verifyingToast);
+        setLoadingMessage('');
         
         if (!response.ok || !result.success) {
           toast.error(result.message || 'Payment verification failed. Transaction ID or amount does not match screenshot.', {
@@ -415,7 +431,8 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         }, 100);
         
       } catch (error) {
-        toast.dismiss(loadingToast);
+        toast.dismiss();
+        setLoadingMessage('');
         
         if (error.name === 'AbortError') {
           toast.error('Verification timeout. Please try again with a clearer screenshot.', {
@@ -485,6 +502,9 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
     setIsSubmitting(true);
 
     try {
+      // Step 1: Preparing data
+      setLoadingMessage('Preparing registration data...');
+      
       // Prepare FormData for backend API
       const formDataToSend = new FormData();
       
@@ -533,12 +553,14 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         if (!formData.transactionId || !formData.transactionId.trim()) {
           toast.error('Transaction ID is required for paid events');
           setIsSubmitting(false);
+          setLoadingMessage('');
           return;
         }
         
         if (!formData.paymentScreenshot) {
           toast.error('Payment screenshot is required for paid events');
           setIsSubmitting(false);
+          setLoadingMessage('');
           return;
         }
         
@@ -547,10 +569,24 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         console.log('Payment info added - Transaction ID:', formData.transactionId.trim());
       }
       
+      // Step 2: Uploading documents
+      setLoadingMessage('Uploading payment screenshot...');
+      await new Promise(resolve => setTimeout(resolve, 300)); // Small delay for UI feedback
+      
+      // Step 3: Verifying payment
+      if (event?.entryFee > 0) {
+        setLoadingMessage('Verifying payment details with OCR...');
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
+      // Step 4: Finalizing registration
+      setLoadingMessage('Finalizing your registration...');
+      
       // Submit to backend API
       const response = await registrationsService.submitRegistration(formDataToSend);
       
       if (response.success) {
+        setLoadingMessage('Registration successful!');
         setRegistrationSuccess(true);
         setRegistrationData(response.data);
         
@@ -563,6 +599,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         await refreshEvents();
         
         // Auto-download receipt
+        setLoadingMessage('Generating receipt...');
         try {
           const { downloadReceipt } = await import('../../utils/receiptGenerator');
           downloadReceipt(response.data, event);
@@ -572,12 +609,14 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
           // Don't block the flow if receipt download fails
         }
         
+        setLoadingMessage('');
         // Don't close modal immediately - show success message with download button
         // onClose();
       } else {
         // Backend returned error in response
         toast.error(response.message || 'Registration failed. Please try again.');
         setIsSubmitting(false);
+        setLoadingMessage('');
         return;
       }
       
@@ -618,6 +657,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
       });
       
       setIsSubmitting(false);
+      setLoadingMessage('');
       
       // Don't close modal or proceed - stay on current step so user can fix the issue
       return;
@@ -1214,7 +1254,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                     {isSubmitting ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Submitting...</span>
+                        <span className="text-sm md:text-base">{loadingMessage || 'Processing...'}</span>
                       </>
                     ) : (
                       <>

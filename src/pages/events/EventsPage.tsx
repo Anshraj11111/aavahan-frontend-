@@ -1,16 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Filter, Calendar, MapPin, Users, Clock, Trophy, Star, Zap, Award, Eye, UserPlus, Sparkles } from 'lucide-react';
+import { Search, Filter, Calendar, MapPin, Users, Clock, Trophy, Star, Zap, Award, Eye, UserPlus, Sparkles, Download, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { eventsService } from '../../services/events';
 import { Event, EventFilters } from '../../types';
-import { EVENT_CATEGORIES, DAY_INFO, DEPARTMENTS } from '../../constants';
-import { fadeInUp, staggerContainer, scaleUp, slideInLeft, slideInRight } from '../../lib/animations';
+import { fadeInUp, staggerContainer, scaleUp } from '../../lib/animations';
 import RegistrationModal from '../../components/modals/RegistrationModal';
 import { useRegistrations } from '../../contexts/RegistrationContext';
 import { useEvents } from '../../contexts/EventsContext';
 import LightweightBackground from '../../components/backgrounds/LightweightBackground';
+import toast from 'react-hot-toast';
 
 // @ts-ignore - Image import
 import collegeBuilding from '../../assets/images/college.png';
@@ -21,6 +18,7 @@ const EventsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [showEventDetailsModal, setShowEventDetailsModal] = useState(false);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const { getRegistrationStats, getRegistrationsByEvent } = useRegistrations();
   const { events, loading } = useEvents();
@@ -106,6 +104,202 @@ const EventsPage = () => {
   const handleRegisterClick = (event: Event) => {
     setSelectedEvent(event);
     setShowRegistrationModal(true);
+  };
+
+  const handleViewDetailsClick = (event: Event) => {
+    setSelectedEvent(event);
+    setShowEventDetailsModal(true);
+    // Scroll to top immediately when modal opens
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
+  };
+
+  // Close modal handler
+  const handleCloseEventDetailsModal = () => {
+    setShowEventDetailsModal(false);
+    setSelectedEvent(null);
+    // Unlock body scroll
+    document.body.style.overflow = 'unset';
+  };
+
+  // Download event details as HTML
+  const handleDownloadEventDetails = (event: Event) => {
+    try {
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>${event.title} - Event Details</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; color: #333; max-width: 900px; margin: 0 auto; }
+            h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 15px; margin-bottom: 30px; }
+            h2 { color: #1e40af; margin-top: 30px; margin-bottom: 15px; border-left: 4px solid #1e40af; padding-left: 15px; }
+            .header { background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+            .header h1 { color: white; border: none; margin: 0; }
+            .badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; margin-right: 10px; margin-bottom: 10px; }
+            .badge-cultural { background: #ec4899; color: white; }
+            .badge-technical { background: #3b82f6; color: white; }
+            .badge-featured { background: #f59e0b; color: white; }
+            .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0; }
+            .info-box { background: #f3f4f6; padding: 20px; border-radius: 8px; border-left: 4px solid #1e40af; }
+            .info-label { font-weight: bold; color: #6b7280; font-size: 14px; margin-bottom: 5px; }
+            .info-value { color: #1f2937; font-size: 16px; font-weight: 600; }
+            .section { background: #f9fafb; padding: 25px; border-radius: 10px; margin: 20px 0; }
+            .rules-list { list-style: none; padding: 0; }
+            .rules-list li { padding: 12px; margin: 10px 0; background: white; border-radius: 6px; border-left: 4px solid #3b82f6; }
+            .footer { margin-top: 40px; text-align: center; color: #6b7280; font-size: 14px; border-top: 2px solid #e5e7eb; padding-top: 20px; }
+            .progress-bar { background: #e5e7eb; height: 20px; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+            .progress-fill { background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%); height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>${event.title}</h1>
+            <p style="margin: 10px 0 0 0; font-size: 18px;">${event.shortDescription}</p>
+            <div style="margin-top: 15px;">
+              <span class="badge badge-${event.category}">${event.category === 'cultural' ? '🎭 Cultural' : '💻 Technical'}</span>
+              <span class="badge" style="background: rgba(255,255,255,0.2);">${typeof event.day === 'string' ? event.day : `Day ${event.day}`}</span>
+              ${event.featured ? '<span class="badge badge-featured">⭐ Featured</span>' : ''}
+            </div>
+          </div>
+
+          <h2>📅 Event Information</h2>
+          <div class="info-grid">
+            <div class="info-box">
+              <div class="info-label">Date</div>
+              <div class="info-value">${new Date(event.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+            </div>
+            <div class="info-box">
+              <div class="info-label">Time</div>
+              <div class="info-value">${event.startTime} - ${event.endTime}</div>
+            </div>
+            <div class="info-box">
+              <div class="info-label">Venue</div>
+              <div class="info-value">${event.venue}</div>
+            </div>
+            <div class="info-box">
+              <div class="info-label">Entry Fee</div>
+              <div class="info-value">₹${event.entryFee === 0 ? 'Free' : event.entryFee}</div>
+            </div>
+          </div>
+
+          ${event.fullDescription ? `
+          <h2>📝 About This Event</h2>
+          <div class="section">
+            <p style="line-height: 1.8; margin: 0;">${event.fullDescription}</p>
+          </div>
+          ` : ''}
+
+          <h2>👥 Participation Details</h2>
+          <div class="section">
+            <div class="info-grid">
+              <div>
+                <div class="info-label">Participation Type</div>
+                <div class="info-value" style="text-transform: capitalize;">${event.participationType}</div>
+              </div>
+              ${event.participationType === 'team' ? `
+              <div>
+                <div class="info-label">Team Size</div>
+                <div class="info-value">${event.minTeamSize} - ${event.maxTeamSize} members</div>
+              </div>
+              ` : ''}
+              ${event.eligibility ? `
+              <div>
+                <div class="info-label">Eligibility</div>
+                <div class="info-value">${event.eligibility}</div>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <h2>📊 Registration Status</h2>
+          <div class="section">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <span style="font-weight: bold;">Current Registrations:</span>
+              <span style="font-weight: bold; font-size: 18px;">${event.currentRegistrations} / ${event.maxRegistrations}</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${Math.min((event.currentRegistrations / event.maxRegistrations) * 100, 100)}%">
+                ${Math.round((event.currentRegistrations / event.maxRegistrations) * 100)}%
+              </div>
+            </div>
+            <div style="margin-top: 15px; padding: 15px; background: ${
+              event.currentRegistrations >= event.maxRegistrations ? '#fee2e2' : 
+              new Date(event.registrationDeadline) < new Date() ? '#fef3c7' : '#dcfce7'
+            }; border-radius: 8px; text-align: center; font-weight: bold; color: ${
+              event.currentRegistrations >= event.maxRegistrations ? '#991b1b' : 
+              new Date(event.registrationDeadline) < new Date() ? '#92400e' : '#166534'
+            };">
+              Status: ${
+                event.currentRegistrations >= event.maxRegistrations ? 'FULL' : 
+                new Date(event.registrationDeadline) < new Date() ? 'CLOSED' : 'OPEN'
+              }
+            </div>
+          </div>
+
+          ${event.rules && event.rules.length > 0 ? `
+          <h2>⚡ Rules & Guidelines</h2>
+          <div class="section">
+            <ul class="rules-list">
+              ${event.rules.filter((r: string) => r).map((rule: string, index: number) => `
+                <li><strong>${index + 1}.</strong> ${rule}</li>
+              `).join('')}
+            </ul>
+          </div>
+          ` : ''}
+
+          ${event.prizeDetails ? `
+          <h2>🏆 Prize Details</h2>
+          <div class="section">
+            <p style="font-size: 18px; font-weight: 600; margin: 0; color: #1e40af;">${event.prizeDetails}</p>
+          </div>
+          ` : ''}
+
+          ${event.coordinatorName ? `
+          <h2>📞 Event Coordinator</h2>
+          <div class="section">
+            <div style="display: flex; align-items: center; gap: 20px;">
+              <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: bold;">
+                ${event.coordinatorName.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div style="font-size: 20px; font-weight: bold; color: #1f2937; margin-bottom: 5px;">${event.coordinatorName}</div>
+                ${event.coordinatorPhone ? `<div style="color: #6b7280; margin: 5px 0;">📞 +91 ${event.coordinatorPhone}</div>` : ''}
+                ${event.coordinatorEmail ? `<div style="color: #6b7280; margin: 5px 0;">✉️ ${event.coordinatorEmail}</div>` : ''}
+              </div>
+            </div>
+          </div>
+          ` : ''}
+
+          <div class="footer">
+            <p><strong>Aavhaan 2026</strong> - Technical & Cultural Festival</p>
+            <p>Shri Ram Group of Colleges</p>
+            <p>Downloaded on ${new Date().toLocaleString('en-IN')}</p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Create blob and download
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${event.title.replace(/[^a-z0-9]/gi, '_')}_Details.html`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Event details downloaded successfully!');
+    } catch (error) {
+      console.error('Failed to download event details:', error);
+      toast.error('Failed to download event details');
+    }
   };
 
   // Get real-time registration stats from backend events (MongoDB)
@@ -519,13 +713,15 @@ const EventsPage = () => {
 
                       {/* Action Buttons */}
                       <div className="flex space-x-3">
-                        <Link
-                          to={`/events/${event.slug}`}
+                        <motion.button
+                          onClick={() => handleViewDetailsClick(event)}
                           className="flex-1 glass-panel px-4 py-3 text-center text-white font-medium rounded-xl hover:bg-white/10 transition-all duration-300 border border-white/20 hover:border-white/40 flex items-center justify-center space-x-2 group"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                         >
                           <Eye className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
                           <span>View Details</span>
-                        </Link>
+                        </motion.button>
                         
                         {canRegisterUpdated(event) ? (
                           <motion.button
@@ -571,6 +767,294 @@ const EventsPage = () => {
         }}
         event={selectedEvent}
       />
+
+      {/* Event Details Modal */}
+      <AnimatePresence>
+        {showEventDetailsModal && selectedEvent && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] overflow-y-auto pt-20"
+            onClick={handleCloseEventDetailsModal}
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            <div className="min-h-screen flex items-start justify-center p-4 pb-20">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="bg-navy-900 rounded-2xl max-w-5xl w-full border-2 border-white/20 shadow-2xl my-8 max-h-[85vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+              {/* Header with Event Image */}
+              <div className="relative h-48 sm:h-56 md:h-64 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-t-2xl overflow-hidden">
+                {selectedEvent.posterImage ? (
+                  <img
+                    src={selectedEvent.posterImage}
+                    alt={selectedEvent.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500/30 to-purple-500/30">
+                    <Trophy className="w-32 h-32 text-white/50" />
+                  </div>
+                )}
+                
+                {/* Close Button */}
+                <button
+                  onClick={handleCloseEventDetailsModal}
+                  className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm text-white rounded-full hover:bg-black/70 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+
+                {/* Download Button */}
+                <button
+                  onClick={() => handleDownloadEventDetails(selectedEvent)}
+                  className="absolute top-2 sm:top-4 left-2 sm:left-4 px-2 sm:px-4 py-1.5 sm:py-2 bg-green-600 hover:bg-green-700 backdrop-blur-sm text-white rounded-full transition-colors flex items-center gap-1 sm:gap-2 font-semibold text-xs sm:text-base"
+                >
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="hidden sm:inline">Download Details</span>
+                  <span className="sm:hidden">Download</span>
+                </button>
+
+                {/* Event Title Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 flex-wrap">
+                    <span className={`px-2 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold ${
+                      selectedEvent.category === 'cultural' 
+                        ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' 
+                        : 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+                    }`}>
+                      {selectedEvent.category === 'cultural' ? '🎭 Cultural' : '💻 Technical'}
+                    </span>
+                    <span className="px-2 sm:px-4 py-1 sm:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-xs sm:text-sm font-bold">
+                      {typeof selectedEvent.day === 'string' ? selectedEvent.day : `Day ${selectedEvent.day}`}
+                    </span>
+                    {selectedEvent.featured && (
+                      <span className="px-2 sm:px-4 py-1 sm:py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full text-xs sm:text-sm font-bold flex items-center">
+                        <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="currentColor" />
+                        Featured
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-1 sm:mb-2">{selectedEvent.title}</h2>
+                  <p className="text-white/90 text-sm sm:text-base md:text-lg font-semibold">{selectedEvent.shortDescription}</p>
+                </div>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 md:space-y-8">
+                {/* Quick Info Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="glass-panel p-4 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                        <Calendar className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Date</p>
+                        <p className="text-white font-bold">{new Date(selectedEvent.date).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="glass-panel p-4 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                        <Clock className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Time</p>
+                        <p className="text-white font-bold text-sm">{selectedEvent.startTime} - {selectedEvent.endTime}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="glass-panel p-4 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                        <MapPin className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Venue</p>
+                        <p className="text-white font-bold">{selectedEvent.venue}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="glass-panel p-4 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center">
+                        <Trophy className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Entry Fee</p>
+                        <p className="text-white font-bold">₹{selectedEvent.entryFee === 0 ? 'Free' : selectedEvent.entryFee}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Full Description */}
+                {selectedEvent.fullDescription && (
+                  <div className="glass-panel p-6 rounded-xl">
+                    <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                      <Award className="w-6 h-6 text-blue-400" />
+                      About This Event
+                    </h3>
+                    <p className="text-gray-300 leading-relaxed text-base">{selectedEvent.fullDescription}</p>
+                  </div>
+                )}
+
+                {/* Participation & Registration */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="glass-panel p-6 rounded-xl">
+                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                      <Users className="w-5 h-5 text-green-400" />
+                      Participation
+                    </h3>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-gray-400 text-sm">Type</p>
+                        <p className="text-white font-bold capitalize">{selectedEvent.participationType}</p>
+                      </div>
+                      {selectedEvent.participationType === 'team' && (
+                        <div>
+                          <p className="text-gray-400 text-sm">Team Size</p>
+                          <p className="text-white font-bold">{selectedEvent.minTeamSize} - {selectedEvent.maxTeamSize} members</p>
+                        </div>
+                      )}
+                      {selectedEvent.eligibility && (
+                        <div>
+                          <p className="text-gray-400 text-sm">Eligibility</p>
+                          <p className="text-white font-semibold">{selectedEvent.eligibility}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="glass-panel p-6 rounded-xl">
+                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                      <Users className="w-5 h-5 text-blue-400" />
+                      Registration Status
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Current / Maximum</span>
+                        <span className="text-white font-bold text-lg">{selectedEvent.currentRegistrations} / {selectedEvent.maxRegistrations}</span>
+                      </div>
+                      <div className="w-full bg-white/10 rounded-full h-3">
+                        <div 
+                          className={`h-3 rounded-full ${
+                            selectedEvent.category === 'cultural' 
+                              ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
+                              : 'bg-gradient-to-r from-blue-500 to-cyan-500'
+                          }`}
+                          style={{ width: `${Math.min((selectedEvent.currentRegistrations / selectedEvent.maxRegistrations) * 100, 100)}%` }}
+                        />
+                      </div>
+                      <div className={`px-4 py-2 rounded-lg text-center font-bold ${getEventStatusColor(selectedEvent)}`}>
+                        {getEventStatusText(selectedEvent)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rules */}
+                {selectedEvent.rules && selectedEvent.rules.length > 0 && (
+                  <div className="glass-panel p-6 rounded-xl">
+                    <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                      <Zap className="w-6 h-6 text-yellow-400" />
+                      Rules & Guidelines
+                    </h3>
+                    <ul className="space-y-3">
+                      {selectedEvent.rules.filter(r => r).map((rule, index) => (
+                        <li key={index} className="flex items-start gap-3">
+                          <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                            <span className="text-white text-xs font-bold">{index + 1}</span>
+                          </div>
+                          <span className="text-gray-300 font-semibold">{rule}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Prize Details */}
+                {selectedEvent.prizeDetails && (
+                  <div className="glass-panel p-6 rounded-xl">
+                    <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                      <Award className="w-6 h-6 text-yellow-400" />
+                      Prize Details
+                    </h3>
+                    <p className="text-gray-300 font-semibold text-lg">{selectedEvent.prizeDetails}</p>
+                  </div>
+                )}
+
+                {/* Coordinator Info */}
+                {selectedEvent.coordinatorName && (
+                  <div className="glass-panel p-6 rounded-xl">
+                    <h3 className="text-2xl font-bold text-white mb-4">Event Coordinator</h3>
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                        <Users className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-white font-bold text-lg">{selectedEvent.coordinatorName}</p>
+                        {selectedEvent.coordinatorPhone && (
+                          <p className="text-gray-400">📞 +91 {selectedEvent.coordinatorPhone}</p>
+                        )}
+                        {selectedEvent.coordinatorEmail && (
+                          <p className="text-gray-400">✉️ {selectedEvent.coordinatorEmail}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+                  {canRegisterUpdated(selectedEvent) ? (
+                    <motion.button
+                      onClick={() => {
+                        handleCloseEventDetailsModal();
+                        handleRegisterClick(selectedEvent);
+                      }}
+                      className={`flex-1 bg-gradient-to-r ${
+                        selectedEvent.category === 'cultural' 
+                          ? 'from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600' 
+                          : 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
+                      } text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm sm:text-base`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span>Register Now</span>
+                    </motion.button>
+                  ) : (
+                    <button
+                      disabled
+                      className="flex-1 bg-gray-600/50 text-gray-400 font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl cursor-not-allowed text-sm sm:text-base"
+                    >
+                      Registration Unavailable
+                    </button>
+                  )}
+                  <button
+                    onClick={handleCloseEventDetailsModal}
+                    className="px-6 sm:px-8 py-3 sm:py-4 glass-panel text-white font-bold rounded-xl hover:bg-white/10 transition-all duration-300 text-sm sm:text-base"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
