@@ -152,8 +152,8 @@ const NewFeaturedEventsSection = () => {
                     {/* Right - Register Button */}
                     <div className="md:col-span-3 p-6 flex items-center justify-center bg-blue-900/20 backdrop-blur-sm">
                       <Link
-                        to={`/events/${event.slug}`}
-                        className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 shadow-lg shadow-orange-500/50 hover:shadow-xl hover:shadow-orange-500/70 hover:scale-105 w-full text-center"
+                        to="/events"
+                        className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 shadow-lg shadow-orange-500/50 hover:shadow-xl hover:shadow-orange-500/70 hover:scale-105 w-full text-center inline-block"
                       >
                         Register
                       </Link>

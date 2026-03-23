@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/NewFooter';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import ScrollToTop from './components/common/ScrollToTop';
 
 // Context Providers
 import { RegistrationProvider } from './contexts/RegistrationContext';
@@ -50,6 +51,7 @@ const App = () => {
         <EventsProvider>
           <RegistrationProvider>
           <Router>
+            <ScrollToTop />
             <div className="min-h-screen bg-navy-950">
               <Routes>
                 {/* Admin Routes - No public navbar */}

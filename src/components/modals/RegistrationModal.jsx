@@ -416,7 +416,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   return (
     <AnimatePresence mode="wait">
       {isOpen && (
-      <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-24 sm:pt-28 overflow-y-auto">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
