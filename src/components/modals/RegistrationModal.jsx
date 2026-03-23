@@ -212,6 +212,8 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         const verificationData = new FormData();
         verificationData.append('transactionId', formData.transactionId.trim());
         verificationData.append('screenshot', formData.paymentScreenshot);
+        verificationData.append('eventId', event._id);
+        verificationData.append('expectedAmount', event.entryFee.toString());
         
         // Call backend OCR verification API with longer timeout
         const controller = new AbortController();
@@ -229,7 +231,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         toast.dismiss(loadingToast);
         
         if (!response.ok || !result.success) {
-          toast.error(result.message || 'Payment verification failed. Transaction ID does not match screenshot.', {
+          toast.error(result.message || 'Payment verification failed. Transaction ID or amount does not match screenshot.', {
             duration: 6000
           });
           return;

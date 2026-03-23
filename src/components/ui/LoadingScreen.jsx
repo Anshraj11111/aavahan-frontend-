@@ -38,7 +38,7 @@ const LoadingScreen = ({ isLoading }) => {
           className="text-3xl font-bold text-white mb-4"
         >
           <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            Tech Fest 2026
+            Aavhaan 2026
           </span>
         </motion.h2>
 

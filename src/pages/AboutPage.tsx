@@ -4,6 +4,9 @@ import { FEST_INFO, DAY_INFO } from '../constants';
 import { fadeInUp, staggerContainer, scaleUp } from '../lib/animations';
 import LightweightBackground from '../components/backgrounds/LightweightBackground';
 
+// @ts-ignore - Image import
+import collegeBuilding from '../assets/images/college.png';
+
 const AboutPage = () => {
   const stats = [
     { icon: Users, label: "Expected Participants", value: "5000+", color: "from-blue-500 to-cyan-500" },
@@ -56,53 +59,60 @@ const AboutPage = () => {
       {/* Premium Animated Background */}
       <LightweightBackground />
 
-      {/* Hero Section */}
+      {/* Hero Section with College Building */}
       <motion.section 
-        className="py-20 relative z-10"
+        className="py-24 relative z-10"
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* College Building Background */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={collegeBuilding} 
+            alt="Shri Ram Group College" 
+            className="w-full h-full object-cover opacity-10"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy-950/90 via-navy-950/95 to-navy-950" />
+        </div>
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-6xl mx-auto text-center">
-            <motion.div variants={fadeInUp} className="mb-8">
-              <span className="inline-block px-6 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-full text-blue-400 font-medium mb-6">
-                About Tech Fest 2026
-              </span>
-            </motion.div>
-            
             <motion.h1 
               variants={fadeInUp}
-              className="text-5xl md:text-7xl font-display font-bold text-white mb-8 leading-tight"
+              className="text-4xl md:text-6xl lg:text-7xl font-display font-black text-white mb-8 leading-tight tracking-tight"
+              style={{ textShadow: '4px 4px 8px rgba(0,0,0,0.8)' }}
             >
-              Where Innovation Meets
-              <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                Celebration
-              </span>
+              ABOUT US
             </motion.h1>
+            
+            <motion.div 
+              variants={fadeInUp}
+              className="w-32 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 mx-auto mb-12 rounded-full"
+            />
             
             <motion.p 
               variants={fadeInUp}
-              className="text-xl md:text-2xl text-gray-300 mb-12 leading-relaxed max-w-4xl mx-auto"
+              className="text-xl md:text-2xl text-gray-200 mb-12 leading-relaxed max-w-4xl mx-auto font-medium"
             >
               {FEST_INFO.description}
             </motion.p>
             
             <motion.div 
               variants={fadeInUp}
-              className="flex flex-wrap items-center justify-center gap-8 text-gray-300"
+              className="flex flex-wrap items-center justify-center gap-6 text-gray-300"
             >
-              <div className="flex items-center glass-panel px-6 py-3 rounded-full">
-                <Calendar className="w-5 h-5 mr-3 text-blue-400" />
-                <span className="font-medium">April 1-3, 2026</span>
+              <div className="flex items-center glass-panel px-8 py-4 rounded-2xl border-2 border-white/30 backdrop-blur-xl">
+                <Calendar className="w-6 h-6 mr-3 text-blue-400" />
+                <span className="font-bold text-lg">April 1-3, 2026</span>
               </div>
-              <div className="flex items-center glass-panel px-6 py-3 rounded-full">
-                <MapPin className="w-5 h-5 mr-3 text-purple-400" />
-                <span className="font-medium">{FEST_INFO.venue}</span>
+              <div className="flex items-center glass-panel px-8 py-4 rounded-2xl border-2 border-white/30 backdrop-blur-xl">
+                <MapPin className="w-6 h-6 mr-3 text-purple-400" />
+                <span className="font-bold text-lg">{FEST_INFO.venue}</span>
               </div>
-              <div className="flex items-center glass-panel px-6 py-3 rounded-full">
-                <Users className="w-5 h-5 mr-3 text-cyan-400" />
-                <span className="font-medium">{FEST_INFO.organization}</span>
+              <div className="flex items-center glass-panel px-8 py-4 rounded-2xl border-2 border-white/30 backdrop-blur-xl">
+                <Users className="w-6 h-6 mr-3 text-cyan-400" />
+                <span className="font-bold text-lg">{FEST_INFO.organization}</span>
               </div>
             </motion.div>
           </div>
@@ -118,24 +128,80 @@ const AboutPage = () => {
         variants={staggerContainer}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
                 <motion.div
                   key={index}
                   variants={scaleUp}
-                  className="glass-panel p-6 rounded-xl text-center group hover:scale-105 transition-all duration-300"
+                  className="glass-panel p-8 rounded-2xl text-center group hover:scale-105 transition-all duration-300 border-2 border-white/30 backdrop-blur-xl"
                 >
-                  <div className={`w-16 h-16 bg-gradient-to-r ${stat.color} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                  <div className={`w-16 h-16 bg-gradient-to-r ${stat.color} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                     <Icon className="w-8 h-8 text-white" />
                   </div>
-                  <div className="text-3xl font-bold text-white mb-2">{stat.value}</div>
-                  <div className="text-gray-400 text-sm font-medium">{stat.label}</div>
+                  <div className="text-4xl font-black text-white mb-2">{stat.value}</div>
+                  <div className="text-white text-base font-black uppercase tracking-wide">{stat.label}</div>
                 </motion.div>
               );
             })}
           </div>
+        </div>
+      </motion.section>
+
+      {/* College Building Showcase - Large and Prominent */}
+      <motion.section 
+        className="py-20 relative z-10"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={staggerContainer}
+      >
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div variants={fadeInUp} className="text-center mb-16">
+            <h2 className="text-5xl md:text-6xl font-black text-white mb-4">
+              OUR <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">CAMPUS</span>
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full" />
+          </motion.div>
+
+          <motion.div 
+            variants={fadeInUp}
+            className="glass-panel rounded-3xl overflow-hidden border-2 border-white/30 max-w-7xl mx-auto backdrop-blur-xl"
+          >
+            {/* Large College Building Image */}
+            <div className="relative h-[500px] md:h-[600px]">
+              <img 
+                src={collegeBuilding} 
+                alt="Shri Ram Group College Campus" 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-transparent" />
+              
+              {/* Overlay Content */}
+              <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
+                <div className="max-w-4xl">
+                  <h3 className="text-4xl md:text-5xl font-black text-white mb-4" style={{ textShadow: '2px 2px 6px rgba(0,0,0,0.9)' }}>
+                    SHRI RAM GROUP OF COLLEGES
+                  </h3>
+                  <p className="text-xl text-gray-200 mb-6 font-medium" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}>
+                    Muzaffarnagar's Premier Technical Institution
+                  </p>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="glass-panel px-6 py-3 rounded-xl border border-white/30 backdrop-blur-xl">
+                      <div className="text-white font-bold text-lg">State-of-the-Art Facilities</div>
+                    </div>
+                    <div className="glass-panel px-6 py-3 rounded-xl border border-white/30 backdrop-blur-xl">
+                      <div className="text-white font-bold text-lg">Modern Infrastructure</div>
+                    </div>
+                    <div className="glass-panel px-6 py-3 rounded-xl border border-white/30 backdrop-blur-xl">
+                      <div className="text-white font-bold text-lg">Innovation Hub</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </motion.section>
 
@@ -158,13 +224,13 @@ const AboutPage = () => {
                 <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-8 text-center">
                   Welcome to 
                   <span className="block bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    Tech Fest 2026
+                    Aavhaan 2026
                   </span>
                 </h2>
                 
                 <div className="prose prose-lg prose-invert max-w-none space-y-6">
-                  <p className="text-gray-300 leading-relaxed text-lg text-center mb-8">
-                    Tech Fest 2026 is the premier technology festival organized by Shri Ram Group, Jabalpur. 
+                  <p className="text-gray-100 leading-relaxed text-lg text-center mb-8 font-semibold">
+                    Aavhaan 2026 is the premier technology festival organized by Shri Ram Group, Jabalpur. 
                     This three-day extravaganza celebrates the perfect blend of cultural diversity and 
                     technological innovation, bringing together students from across the region to showcase 
                     their talents and compete in various events.
@@ -176,10 +242,10 @@ const AboutPage = () => {
                         <Sparkles className="w-6 h-6 mr-3 text-yellow-400" />
                         Our Vision
                       </h3>
-                      <p className="text-gray-300 leading-relaxed">
+                      <p className="text-gray-100 leading-relaxed font-semibold text-base">
                         Our festival embodies the theme "Unity in Diversity," highlighting how technology 
                         can bridge cultural gaps and create meaningful connections. From traditional cultural 
-                        performances to cutting-edge technical competitions, Tech Fest 2026 offers something 
+                        performances to cutting-edge technical competitions, Aavhaan 2026 offers something 
                         for everyone.
                       </p>
                     </div>
@@ -189,7 +255,7 @@ const AboutPage = () => {
                         <Target className="w-6 h-6 mr-3 text-blue-400" />
                         Our Mission
                       </h3>
-                      <p className="text-gray-300 leading-relaxed">
+                      <p className="text-gray-100 leading-relaxed font-semibold text-base">
                         Join us for an unforgettable experience filled with learning, networking, entertainment, 
                         and the opportunity to showcase your skills on a prestigious platform. We aim to inspire 
                         the next generation of innovators and creators.
@@ -276,12 +342,11 @@ const AboutPage = () => {
                 className="text-4xl font-display font-bold text-white mb-4 text-center"
               >
                 Why Attend 
-                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Tech Fest 2026?</span>
+                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Aavhaan 2026?</span>
               </motion.h2>
               <motion.p 
                 variants={fadeInUp}
-                className="text-gray-400 text-center mb-12 max-w-2xl mx-auto"
-              >
+                className="text-gray-100 text-center mb-12 max-w-2xl mx-auto text-lg font-semibold">
                 Discover endless opportunities for growth, learning, and celebration at India's most innovative tech festival
               </motion.p>
               
@@ -302,11 +367,11 @@ const AboutPage = () => {
                           <Icon className="w-8 h-8 text-white" />
                         </div>
                         
-                        <h3 className="text-xl font-bold text-white mb-4 group-hover:text-white transition-colors duration-300">
+                        <h3 className="text-2xl font-black text-white mb-4 group-hover:text-white transition-colors duration-300">
                           {feature.title}
                         </h3>
                         
-                        <p className="text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
+                        <p className="text-gray-100 text-base leading-relaxed group-hover:text-white transition-colors duration-300 font-semibold">
                           {feature.description}
                         </p>
                       </div>
@@ -330,7 +395,7 @@ const AboutPage = () => {
                   Get in 
                   <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"> Touch</span>
                 </h2>
-                <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+                <p className="text-gray-100 text-center mb-12 max-w-2xl mx-auto text-lg font-semibold">
                   Have questions? Want to collaborate? We'd love to hear from you. Reach out to us through any of these channels.
                 </p>
                 
@@ -346,10 +411,10 @@ const AboutPage = () => {
                           <Phone className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <p className="text-white font-semibold mb-1">Phone</p>
+                          <p className="text-white font-black mb-1 text-lg">Phone</p>
                           <div className="space-y-1">
                             {FEST_INFO.contact.phone.map((phone, index) => (
-                              <p key={index} className="text-gray-300 font-mono">{phone}</p>
+                              <p key={index} className="text-gray-100 font-mono text-base font-semibold">{phone}</p>
                             ))}
                           </div>
                         </div>
@@ -360,8 +425,8 @@ const AboutPage = () => {
                           <Mail className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <p className="text-white font-semibold mb-1">Email</p>
-                          <p className="text-gray-300">{FEST_INFO.contact.email}</p>
+                          <p className="text-white font-black mb-1 text-lg">Email</p>
+                          <p className="text-gray-100 text-base font-semibold">{FEST_INFO.contact.email}</p>
                         </div>
                       </div>
                       
@@ -370,8 +435,8 @@ const AboutPage = () => {
                           <Globe className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <p className="text-white font-semibold mb-1">Website</p>
-                          <p className="text-gray-300">{FEST_INFO.socialMedia.website}</p>
+                          <p className="text-white font-black mb-1 text-lg">Website</p>
+                          <p className="text-gray-100 text-base font-semibold">{FEST_INFO.socialMedia.website}</p>
                         </div>
                       </div>
                       
@@ -380,8 +445,8 @@ const AboutPage = () => {
                           <MapPin className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <p className="text-white font-semibold mb-1">Address</p>
-                          <p className="text-gray-300 leading-relaxed">{FEST_INFO.contact.address}</p>
+                          <p className="text-white font-black mb-1 text-lg">Address</p>
+                          <p className="text-gray-100 leading-relaxed text-base font-semibold">{FEST_INFO.contact.address}</p>
                         </div>
                       </div>
                     </div>
@@ -403,8 +468,8 @@ const AboutPage = () => {
                           <span className="text-white font-bold">IG</span>
                         </div>
                         <div>
-                          <p className="text-white font-semibold">Instagram</p>
-                          <p className="text-gray-400 text-sm">{FEST_INFO.socialMedia.instagram}</p>
+                          <p className="text-white font-black text-lg">Instagram</p>
+                          <p className="text-gray-100 text-base font-semibold">{FEST_INFO.socialMedia.instagram}</p>
                         </div>
                       </a>
                       
@@ -418,8 +483,8 @@ const AboutPage = () => {
                           <span className="text-white font-bold">FB</span>
                         </div>
                         <div>
-                          <p className="text-white font-semibold">Facebook</p>
-                          <p className="text-gray-400 text-sm">{FEST_INFO.socialMedia.facebook}</p>
+                          <p className="text-white font-black text-lg">Facebook</p>
+                          <p className="text-gray-100 text-base font-semibold">{FEST_INFO.socialMedia.facebook}</p>
                         </div>
                       </a>
                       
@@ -433,8 +498,8 @@ const AboutPage = () => {
                           <span className="text-white font-bold">TW</span>
                         </div>
                         <div>
-                          <p className="text-white font-semibold">Twitter</p>
-                          <p className="text-gray-400 text-sm">{FEST_INFO.socialMedia.twitter}</p>
+                          <p className="text-white font-black text-lg">Twitter</p>
+                          <p className="text-gray-100 text-base font-semibold">{FEST_INFO.socialMedia.twitter}</p>
                         </div>
                       </a>
                       
@@ -448,8 +513,8 @@ const AboutPage = () => {
                           <span className="text-white font-bold">LI</span>
                         </div>
                         <div>
-                          <p className="text-white font-semibold">LinkedIn</p>
-                          <p className="text-gray-400 text-sm">{FEST_INFO.socialMedia.linkedin}</p>
+                          <p className="text-white font-black text-lg">LinkedIn</p>
+                          <p className="text-gray-100 text-base font-semibold">{FEST_INFO.socialMedia.linkedin}</p>
                         </div>
                       </a>
                     </div>

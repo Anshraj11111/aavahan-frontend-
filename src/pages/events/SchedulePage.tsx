@@ -1,34 +1,39 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Calendar, Clock, MapPin, Users, Trophy, Download, Plus, Star, Zap, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { eventsService } from '../../services/events';
 import { DAY_INFO } from '../../constants';
 import { formatDate, formatCurrency } from '../../utils';
 import { Link } from 'react-router-dom';
 import { fadeInUp, staggerContainer, scaleUp, slideInLeft } from '../../lib/animations';
 import LightweightBackground from '../../components/backgrounds/LightweightBackground';
+import { useEvents } from '../../contexts/EventsContext';
+import RegistrationModal from '../../components/modals/RegistrationModal';
+
+// @ts-ignore - Image import
+import collegeBuilding from '../../assets/images/college.png';
 
 const SchedulePage = () => {
   const [selectedDay, setSelectedDay] = useState<number>(1);
-
-  const { data: scheduleData, isLoading } = useQuery({
-    queryKey: ['day-schedule'],
-    queryFn: () => eventsService.getDaySchedule(),
-    staleTime: 5 * 60 * 1000,
-  });
+  const [expandedEvent, setExpandedEvent] = useState<string | null>(null);  // Track which event is expanded
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);  // Registration modal state
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);  // Selected event for registration
+  const { events, loading: isLoading } = useEvents();  // Use EventsContext instead of separate API call
 
   // Group events by day
-  const allEvents = scheduleData?.data || [];
+  const allEvents = events || [];
+  
+  // Convert selectedDay number to "Day X" format for matching
+  const dayString = `Day ${selectedDay}`;
+  
   const schedule = Array.isArray(allEvents) ? allEvents.reduce((acc, event) => {
     if (!acc[event.day]) {
       acc[event.day] = [];
     }
     acc[event.day].push(event);
     return acc;
-  }, {} as { [key: number]: any[] }) : {};
+  }, {} as { [key: string]: any[] }) : {};
   
-  const dayEvents = schedule[selectedDay] || [];
+  const dayEvents = schedule[dayString] || [];
 
   // Sort events by start time
   const sortedEvents = [...dayEvents].sort((a, b) => {
@@ -40,38 +45,43 @@ const SchedulePage = () => {
       {/* Premium Animated Background */}
       <LightweightBackground />
 
-      {/* Header */}
+      {/* Header with College Building */}
       <motion.section 
-        className="py-20 relative z-10"
+        className="py-24 relative z-10"
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* College Building Background */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={collegeBuilding} 
+            alt="Shri Ram Group College" 
+            className="w-full h-full object-cover opacity-10"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy-950/90 via-navy-950/95 to-navy-950" />
+        </div>
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <motion.div variants={fadeInUp} className="mb-8">
-              <span className="inline-block px-6 py-3 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 border border-blue-500/30 rounded-full text-blue-300 font-semibold mb-6 backdrop-blur-xl">
-                <Calendar className="inline w-5 h-5 mr-2 -mt-1" />
-                Tech Fest 2026 Schedule
-              </span>
-            </motion.div>
-            
             <motion.h1 
               variants={fadeInUp}
-              className="text-5xl lg:text-7xl font-display font-bold text-white mb-8 leading-tight"
+              className="text-4xl md:text-6xl lg:text-7xl font-display font-black text-white mb-8 leading-tight tracking-tight"
               style={{
-                textShadow: "3px 3px 6px rgba(0,0,0,0.9), 0 0 30px rgba(59,130,246,0.5)"
+                textShadow: "4px 4px 8px rgba(0,0,0,0.9)"
               }}
             >
-              Event 
-              <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mt-2">
-                Schedule
-              </span>
+              SCHEDULE
             </motion.h1>
+            
+            <motion.div 
+              variants={fadeInUp}
+              className="w-32 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 mx-auto mb-8 rounded-full"
+            />
             
             <motion.p 
               variants={fadeInUp}
-              className="text-gray-300 text-xl max-w-4xl mx-auto leading-relaxed"
+              className="text-white text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed font-bold"
             >
               Plan your Tech Fest 2026 experience with our comprehensive schedule. 
               Three days of innovation, culture, and celebration await you.
@@ -264,7 +274,7 @@ const SchedulePage = () => {
                   </p>
                 </div>
                 
-                <p className="text-gray-300 leading-relaxed text-lg max-w-3xl mx-auto">
+                <p className="text-gray-100 leading-relaxed text-lg max-w-3xl mx-auto font-semibold">
                   {DAY_INFO[selectedDay as keyof typeof DAY_INFO].description}
                 </p>
               </div>
@@ -309,10 +319,10 @@ const SchedulePage = () => {
             >
               <div className="glass-panel p-12 rounded-2xl max-w-2xl mx-auto">
                 <Calendar className="w-32 h-32 text-gray-600 mx-auto mb-8" />
-                <h3 className="text-3xl font-bold text-white mb-6">
+                <h3 className="text-3xl font-black text-white mb-6">
                   No Events Scheduled
                 </h3>
-                <p className="text-gray-400 text-lg leading-relaxed">
+                <p className="text-gray-100 text-xl leading-relaxed font-semibold">
                   Events for Day {selectedDay} will be announced soon. Stay tuned for exciting updates!
                 </p>
               </div>
@@ -345,7 +355,10 @@ const SchedulePage = () => {
 
               <div className="space-y-8">
                 <AnimatePresence>
-                  {sortedEvents.map((event, index) => (
+                  {sortedEvents.map((event, index) => {
+                    const isExpanded = expandedEvent === event._id;
+                    
+                    return (
                     <motion.div
                       key={event._id}
                       variants={slideInLeft}
@@ -387,10 +400,11 @@ const SchedulePage = () => {
                         />
                       </motion.div>
 
-                      {/* Event Card with Enhanced Design */}
+                      {/* Event Card - Clickable to Expand */}
                       <motion.div 
-                        className="lg:ml-20 glass-panel p-8 rounded-2xl group hover:scale-[1.02] transition-all duration-300 relative overflow-hidden border border-white/20 backdrop-blur-xl"
+                        className="lg:ml-20 glass-panel p-8 rounded-2xl group hover:scale-[1.02] transition-all duration-300 relative overflow-hidden border border-white/20 backdrop-blur-xl cursor-pointer"
                         whileHover={{ y: -8, boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}
+                        onClick={() => setExpandedEvent(isExpanded ? null : event._id)}
                       >
                         {/* Background Gradient on Hover */}
                         <motion.div 
@@ -453,7 +467,7 @@ const SchedulePage = () => {
                           </div>
 
                           {/* Event Details with Enhanced Typography */}
-                          <div className="lg:col-span-3">
+                          <div className="lg:col-span-4">
                             <div className="flex flex-wrap items-start gap-3 mb-5">
                               <motion.span 
                                 className={`px-5 py-2 rounded-full text-sm font-bold shadow-lg ${
@@ -494,11 +508,11 @@ const SchedulePage = () => {
                               {event.title}
                             </h3>
                             
-                            <p className="text-gray-300 mb-6 line-clamp-2 leading-relaxed text-base">
+                            <p className="text-gray-300 mb-6 leading-relaxed text-base">
                               {event.shortDescription}
                             </p>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-6">
                               <motion.div 
                                 className="flex items-center space-x-3 text-gray-400 group-hover:text-gray-300 transition-colors duration-300 glass-panel px-4 py-3 rounded-xl"
                                 whileHover={{ scale: 1.05, x: 5 }}
@@ -537,39 +551,120 @@ const SchedulePage = () => {
                                 </span>
                               </motion.div>
                             </div>
-                          </div>
 
-                          {/* Actions with Enhanced Buttons */}
-                          <div className="flex flex-col space-y-3">
-                            <Link
-                              to={`/events/${event.slug}`}
-                              className="glass-panel px-6 py-3 text-center text-white font-semibold rounded-xl hover:bg-white/10 transition-all duration-300 border-2 border-white/30 hover:border-white/50 hover:shadow-lg"
-                            >
-                              View Details
-                            </Link>
-                            
-                            {event.status === 'published' && 
-                             event.currentRegistrations < event.maxRegistrations &&
-                             new Date(event.registrationDeadline) > new Date() && (
-                              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <Link
-                                  to={`/registration/${event._id}`}
-                                  className={`block bg-gradient-to-r ${
-                                    selectedDay === 1 ? 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' :
-                                    selectedDay === 2 ? 'from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' :
-                                    'from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
-                                  } text-white font-bold py-3 px-6 rounded-xl text-center transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center space-x-2`}
+                            {/* Expandable Details Section */}
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="border-t border-white/20 pt-6 mt-6"
                                 >
-                                  <Plus size={18} />
-                                  <span>Register Now</span>
-                                </Link>
-                              </motion.div>
-                            )}
+                                  {/* Full Description */}
+                                  {event.fullDescription && (
+                                    <div className="mb-6">
+                                      <h4 className="text-xl font-bold text-white mb-3">About This Event</h4>
+                                      <p className="text-gray-300 leading-relaxed whitespace-pre-line">
+                                        {event.fullDescription}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  {/* Rules */}
+                                  {event.rules && event.rules.length > 0 && (
+                                    <div className="mb-6">
+                                      <h4 className="text-xl font-bold text-white mb-3">Rules & Guidelines</h4>
+                                      <ul className="space-y-2">
+                                        {event.rules.map((rule: string, idx: number) => (
+                                          <li key={idx} className="flex items-start space-x-3 text-gray-300">
+                                            <span className="text-blue-400 mt-1">•</span>
+                                            <span>{rule}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+
+                                  {/* Eligibility */}
+                                  {event.eligibility && (
+                                    <div className="mb-6">
+                                      <h4 className="text-xl font-bold text-white mb-3">Eligibility</h4>
+                                      <p className="text-gray-300 leading-relaxed">{event.eligibility}</p>
+                                    </div>
+                                  )}
+
+                                  {/* Prize Details */}
+                                  {event.prizeDetails && (
+                                    <div className="mb-6">
+                                      <h4 className="text-xl font-bold text-white mb-3 flex items-center">
+                                        <Trophy className="w-5 h-5 mr-2 text-yellow-400" />
+                                        Prize Details
+                                      </h4>
+                                      <p className="text-gray-300 leading-relaxed">{event.prizeDetails}</p>
+                                    </div>
+                                  )}
+
+                                  {/* Coordinator Info */}
+                                  {event.coordinatorName && (
+                                    <div className="mb-6">
+                                      <h4 className="text-xl font-bold text-white mb-3">Contact Coordinator</h4>
+                                      <div className="glass-panel p-4 rounded-xl space-y-2">
+                                        <p className="text-white font-semibold">{event.coordinatorName}</p>
+                                        {event.coordinatorPhone && (
+                                          <p className="text-gray-300">📞 {event.coordinatorPhone}</p>
+                                        )}
+                                        {event.coordinatorEmail && (
+                                          <p className="text-gray-300">✉️ {event.coordinatorEmail}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Register Button - Only show for non-schedule-only events */}
+                                  {!event.isScheduleOnly && 
+                                   event.status === 'published' && 
+                                   event.currentRegistrations < event.maxRegistrations &&
+                                   new Date(event.registrationDeadline) > new Date() && (
+                                    <motion.div 
+                                      whileHover={{ scale: 1.05 }} 
+                                      whileTap={{ scale: 0.95 }}
+                                      className="mt-6"
+                                    >
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();  // Prevent card collapse
+                                          setSelectedEvent(event);
+                                          setShowRegistrationModal(true);
+                                        }}
+                                        className={`w-full bg-gradient-to-r ${
+                                          selectedDay === 1 ? 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' :
+                                          selectedDay === 2 ? 'from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' :
+                                          'from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
+                                        } text-white font-bold py-4 px-8 rounded-xl text-center transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center space-x-2`}
+                                      >
+                                        <Plus size={20} />
+                                        <span>Register Now</span>
+                                      </button>
+                                    </motion.div>
+                                  )}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+
+                            {/* Click to Expand Indicator */}
+                            <div className="text-center mt-4">
+                              <span className="text-gray-400 text-sm font-medium">
+                                {isExpanded ? '▲ Click to collapse' : '▼ Click to see full details'}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </motion.div>
                     </motion.div>
-                  ))}
+                    );
+                  })}
                 </AnimatePresence>
               </div>
             </motion.div>
@@ -681,6 +776,16 @@ const SchedulePage = () => {
           </motion.div>
         </div>
       </motion.section>
+
+      {/* Registration Modal */}
+      <RegistrationModal
+        isOpen={showRegistrationModal}
+        onClose={() => {
+          setShowRegistrationModal(false);
+          setSelectedEvent(null);
+        }}
+        event={selectedEvent}
+      />
     </div>
   );
 };

@@ -15,7 +15,7 @@ const EventManagement = () => {
     department: '', day: 1, date: '', startTime: '', endTime: '', venue: '',
     participationType: 'solo', minTeamSize: 1, maxTeamSize: 1, entryFee: 0,
     maxRegistrations: 50, prizeDetails: '', coordinatorName: '', coordinatorPhone: '',
-    coordinatorEmail: '', bannerImage: '', eligibility: '', registrationDeadline: '',
+    coordinatorEmail: '', posterImage: '', eligibility: '', registrationDeadline: '',
     featured: false, rules: [''], tags: ['']
   });
 
@@ -23,9 +23,12 @@ const EventManagement = () => {
     setEditingEvent(event);
     const dayNumber = typeof event.day === 'string' ? parseInt(event.day.replace('Day ', '')) : event.day;
     setFormData({
-      ...event, day: dayNumber,
+      ...event, 
+      day: dayNumber,
+      posterImage: event.posterImage || event.bannerImage || '', // Load existing poster or banner image
       registrationDeadline: event.registrationDeadline ? new Date(event.registrationDeadline).toISOString().slice(0, 16) : '',
-      rules: event.rules || [''], tags: event.tags || ['']
+      rules: event.rules || [''], 
+      tags: event.tags || ['']
     });
     setShowModal(true);
   };
@@ -37,7 +40,7 @@ const EventManagement = () => {
       department: '', day: 1, date: '', startTime: '', endTime: '', venue: '',
       participationType: 'solo', minTeamSize: 1, maxTeamSize: 1, entryFee: 0,
       maxRegistrations: 50, prizeDetails: '', coordinatorName: '', coordinatorPhone: '',
-      coordinatorEmail: '', bannerImage: '', eligibility: '', registrationDeadline: '',
+      coordinatorEmail: '', posterImage: '', eligibility: '', registrationDeadline: '',
       featured: false, rules: [''], tags: ['']
     });
     setShowModal(true);
@@ -45,8 +48,25 @@ const EventManagement = () => {
 
   const handleSave = async () => {
     try {
-      if (!formData.title || !formData.category || !formData.day || !formData.date || !formData.participationType) {
-        toast.error('Please fill all required fields');
+      // Validate required fields
+      if (!formData.title || !formData.title.trim()) {
+        toast.error('Event Title is required');
+        return;
+      }
+      if (!formData.category) {
+        toast.error('Category is required');
+        return;
+      }
+      if (!formData.day) {
+        toast.error('Day is required');
+        return;
+      }
+      if (!formData.date) {
+        toast.error('Date is required');
+        return;
+      }
+      if (!formData.participationType) {
+        toast.error('Participation Type is required');
         return;
       }
 
@@ -62,24 +82,51 @@ const EventManagement = () => {
         ...formData,
         day: `Day ${formData.day}`,
         registrationDeadline: deadline,
-        rules: formData.rules.filter(r => r.trim()),
-        tags: formData.tags.filter(t => t.trim()),
-        status: 'published'
+        rules: formData.rules.filter(r => r && r.trim()),
+        tags: formData.tags.filter(t => t && t.trim()),
+        status: 'published',
+        // Ensure these fields have values
+        shortDescription: formData.shortDescription || formData.title,
+        fullDescription: formData.fullDescription || formData.shortDescription || formData.title,
+        venue: formData.venue || 'TBA',
+        startTime: formData.startTime || '09:00 AM',
+        endTime: formData.endTime || '05:00 PM',
+        // CRITICAL: Use posterImage for both poster and banner
+        posterImage: formData.posterImage || '',
+        bannerImage: formData.posterImage || '' // Same image for banner
       };
 
+      console.log('💾 Saving event with data:', eventData);
+      console.log('   Event ID:', editingEvent?._id);
+      console.log('   Poster Image from form:', formData.posterImage);
+      console.log('   Poster Image in eventData:', eventData.posterImage);
+      console.log('   Banner Image in eventData:', eventData.bannerImage);
+
       if (editingEvent) {
-        await updateEvent(editingEvent._id, eventData);
-        toast.success('Event updated!');
+        console.log('🔄 Updating existing event...');
+        const updatedEvent = await updateEvent(editingEvent._id, eventData);
+        console.log('✅ Event updated successfully:', updatedEvent);
+        console.log('✅ Saved posterImage:', updatedEvent?.posterImage?.substring(0, 100) + '...');
+        toast.success('Event updated successfully!');
       } else {
-        await addEvent(eventData);
-        toast.success('Event created!');
+        console.log('➕ Creating new event...');
+        const newEvent = await addEvent(eventData);
+        console.log('✅ Event created successfully:', newEvent);
+        console.log('✅ Saved posterImage:', newEvent?.posterImage?.substring(0, 100) + '...');
+        toast.success('Event created successfully!');
       }
 
       setShowModal(false);
       setEditingEvent(null);
+      
+      // Force refresh events from backend to ensure we have latest data
+      console.log('🔄 Refreshing events from backend...');
+      window.location.reload(); // Force full page reload to see changes
     } catch (error) {
-      console.error('Save error:', error);
-      toast.error(error?.message || 'Failed to save');
+      console.error('❌ Save error:', error);
+      console.error('   Error details:', error.response?.data || error.message);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save event';
+      toast.error(errorMessage);
     }
   };
 
@@ -165,26 +212,40 @@ const EventManagement = () => {
 
       <AnimatePresence>
         {showModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto">
-            <div className="min-h-screen flex items-center justify-center p-4">
-              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-gray-900 rounded-xl border border-white/10 w-full max-w-7xl my-8 shadow-2xl">
-                
-                <div className="sticky top-0 bg-gray-900 z-10 px-8 pt-8 pb-4 border-b border-gray-700">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-2xl font-bold text-white">{editingEvent ? 'Edit Event' : 'Add New Event'}</h3>
-                    <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white"><X size={24} /></button>
-                  </div>
-                </div>
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-gray-900 z-50 flex flex-col h-screen w-screen"
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-gray-800 to-gray-900 border-b-2 border-blue-500/30 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex-shrink-0 shadow-lg">
+              <div className="flex justify-between items-center max-w-[1600px] mx-auto">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
+                  {editingEvent ? 'Edit Event' : 'Add New Event'}
+                </h3>
+                <button 
+                  onClick={() => setShowModal(false)} 
+                  className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700 rounded-lg"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
 
-                <div className="px-8 py-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto bg-gray-900">
+              <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8 max-w-[1600px] mx-auto">
                   
                   {/* Left Column */}
                   <div className="space-y-6">
                     {/* Basic Info */}
-                    <div className="bg-gray-800/50 p-6 rounded-lg space-y-4">
-                      <h4 className="text-lg font-semibold text-white mb-4">Basic Information</h4>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-blue-500/20 shadow-xl space-y-4">
+                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
+                        Basic Information
+                      </h4>
                       <div>
                         <label className="block text-white font-medium mb-2">Event Title *</label>
                         <input type="text" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)}
@@ -222,8 +283,11 @@ const EventManagement = () => {
                     </div>
 
                     {/* Schedule */}
-                    <div className="bg-gray-800/50 p-6 rounded-lg space-y-4">
-                      <h4 className="text-lg font-semibold text-white mb-4">Event Schedule</h4>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-purple-500/20 shadow-xl space-y-4">
+                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <div className="w-1 h-6 bg-purple-500 rounded-full"></div>
+                        Event Schedule
+                      </h4>
                       <div className="grid grid-cols-3 gap-4">
                         <div>
                           <label className="block text-white font-medium mb-2">Day *</label>
@@ -269,8 +333,11 @@ const EventManagement = () => {
                     </div>
 
                     {/* Participation */}
-                    <div className="bg-gray-800/50 p-6 rounded-lg space-y-4">
-                      <h4 className="text-lg font-semibold text-white mb-4">Participation</h4>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-green-500/20 shadow-xl space-y-4">
+                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <div className="w-1 h-6 bg-green-500 rounded-full"></div>
+                        Participation
+                      </h4>
                       <div className="grid grid-cols-3 gap-4">
                         <div>
                           <label className="block text-white font-medium mb-2">Type *</label>
@@ -315,8 +382,11 @@ const EventManagement = () => {
                   {/* Right Column */}
                   <div className="space-y-6">
                     {/* Prize & Coordinator */}
-                    <div className="bg-gray-800/50 p-6 rounded-lg space-y-4">
-                      <h4 className="text-lg font-semibold text-white mb-4">Prize & Coordinator</h4>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-yellow-500/20 shadow-xl space-y-4">
+                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <div className="w-1 h-6 bg-yellow-500 rounded-full"></div>
+                        Prize & Coordinator
+                      </h4>
                       <div>
                         <label className="block text-white font-medium mb-2">Prize Details</label>
                         <input type="text" value={formData.prizeDetails} onChange={(e) => handleInputChange('prizeDetails', e.target.value)}
@@ -344,13 +414,116 @@ const EventManagement = () => {
                     </div>
 
                     {/* Media & Settings */}
-                    <div className="bg-gray-800/50 p-6 rounded-lg space-y-4">
-                      <h4 className="text-lg font-semibold text-white mb-4">Media & Settings</h4>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-cyan-500/20 shadow-xl space-y-4">
+                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <div className="w-1 h-6 bg-cyan-500 rounded-full"></div>
+                        Media & Settings
+                      </h4>
                       <div>
-                        <label className="block text-white font-medium mb-2">Banner Image URL</label>
-                        <input type="url" value={formData.bannerImage} onChange={(e) => handleInputChange('bannerImage', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
-                          placeholder="https://example.com/image.jpg" />
+                        <label className="block text-white font-medium mb-2">Event Poster Image</label>
+                        <div className="space-y-3">
+                          {/* File Upload Button */}
+                          <div>
+                            <input 
+                              type="file" 
+                              id="posterImageUpload"
+                              accept="image/*"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  console.log('📁 File selected:', file.name, file.size, 'bytes');
+                                  
+                                  // Check file size (max 5MB)
+                                  if (file.size > 5 * 1024 * 1024) {
+                                    toast.error('Image too large! Please select an image under 5MB.');
+                                    return;
+                                  }
+                                  
+                                  try {
+                                    // Show loading toast
+                                    const loadingToast = toast.loading('Uploading image...');
+                                    
+                                    // Create FormData for file upload
+                                    const formData = new FormData();
+                                    formData.append('image', file);
+                                    
+                                    // Upload to Cloudinary via backend
+                                    const response = await fetch(`http://localhost:5000/api/v1/admin/events/${editingEvent._id}/image?type=poster`, {
+                                      method: 'POST',
+                                      headers: {
+                                        'Authorization': `Bearer ${localStorage.getItem('adminToken') || localStorage.getItem('AUTH_TOKEN')}`
+                                      },
+                                      body: formData
+                                    });
+                                    
+                                    const data = await response.json();
+                                    
+                                    toast.dismiss(loadingToast);
+                                    
+                                    console.log('📦 Upload response:', data);
+                                    console.log('   Success:', data.success);
+                                    console.log('   Data:', data.data);
+                                    console.log('   Message:', data.message);
+                                    
+                                    if (data.success && data.data?.event?.posterImage) {
+                                      const imageUrl = data.data.event.posterImage;
+                                      console.log('✅ Image uploaded to Cloudinary:', imageUrl);
+                                      handleInputChange('posterImage', imageUrl);
+                                      toast.success('Image uploaded successfully!');
+                                    } else {
+                                      console.error('❌ Upload failed:', data);
+                                      const errorMsg = data.message || data.error || 'Failed to upload image';
+                                      toast.error(errorMsg);
+                                    }
+                                  } catch (error) {
+                                    console.error('❌ Upload error:', error);
+                                    toast.error('Failed to upload image. Please try again.');
+                                  }
+                                }
+                              }}
+                              className="hidden"
+                            />
+                            <label 
+                              htmlFor="posterImageUpload"
+                              className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium rounded-lg cursor-pointer transition-all duration-300"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                              </svg>
+                              Upload Poster Image
+                            </label>
+                            <p className="text-gray-400 text-xs mt-1">Click to select an image file (JPG, PNG, etc.) - Max 5MB</p>
+                          </div>
+                          
+                          {/* Preview */}
+                          {formData.posterImage && formData.posterImage.trim() && (
+                            <div className="mt-3">
+                              <p className="text-sm text-gray-400 mb-2">Preview:</p>
+                              <div className="relative">
+                                <img 
+                                  src={formData.posterImage} 
+                                  alt="Poster Preview" 
+                                  className="w-full h-64 object-contain rounded-lg border border-gray-600 bg-gray-900" 
+                                  onError={(e) => { 
+                                    e.target.style.display = 'none';
+                                    console.error('❌ Failed to load image:', formData.posterImage);
+                                  }} 
+                                  onLoad={() => console.log('✅ Image loaded successfully:', formData.posterImage)}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleInputChange('posterImage', '');
+                                    document.getElementById('posterImageUpload').value = '';
+                                  }}
+                                  className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div>
                         <label className="flex items-center gap-2 text-white font-medium cursor-pointer">
@@ -362,8 +535,11 @@ const EventManagement = () => {
                     </div>
 
                     {/* Tags */}
-                    <div className="bg-gray-800/50 p-6 rounded-lg space-y-4">
-                      <h4 className="text-lg font-semibold text-white mb-4">Tags</h4>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-pink-500/20 shadow-xl space-y-4">
+                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <div className="w-1 h-6 bg-pink-500 rounded-full"></div>
+                        Tags
+                      </h4>
                       <div className="space-y-2">
                         {formData.tags.map((tag, index) => (
                           <div key={index} className="flex gap-2">
@@ -382,8 +558,11 @@ const EventManagement = () => {
                     </div>
 
                     {/* Rules */}
-                    <div className="bg-gray-800/50 p-6 rounded-lg space-y-4">
-                      <h4 className="text-lg font-semibold text-white mb-4">Rules</h4>
+                    <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl border border-orange-500/20 shadow-xl space-y-4">
+                      <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <div className="w-1 h-6 bg-orange-500 rounded-full"></div>
+                        Rules
+                      </h4>
                       <div className="space-y-2">
                         {formData.rules.map((rule, index) => (
                           <div key={index} className="flex gap-2">
@@ -401,22 +580,28 @@ const EventManagement = () => {
                       </div>
                     </div>
                   </div>
-                  </div>
                 </div>
-
-                <div className="sticky bottom-0 bg-gray-900 z-10 px-8 py-6 border-t border-gray-700">
-                  <div className="flex gap-4">
-                    <button onClick={handleSave} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
-                      <Save size={16} /> {editingEvent ? 'Update Event' : 'Create Event'}
-                    </button>
-                    <button onClick={() => setShowModal(false)} className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
+              </div>
             </div>
-          </div>
+
+            {/* Footer */}
+            <div className="bg-gradient-to-r from-gray-800 to-gray-900 border-t-2 border-blue-500/30 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex-shrink-0 shadow-lg">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 max-w-[1600px] mx-auto">
+                <button 
+                  onClick={handleSave} 
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold text-base sm:text-lg transition-all duration-300 shadow-lg hover:shadow-blue-500/50 border border-blue-500/30"
+                >
+                  <Save size={20} /> {editingEvent ? 'Update Event' : 'Create Event'}
+                </button>
+                <button 
+                  onClick={() => setShowModal(false)} 
+                  className="px-6 sm:px-8 py-3 sm:py-4 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-bold text-base sm:text-lg transition-all duration-300 shadow-lg border border-gray-500/30"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

@@ -1,110 +1,92 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, Target, Users } from 'lucide-react';
-import { fadeUp, slideInLeft, slideInRight, staggerContainer } from '../../../lib/animations';
-import SectionWrapper from '../../../components/common/SectionWrapper';
-import SectionHeading from '../../../components/common/SectionHeading';
-import PremiumButton from '../../../components/common/PremiumButton';
-import GlassCard from '../../../components/common/GlassCard';
+import { Sparkles, Zap, Trophy, Users, Award, Target, ArrowRight } from 'lucide-react';
 
-/**
- * AboutSection Component
- * About preview with two-column layout
- */
-const AboutSection = () => {
+const NewAboutSection = () => {
   const features = [
-    {
-      icon: <Sparkles size={24} />,
-      title: 'Innovation First',
-      description: 'Cutting-edge competitions and workshops led by industry experts'
-    },
-    {
-      icon: <Target size={24} />,
-      title: 'Skill Development',
-      description: 'Hands-on learning experiences to enhance your technical prowess'
-    },
-    {
-      icon: <Users size={24} />,
-      title: 'Networking',
-      description: 'Connect with like-minded innovators and industry professionals'
-    }
+    { icon: Sparkles, title: 'Innovation', desc: 'Cutting-edge tech competitions', color: 'from-blue-500 to-cyan-500' },
+    { icon: Trophy, title: 'Prizes', desc: '₹60,000+ prize pool', color: 'from-yellow-500 to-orange-500' },
+    { icon: Users, title: 'Networking', desc: 'Connect with industry leaders', color: 'from-purple-500 to-pink-500' },
+    { icon: Zap, title: 'Workshops', desc: 'Hands-on learning sessions', color: 'from-green-500 to-emerald-500' }
   ];
 
   return (
-    <SectionWrapper showGrid showGlow glowColor="cyan">
-      <div className="container mx-auto px-4">
+    <section className="py-20 relative bg-gradient-to-br from-[#0a1628] via-[#0f1f3d] to-[#1a2744]">
+      {/* Starfield Background */}
+      <div className="absolute inset-0">
+        {[...Array(30)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              opacity: Math.random() * 0.5 + 0.2
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Glowing Orbs */}
+      <div className="absolute top-20 right-20 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 left-20 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
         >
-          {/* Section Heading */}
-          <div className="text-center mb-16">
-            <SectionHeading
-              badge="About Tech Fest"
-              title="Where Innovation Meets Creativity"
-              subtitle="Join us for the most anticipated technology festival of 2026, celebrating innovation, diversity, and technical excellence."
-            />
-          </div>
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+            About <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Tech Fest 2026</span>
+          </h2>
+          <div className="w-24 h-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 mx-auto mb-6 rounded-full shadow-lg shadow-blue-500/50" />
+          <p className="text-white text-lg md:text-xl max-w-3xl mx-auto leading-relaxed font-bold">
+            Tech Fest 2026 brings together <span className="text-cyan-400 font-black">innovation</span>, <span className="text-blue-400 font-black">creativity</span>, and <span className="text-purple-400 font-black">technical excellence</span> at Shri Ram Group of Colleges.
+          </p>
+        </motion.div>
 
-          {/* Two Column Layout */}
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Content */}
-            <motion.div variants={slideInLeft}>
-              <h3 className="text-3xl font-display font-bold gradient-text mb-6">
-                CODE IT. BUILD IT. BREAK LIMITS.
-              </h3>
-              
-              <p className="text-gray-300 text-lg mb-6 leading-relaxed">
-                Tech Fest 2026 is the flagship event of Shri Ram Group, Jabalpur, bringing together 
-                thousands of students, innovators, and tech enthusiasts for three days of 
-                extraordinary experiences.
-              </p>
-              
-              <p className="text-gray-400 mb-8 leading-relaxed">
-                From intense coding competitions and hackathons to vibrant cultural performances 
-                and networking opportunities, Tech Fest 2026 is your gateway to innovation, 
-                learning, and unforgettable memories.
-              </p>
-
-              <Link to="/about">
-                <PremiumButton 
-                  variant="secondary" 
-                  size="lg"
-                  icon={<ArrowRight size={20} />}
-                  iconRight
-                >
-                  Learn More About Us
-                </PremiumButton>
-              </Link>
+        {/* Feature Cards Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto mb-10">
+          {features.map((feature, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              whileHover={{ y: -10, scale: 1.05 }}
+              className="bg-blue-900/30 backdrop-blur-md rounded-2xl p-6 border border-blue-400/30 shadow-lg hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 text-center group"
+            >
+              <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                <feature.icon className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-black text-white mb-2">{feature.title}</h3>
+              <p className="text-base text-gray-100 font-semibold">{feature.desc}</p>
             </motion.div>
+          ))}
+        </div>
 
-            {/* Right: Features */}
-            <motion.div variants={slideInRight} className="space-y-4">
-              {features.map((feature, index) => (
-                <GlassCard key={index} padding="md" hover>
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center text-blue-400 flex-shrink-0">
-                      {feature.icon}
-                    </div>
-                    <div>
-                      <h4 className="text-xl font-bold text-white mb-2">
-                        {feature.title}
-                      </h4>
-                      <p className="text-gray-400">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </div>
-                </GlassCard>
-              ))}
-            </motion.div>
-          </div>
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center"
+        >
+          <Link
+            to="/about"
+            className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 font-bold text-base transition-colors group"
+          >
+            <span>Learn More About Us</span>
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
         </motion.div>
       </div>
-    </SectionWrapper>
+    </section>
   );
 };
 
-export default AboutSection;
+export default NewAboutSection;

@@ -32,6 +32,12 @@ const AdminSidebar = ({ activeView, setActiveView, onLogout }) => {
       color: 'text-purple-400'
     },
     {
+      id: 'schedule',
+      label: 'Schedule',
+      icon: Calendar,
+      color: 'text-cyan-400'
+    },
+    {
       id: 'registrations',
       label: 'View Registrations',
       icon: Users,

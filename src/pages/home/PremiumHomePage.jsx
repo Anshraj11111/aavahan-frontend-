@@ -11,7 +11,7 @@ import { useRegistrations } from '../../contexts/RegistrationContext';
 import { useEvents } from '../../contexts/EventsContext';
 import AnimatedBackground from '../../components/backgrounds/AnimatedBackground';
 import FloatingActionButton from '../../components/ui/FloatingActionButton';
-import aavhaanLogo from '../../assets/images/Screenshot 2026-03-21 125310.png';
+import aavhaanLogo from '../../assets/images/logo.png';
 
 const PremiumHomePage = () => {
   const { getRegistrationStats } = useRegistrations();

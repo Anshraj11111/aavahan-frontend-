@@ -6,6 +6,9 @@ import { fadeInUp, staggerContainer, scaleUp, slideInLeft, slideInRight, fadeIn 
 import toast from 'react-hot-toast';
 import LightweightBackground from '../components/backgrounds/LightweightBackground';
 
+// @ts-ignore - Image import
+import collegeBuilding from '../assets/images/college.png';
+
 const ContactPage = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -202,74 +205,81 @@ const ContactPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Header */}
+      {/* Header with College Building */}
       <motion.section 
-        className="py-20 relative z-10"
+        className="py-24 relative z-10"
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* College Building Background */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={collegeBuilding} 
+            alt="Shri Ram Group College" 
+            className="w-full h-full object-cover opacity-10"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy-950/90 via-navy-950/95 to-navy-950" />
+        </div>
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <motion.div variants={fadeInUp} className="mb-8">
-              <span className="inline-block px-6 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-full text-blue-400 font-medium mb-6">
-                Get in Touch
-              </span>
-            </motion.div>
-            
             <motion.h1 
               variants={fadeInUp}
-              className="text-5xl md:text-7xl font-display font-bold text-white mb-8 leading-tight"
+              className="text-6xl md:text-8xl font-display font-black text-white mb-8 leading-tight tracking-tight"
+              style={{ textShadow: "4px 4px 8px rgba(0,0,0,0.9)" }}
             >
-              Contact 
-              <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                Tech Fest 2026
-              </span>
+              CONTACT US
             </motion.h1>
+            
+            <motion.div 
+              variants={fadeInUp}
+              className="w-32 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 mx-auto mb-8 rounded-full"
+            />
             
             <motion.p 
               variants={fadeInUp}
-              className="text-xl md:text-2xl text-gray-300 mb-12 leading-relaxed max-w-4xl mx-auto"
+              className="text-white text-xl md:text-2xl mb-12 leading-relaxed max-w-4xl mx-auto font-bold"
             >
               Have questions about Tech Fest 2026? We're here to help! 
               Reach out to us through any of the channels below or send us a message.
             </motion.p>
             
-            {/* Quick Stats */}
+            {/* Quick Stats - Poster Style */}
             <motion.div 
               variants={fadeInUp}
-              className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
+              className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto"
             >
-              <div className="glass-panel p-6 rounded-xl text-center group hover:scale-105 transition-all duration-300">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-                  <MessageCircle className="w-6 h-6 text-white" />
+              <div className="glass-panel p-8 rounded-2xl text-center group hover:scale-105 transition-all duration-300 border-2 border-white/30 backdrop-blur-xl">
+                <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <MessageCircle className="w-7 h-7 text-white" />
                 </div>
-                <div className="text-2xl font-bold text-white mb-1">24h</div>
-                <div className="text-gray-400 text-sm">Response Time</div>
+                <div className="text-4xl font-black text-white mb-2">24h</div>
+                <div className="text-white text-base font-black uppercase tracking-wide">Response Time</div>
               </div>
               
-              <div className="glass-panel p-6 rounded-xl text-center group hover:scale-105 transition-all duration-300">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-                  <Users className="w-6 h-6 text-white" />
+              <div className="glass-panel p-8 rounded-2xl text-center group hover:scale-105 transition-all duration-300 border-2 border-white/30 backdrop-blur-xl">
+                <div className="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <Users className="w-7 h-7 text-white" />
                 </div>
-                <div className="text-2xl font-bold text-white mb-1">24/7</div>
-                <div className="text-gray-400 text-sm">Support</div>
+                <div className="text-4xl font-black text-white mb-2">24/7</div>
+                <div className="text-white text-base font-black uppercase tracking-wide">Support</div>
               </div>
               
-              <div className="glass-panel p-6 rounded-xl text-center group hover:scale-105 transition-all duration-300">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-                  <Globe className="w-6 h-6 text-white" />
+              <div className="glass-panel p-8 rounded-2xl text-center group hover:scale-105 transition-all duration-300 border-2 border-white/30 backdrop-blur-xl">
+                <div className="w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <Globe className="w-7 h-7 text-white" />
                 </div>
-                <div className="text-2xl font-bold text-white mb-1">5+</div>
-                <div className="text-gray-400 text-sm">Channels</div>
+                <div className="text-4xl font-black text-white mb-2">5+</div>
+                <div className="text-white text-base font-black uppercase tracking-wide">Channels</div>
               </div>
               
-              <div className="glass-panel p-6 rounded-xl text-center group hover:scale-105 transition-all duration-300">
-                <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-                  <Star className="w-6 h-6 text-white" />
+              <div className="glass-panel p-8 rounded-2xl text-center group hover:scale-105 transition-all duration-300 border-2 border-white/30 backdrop-blur-xl">
+                <div className="w-14 h-14 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <Star className="w-7 h-7 text-white" />
                 </div>
-                <div className="text-2xl font-bold text-white mb-1">100%</div>
-                <div className="text-gray-400 text-sm">Satisfaction</div>
+                <div className="text-4xl font-black text-white mb-2">100%</div>
+                <div className="text-white text-base font-black uppercase tracking-wide">Satisfaction</div>
               </div>
             </motion.div>
           </div>
@@ -298,7 +308,7 @@ const ContactPage = () => {
                     Get in 
                     <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"> Touch</span>
                   </h2>
-                  <p className="text-gray-400 mb-8 leading-relaxed">
+                  <p className="text-gray-100 mb-8 leading-relaxed text-lg font-semibold">
                     We're here to help make your Tech Fest 2026 experience amazing. 
                     Choose your preferred way to connect with us.
                   </p>
@@ -329,7 +339,7 @@ const ContactPage = () => {
                           <Phone className="w-7 h-7 text-white" />
                         </motion.div>
                         <div>
-                          <h3 className="text-white font-bold text-lg mb-2 group-hover:text-white transition-colors duration-300">Phone</h3>
+                          <h3 className="text-white font-black text-xl mb-2 group-hover:text-white transition-colors duration-300">Phone</h3>
                           <div className="space-y-1">
                             {FEST_INFO.contact.phone.map((phone, index) => (
                               <motion.p 
@@ -340,7 +350,7 @@ const ContactPage = () => {
                               >
                                 <a
                                   href={`tel:+91${phone}`}
-                                  className="text-gray-300 hover:text-white transition-colors duration-200 font-mono hover:underline"
+                                  className="text-gray-100 hover:text-white transition-colors duration-200 font-mono hover:underline text-base font-semibold"
                                 >
                                   +91 {phone}
                                 </a>
@@ -348,7 +358,7 @@ const ContactPage = () => {
                             ))}
                           </div>
                           <motion.p 
-                            className="text-gray-500 text-sm mt-2 flex items-center"
+                            className="text-gray-200 text-base mt-2 flex items-center font-semibold"
                             whileHover={{ x: 5 }}
                           >
                             <Clock className="w-4 h-4 mr-1" />
@@ -383,16 +393,16 @@ const ContactPage = () => {
                           <Mail className="w-7 h-7 text-white" />
                         </motion.div>
                         <div>
-                          <h3 className="text-white font-bold text-lg mb-2 group-hover:text-white transition-colors duration-300">Email</h3>
+                          <h3 className="text-white font-black text-xl mb-2 group-hover:text-white transition-colors duration-300">Email</h3>
                           <motion.a
                             href={`mailto:${FEST_INFO.contact.email}`}
-                            className="text-gray-300 hover:text-white transition-colors duration-200 break-all hover:underline"
+                            className="text-gray-100 hover:text-white transition-colors duration-200 break-all hover:underline text-base font-semibold"
                             whileHover={{ x: 5 }}
                           >
                             {FEST_INFO.contact.email}
                           </motion.a>
                           <motion.p 
-                            className="text-gray-500 text-sm mt-2 flex items-center"
+                            className="text-gray-200 text-base mt-2 flex items-center font-semibold"
                             whileHover={{ x: 5 }}
                           >
                             <Zap className="w-4 h-4 mr-1" />
@@ -414,8 +424,8 @@ const ContactPage = () => {
                           <MapPin className="w-7 h-7 text-white" />
                         </div>
                         <div>
-                          <h3 className="text-white font-bold text-lg mb-2 group-hover:text-white transition-colors duration-300">Address</h3>
-                          <p className="text-gray-300 leading-relaxed mb-3">
+                          <h3 className="text-white font-black text-xl mb-2 group-hover:text-white transition-colors duration-300">Address</h3>
+                          <p className="text-gray-100 leading-relaxed mb-3 text-base font-semibold">
                             {FEST_INFO.contact.address}
                           </p>
                           <a
@@ -443,8 +453,8 @@ const ContactPage = () => {
                           <Clock className="w-7 h-7 text-white" />
                         </div>
                         <div>
-                          <h3 className="text-white font-bold text-lg mb-2 group-hover:text-white transition-colors duration-300">Office Hours</h3>
-                          <div className="space-y-1 text-gray-300">
+                          <h3 className="text-white font-black text-xl mb-2 group-hover:text-white transition-colors duration-300">Office Hours</h3>
+                          <div className="space-y-1 text-gray-100 text-base font-semibold">
                             <p className="flex justify-between">
                               <span>Monday - Friday:</span>
                               <span className="font-mono">9:00 AM - 6:00 PM</span>
@@ -497,7 +507,7 @@ const ContactPage = () => {
                           >
                             <span className="text-white font-bold">IG</span>
                           </motion.div>
-                          <p className="text-gray-300 text-sm group-hover:text-white transition-colors duration-300">Instagram</p>
+                          <p className="text-gray-100 text-base group-hover:text-white transition-colors duration-300 font-semibold">Instagram</p>
                         </div>
                       </motion.a>
                       
@@ -520,7 +530,7 @@ const ContactPage = () => {
                           >
                             <span className="text-white font-bold">FB</span>
                           </motion.div>
-                          <p className="text-gray-300 text-sm group-hover:text-white transition-colors duration-300">Facebook</p>
+                          <p className="text-gray-100 text-base group-hover:text-white transition-colors duration-300 font-semibold">Facebook</p>
                         </div>
                       </motion.a>
                       
@@ -543,7 +553,7 @@ const ContactPage = () => {
                           >
                             <span className="text-white font-bold">TW</span>
                           </motion.div>
-                          <p className="text-gray-300 text-sm group-hover:text-white transition-colors duration-300">Twitter</p>
+                          <p className="text-gray-100 text-base group-hover:text-white transition-colors duration-300 font-semibold">Twitter</p>
                         </div>
                       </motion.a>
                     </div>
@@ -564,7 +574,7 @@ const ContactPage = () => {
                     Send us a 
                     <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"> Message</span>
                   </h2>
-                  <p className="text-gray-400 mb-8 leading-relaxed">
+                  <p className="text-gray-100 mb-8 leading-relaxed text-lg font-semibold">
                     Fill out the form below and we'll get back to you as soon as possible. 
                     We're excited to hear from you!
                   </p>

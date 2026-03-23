@@ -17,20 +17,20 @@ const StatCard = ({ value, label, icon, suffix = '', prefix = '', decimals = 0, 
       variants={scaleUp}
       initial="hidden"
       animate={inView ? "visible" : "hidden"}
-      className="glass-panel rounded-xl border border-white/10 glow-border p-8 text-center transition-all duration-300"
+      className="glass-panel rounded-2xl border-2 border-white/30 backdrop-blur-xl p-8 text-center group hover:scale-105 transition-all duration-300 hover:border-white/50"
     >
       {icon && (
-        <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 text-blue-400">
+        <div className="inline-flex items-center justify-center w-14 h-14 mb-4 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
           {icon}
         </div>
       )}
-      <div className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
+      <div className="text-4xl font-black text-white mb-2">
         {prefix}
         {inView && <CountUp end={value} duration={duration} decimals={decimals} separator="," />}
         {!inView && '0'}
         {suffix}
       </div>
-      <div className="text-sm md:text-base text-gray-400 font-medium">{label}</div>
+      <div className="text-base text-white font-black uppercase tracking-wide">{label}</div>
     </motion.div>
   );
 };

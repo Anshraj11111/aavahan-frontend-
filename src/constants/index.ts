@@ -3,7 +3,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localho
 
 // Fest Information
 export const FEST_INFO = {
-  name: 'Tech Fest 2026',
+  name: 'Aavhaan 2026',
   organization: 'Shri Ram Group, Jabalpur',
   tagline: 'CODE IT. BUILD IT. BREAK LIMITS.',
   theme: 'Unity in Diversity',
@@ -290,11 +290,11 @@ export const ROUTES = {
 
 // Meta Tags
 export const META_TAGS = {
-  DEFAULT_TITLE: 'Tech Fest 2026 - Shri Ram Group, Jabalpur',
+  DEFAULT_TITLE: 'Aavhaan 2026 - Shri Ram Group, Jabalpur',
   DEFAULT_DESCRIPTION: 'Join the ultimate technology festival at Shri Ram Group, Jabalpur. Experience innovation, creativity, and technical excellence from April 1-3, 2026.',
-  DEFAULT_KEYWORDS: 'tech fest, technology festival, shri ram group, jabalpur, coding competition, hackathon, cultural events, technical events',
+  DEFAULT_KEYWORDS: 'aavhaan, tech fest, technology festival, shri ram group, jabalpur, coding competition, hackathon, cultural events, technical events',
   DEFAULT_IMAGE: '/images/og-image.jpg',
-  SITE_NAME: 'Tech Fest 2026',
+  SITE_NAME: 'Aavhaan 2026',
   TWITTER_HANDLE: '@sriramgroup',
 };
 

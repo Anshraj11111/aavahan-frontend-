@@ -30,28 +30,52 @@ export const EventsProvider = ({ children }) => {
       // Check if user is admin - use admin API to get ALL events (including drafts)
       const isAdmin = (localStorage.getItem('adminToken') || localStorage.getItem('AUTH_TOKEN')) && !isOnLoginPage;
       
+      console.log('🔍 EventsContext: Fetching events...');
+      console.log('   Is Admin:', isAdmin);
+      console.log('   Current Path:', currentPath);
+      
       let response;
       if (isAdmin) {
         // Admin: fetch ALL events (including drafts) from admin API
+        console.log('   Calling: adminService.getAllEvents()');
         response = await adminService.getAllEvents();
-        console.log('Admin: Backend events response:', response);
+        console.log('✓ Admin: Backend events response:', response);
       } else {
         // Public: fetch only published events
+        console.log('   Calling: eventsService.getEvents()');
         response = await eventsService.getEvents();
-        console.log('Public: Backend events response:', response);
+        console.log('✓ Public: Backend events response:', response);
       }
       
-      if (response.success) {
+      if (response && response.success) {
         const eventsData = response.data || [];
+        console.log('✓ Events loaded from MongoDB:', eventsData.length);
+        console.log('   Events:', eventsData);
         setEvents(eventsData);
-        console.log('Events loaded from MongoDB:', eventsData.length);
       } else {
-        console.error('Backend returned success=false');
+        console.error('❌ Backend returned success=false or invalid response');
+        console.error('   Response:', response);
         setError('Failed to load events');
+        setEvents([]);
       }
     } catch (err) {
-      console.error('Failed to fetch events from backend:', err);
-      setError(err.message || 'Failed to load events');
+      console.error('❌ Failed to fetch events from backend:', err);
+      console.error('   Error type:', err.constructor.name);
+      console.error('   Error message:', err.message);
+      console.error('   Error details:', err);
+      
+      // Check if it's a network error
+      if (err.message && err.message.includes('Network Error')) {
+        setError('Backend server is not running. Please start the backend server.');
+        console.error('💡 Solution: Run "cd backend && npm start" in terminal');
+      } else if (err.code === 'UNAUTHORIZED') {
+        setError('Authentication failed. Please login again.');
+        console.error('💡 Solution: Logout and login again');
+      } else {
+        setError(err.message || 'Failed to load events');
+      }
+      
+      setEvents([]);
     } finally {
       setLoading(false);
     }
@@ -79,8 +103,19 @@ export const EventsProvider = ({ children }) => {
 
   const updateEvent = useCallback(async (id, updates) => {
     try {
+      console.log('🔄 EventsContext: Updating event...');
+      console.log('   Event ID:', id);
+      console.log('   Updates:', updates);
+      console.log('   posterImage length:', updates.posterImage?.length || 0);
+      console.log('   posterImage preview:', updates.posterImage?.substring(0, 100) + '...');
+      
       // Call backend API to update event in MongoDB
       const response = await adminService.updateEvent(id, updates);
+      
+      console.log('📥 Backend response:', response);
+      console.log('   Response success:', response.success);
+      console.log('   Response data:', response.data);
+      
       if (response.success && response.data) {
         // Update local state
         setEvents(prev => 
@@ -88,10 +123,17 @@ export const EventsProvider = ({ children }) => {
             event._id === id ? response.data : event
           )
         );
-        console.log('Event updated in MongoDB:', response.data);
+        console.log('✅ Event updated in MongoDB:', response.data);
+        console.log('   Updated posterImage length:', response.data.posterImage?.length || 0);
+        console.log('   Updated posterImage preview:', response.data.posterImage?.substring(0, 100) + '...');
+        return response.data; // Return the updated event
+      } else {
+        console.error('❌ Backend returned success=false');
+        throw new Error('Failed to update event');
       }
     } catch (error) {
-      console.error('Failed to update event:', error);
+      console.error('❌ Failed to update event:', error);
+      console.error('   Error response:', error.response?.data);
       throw error;
     }
   }, []);
@@ -167,5 +209,3 @@ export const EventsProvider = ({ children }) => {
     </EventsContext.Provider>
   );
 };
-
-export default EventsContext;

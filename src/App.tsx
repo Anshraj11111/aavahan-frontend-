@@ -11,8 +11,8 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { RegistrationProvider } from './contexts/RegistrationContext';
 import { EventsProvider } from './contexts/EventsContext';
 
-// Pages - Using Premium Landing Page with Full Animations
-import HomePage from './pages/home/PremiumHomePage';
+// Pages - Using New Redesigned Landing Page
+import HomePage from './pages/home/NewHomePage';
 import EventsPage from './pages/events/EventsPage';
 import EventDetailPage from './pages/events/EventDetailPage';
 import SchedulePage from './pages/events/SchedulePage';

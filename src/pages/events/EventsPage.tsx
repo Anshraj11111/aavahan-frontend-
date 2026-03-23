@@ -12,6 +12,9 @@ import { useRegistrations } from '../../contexts/RegistrationContext';
 import { useEvents } from '../../contexts/EventsContext';
 import LightweightBackground from '../../components/backgrounds/LightweightBackground';
 
+// @ts-ignore - Image import
+import collegeBuilding from '../../assets/images/college.png';
+
 const EventsPage = () => {
   const [filters, setFilters] = useState<EventFilters>({});
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,6 +29,9 @@ const EventsPage = () => {
   // Filter events based on search and filters
   useEffect(() => {
     let filtered = events as Event[];
+
+    // Exclude schedule-only items from Events page
+    filtered = filtered.filter((event: Event) => !event.isScheduleOnly);
 
     // Search filter
     if (searchQuery) {
@@ -42,7 +48,8 @@ const EventsPage = () => {
 
     // Day filter
     if (filters.day) {
-      filtered = filtered.filter((event: Event) => event.day === filters.day);
+      const dayString = `Day ${filters.day}`;
+      filtered = filtered.filter((event: Event) => event.day === dayString || event.day === filters.day);
     }
 
     setFilteredEvents(filtered);
@@ -103,7 +110,7 @@ const EventsPage = () => {
 
   // Get real-time registration stats from backend events (MongoDB)
   const registrationStats = useMemo(() => {
-    const total = events.reduce((sum, event) => sum + (event.currentRegistrations || 0), 0);
+    const total = events.reduce((sum: number, event: Event) => sum + (event.currentRegistrations || 0), 0);
     return { total };
   }, [events]);
 
@@ -122,57 +129,66 @@ const EventsPage = () => {
       {/* Premium Animated Background */}
       <LightweightBackground />
 
-      {/* Header */}
+      {/* Header with College Building - Poster Style */}
       <motion.section 
-        className="py-20 relative z-10"
+        className="py-24 relative z-10"
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto text-center">
-            <motion.div variants={fadeInUp} className="mb-8">
-              <span className="inline-block px-6 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full text-purple-400 font-medium mb-6">
-                Tech Fest 2026 Events
-              </span>
-            </motion.div>
-            
-            <motion.h1 
-              variants={fadeInUp}
-              className="text-5xl md:text-7xl font-display font-bold text-white mb-8 leading-tight"
-            >
-              Discover Amazing 
-              <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                Events
-              </span>
-            </motion.h1>
-            
-            <motion.p 
-              variants={fadeInUp}
-              className="text-xl md:text-2xl text-gray-300 mb-12 leading-relaxed max-w-4xl mx-auto"
-            >
-              Explore our diverse collection of technical competitions, cultural performances, 
-              and innovative challenges designed to showcase your talents.
-            </motion.p>
+        {/* College Building Background */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={collegeBuilding} 
+            alt="Shri Ram Group College" 
+            className="w-full h-full object-cover opacity-15"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy-950/90 via-navy-950/95 to-navy-950" />
+        </div>
 
-            {/* Search Bar */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-6xl mx-auto">
+            {/* Title Section - Poster Style */}
+            <div className="text-center mb-16">
+              <motion.h1 
+                variants={fadeInUp}
+                className="text-6xl md:text-8xl font-display font-black text-white mb-6 leading-tight tracking-tight"
+                style={{ textShadow: '4px 4px 8px rgba(0,0,0,0.8)' }}
+              >
+                ALL EVENTS
+              </motion.h1>
+              
+              <motion.div 
+                variants={fadeInUp}
+                className="w-32 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 mx-auto mb-8 rounded-full"
+              />
+              
+              <motion.p 
+                variants={fadeInUp}
+                className="text-white text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed font-bold"
+              >
+                Explore competitions, cultural performances, and innovative challenges
+              </motion.p>
+            </div>
+
+            {/* Search Bar - Poster Style */}
             <motion.form 
               variants={fadeInUp}
               onSubmit={handleSearch} 
-              className="max-w-2xl mx-auto mb-8"
+              className="max-w-3xl mx-auto mb-12"
             >
-              <div className="relative glass-panel rounded-2xl p-2">
+              <div className="relative glass-panel rounded-2xl p-2 border-2 border-white/30 backdrop-blur-xl">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search events by name or description..."
-                  className="w-full px-6 py-4 pl-12 bg-transparent text-white placeholder-gray-400 focus:outline-none"
+                  className="w-full px-6 py-5 pl-14 bg-transparent text-white placeholder-gray-400 focus:outline-none text-lg"
                 />
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400" />
                 <motion.button
                   type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-2 px-6 rounded-xl transition-all duration-300"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -181,47 +197,37 @@ const EventsPage = () => {
               </div>
             </motion.form>
 
-            {/* Quick Stats */}
+            {/* Quick Stats - Poster Style */}
             <motion.div 
               variants={fadeInUp}
-              className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
             >
-              <div className="glass-panel p-6 rounded-xl text-center group hover:scale-105 transition-all duration-300">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-                  <Trophy className="w-6 h-6 text-white" />
+              <div className="glass-panel p-8 rounded-2xl text-center group hover:scale-105 transition-all duration-300 border-2 border-white/30 backdrop-blur-xl">
+                <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <Trophy className="w-7 h-7 text-white" />
                 </div>
-                <div className="text-2xl font-bold text-white mb-1">{filteredEvents.length}</div>
-                <div className="text-gray-400 text-sm">Total Events</div>
+                <div className="text-4xl font-black text-white mb-2">{filteredEvents.length}</div>
+                <div className="text-white text-base font-black uppercase tracking-wide">Total Events</div>
               </div>
               
-              <div className="glass-panel p-6 rounded-xl text-center group hover:scale-105 transition-all duration-300">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-                  <Users className="w-6 h-6 text-white" />
+              <div className="glass-panel p-8 rounded-2xl text-center group hover:scale-105 transition-all duration-300 border-2 border-white/30 backdrop-blur-xl">
+                <div className="w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <Star className="w-7 h-7 text-white" />
                 </div>
-                <div className="text-2xl font-bold text-white mb-1">
-                  {registrationStats.total}
-                </div>
-                <div className="text-gray-400 text-sm">Registrations</div>
-              </div>
-              
-              <div className="glass-panel p-6 rounded-xl text-center group hover:scale-105 transition-all duration-300">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-                  <Star className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-2xl font-bold text-white mb-1">
+                <div className="text-4xl font-black text-white mb-2">
                   {filteredEvents.filter(event => event.featured).length}
                 </div>
-                <div className="text-gray-400 text-sm">Featured</div>
+                <div className="text-white text-base font-black uppercase tracking-wide">Featured</div>
               </div>
               
-              <div className="glass-panel p-6 rounded-xl text-center group hover:scale-105 transition-all duration-300">
-                <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-                  <Zap className="w-6 h-6 text-white" />
+              <div className="glass-panel p-8 rounded-2xl text-center group hover:scale-105 transition-all duration-300 border-2 border-white/30 backdrop-blur-xl">
+                <div className="w-14 h-14 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <Zap className="w-7 h-7 text-white" />
                 </div>
-                <div className="text-2xl font-bold text-white mb-1">
+                <div className="text-4xl font-black text-white mb-2">
                   {eventsWithRealCounts.filter(event => canRegisterUpdated(event)).length}
                 </div>
-                <div className="text-gray-400 text-sm">Open</div>
+                <div className="text-white text-base font-black uppercase tracking-wide">Open</div>
               </div>
             </motion.div>
           </div>
@@ -285,11 +291,13 @@ const EventsPage = () => {
               </div>
             </motion.div>
 
-            <motion.div 
-              variants={fadeInUp}
-              className="text-gray-400 flex items-center space-x-2"
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="text-white flex items-center space-x-2 font-bold text-base"
             >
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className="w-5 h-5" />
               <span>{filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} found</span>
             </motion.div>
           </div>
@@ -312,8 +320,8 @@ const EventsPage = () => {
             >
               <div className="glass-panel p-12 rounded-2xl max-w-2xl mx-auto">
                 <Calendar className="w-32 h-32 text-gray-600 mx-auto mb-8" />
-                <h3 className="text-3xl font-bold text-white mb-6">No Events Found</h3>
-                <p className="text-gray-400 text-lg leading-relaxed mb-8">
+                <h3 className="text-3xl font-black text-white mb-6">No Events Found</h3>
+                <p className="text-gray-100 text-xl leading-relaxed mb-8 font-semibold">
                   Try adjusting your filters or search criteria to discover amazing events.
                 </p>
                 <motion.button 
@@ -376,7 +384,7 @@ const EventsPage = () => {
 
                       {/* Day Badge */}
                       <div className="absolute bottom-4 left-4 px-3 py-1 bg-black/50 backdrop-blur-sm text-white rounded-full text-sm font-medium">
-                        Day {event.day}
+                        {typeof event.day === 'string' ? event.day : `Day ${event.day}`}
                       </div>
                     </div>
 
@@ -395,38 +403,38 @@ const EventsPage = () => {
                         </div>
                       </div>
 
-                      <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text transition-all duration-300">
+                      <h3 className="text-2xl font-black text-white mb-3 line-clamp-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text transition-all duration-300">
                         {event.title}
                       </h3>
 
-                      <p className="text-gray-300 text-sm mb-4 line-clamp-2 leading-relaxed">
+                      <p className="text-gray-100 text-base mb-4 line-clamp-2 leading-relaxed font-semibold">
                         {event.shortDescription}
                       </p>
 
                       <div className="space-y-2 mb-6">
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <Calendar className="w-4 h-4 mr-2 text-blue-400" />
+                        <div className="flex items-center text-white text-base font-semibold">
+                          <Calendar className="w-5 h-5 mr-2 text-blue-400" />
                           <span>{new Date(event.date).toLocaleDateString()}</span>
                         </div>
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <Clock className="w-4 h-4 mr-2 text-purple-400" />
+                        <div className="flex items-center text-white text-base font-semibold">
+                          <Clock className="w-5 h-5 mr-2 text-purple-400" />
                           <span>{event.startTime} - {event.endTime}</span>
                         </div>
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <MapPin className="w-4 h-4 mr-2 text-green-400" />
+                        <div className="flex items-center text-white text-base font-semibold">
+                          <MapPin className="w-5 h-5 mr-2 text-green-400" />
                           <span>{event.venue}</span>
                         </div>
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <Users className="w-4 h-4 mr-2 text-yellow-400" />
+                        <div className="flex items-center text-white text-base font-semibold">
+                          <Users className="w-5 h-5 mr-2 text-yellow-400" />
                           <span>{event.participationType === 'team' ? 'Team Event' : 'Solo Event'}</span>
                         </div>
                       </div>
 
                       {/* Registration Progress */}
                       <div className="mb-6">
-                        <div className="flex justify-between text-sm mb-2">
-                          <span className="text-gray-400">Registrations</span>
-                          <span className="text-white font-medium">
+                        <div className="flex justify-between text-base mb-2">
+                          <span className="text-white font-bold">Registrations</span>
+                          <span className="text-white font-black">
                             {event.currentRegistrations}/{event.maxRegistrations}
                           </span>
                         </div>

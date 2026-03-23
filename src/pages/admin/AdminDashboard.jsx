@@ -14,6 +14,7 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 import RegistrationsList from '../../components/admin/RegistrationsList';
 import EventManagement from '../../components/admin/EventManagement';
 import AdminSettings from '../../components/admin/AdminSettings';
+import ScheduleManagement from '../../components/admin/ScheduleManagement';
 import { adminService } from '../../services/admin';
 import { STORAGE_KEYS } from '../../constants';
 import { useEvents } from '../../contexts/EventsContext';
@@ -24,7 +25,7 @@ const AdminDashboard = () => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { events } = useEvents(); // Get events from EventsContext
+  const { events, loading: eventsLoading, error: eventsError } = useEvents(); // Get events from EventsContext
 
   useEffect(() => {
     console.log('AdminDashboard: Checking authentication...');
@@ -207,20 +208,62 @@ const AdminDashboard = () => {
         {/* Header */}
         <header className="bg-gray-900 border-b border-gray-700 px-4 md:px-6 py-4">
           <div className="pl-12 lg:pl-0">
-            <h1 className="text-xl md:text-2xl font-bold text-white">
-              {activeView === 'dashboard' ? 'Dashboard' : 
-               activeView === 'registrations' ? 'Registrations' : 
-               activeView === 'events' ? 'Event Management' : 
-               activeView === 'settings' ? 'Admin Settings' :
-               activeView === 'analytics' ? 'Analytics' :
-               activeView === 'notifications' ? 'Send Notifications' : 'Dashboard'}
-            </h1>
-            <p className="text-gray-400 text-sm md:text-base">Welcome back, {adminUser.email}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-white">
+                  {activeView === 'dashboard' ? 'Dashboard' : 
+                   activeView === 'registrations' ? 'Registrations' : 
+                   activeView === 'events' ? 'Event Management' : 
+                   activeView === 'schedule' ? 'Schedule Management' :
+                   activeView === 'settings' ? 'Admin Settings' :
+                   activeView === 'analytics' ? 'Analytics' :
+                   activeView === 'notifications' ? 'Send Notifications' : 'Dashboard'}
+                </h1>
+                <p className="text-gray-400 text-sm md:text-base">Welcome back, {adminUser.email}</p>
+              </div>
+              
+              {/* Backend Status Indicator */}
+              <div className="flex items-center gap-2">
+                {eventsLoading ? (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded-full">
+                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                    <span className="text-yellow-400 text-xs font-medium">Loading...</span>
+                  </div>
+                ) : eventsError ? (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-red-500/20 border border-red-500/50 rounded-full">
+                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                    <span className="text-red-400 text-xs font-medium">Backend Offline</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/50 rounded-full">
+                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span className="text-green-400 text-xs font-medium">Connected</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </header>
 
         {/* Content Area */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        {/* Error Alert */}
+        {eventsError && (
+          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+            <div className="flex items-start gap-3">
+              <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="text-red-400 font-semibold mb-1">Backend Connection Error</h4>
+                <p className="text-red-300 text-sm">{eventsError}</p>
+                <p className="text-red-300 text-sm mt-2">
+                  💡 Solution: Make sure backend server is running. Open terminal and run:
+                  <code className="block mt-1 bg-black/30 px-2 py-1 rounded text-xs">cd backend && npm start</code>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {activeView === 'dashboard' && (
           <>
             {/* Stats Grid */}
@@ -417,6 +460,7 @@ const AdminDashboard = () => {
 
         {activeView === 'registrations' && <RegistrationsList />}
         {activeView === 'events' && <EventManagement />}
+        {activeView === 'schedule' && <ScheduleManagement />}
         {activeView === 'settings' && <AdminSettings />}
         {activeView === 'analytics' && (
           <div className="text-center py-20">

@@ -29,7 +29,7 @@ export interface Event {
   slug: string;
   category: 'cultural' | 'technical';
   department: string;
-  day: 1 | 2 | 3;
+  day: 1 | 2 | 3 | 'Day 1' | 'Day 2' | 'Day 3' | string;  // Support both number and string formats
   date: string;
   startTime: string;
   endTime: string;
@@ -53,6 +53,7 @@ export interface Event {
   bannerImage: string;
   status: 'draft' | 'published' | 'closed';
   featured: boolean;
+  isScheduleOnly?: boolean;  // Flag for schedule-only items
   tags: string[];
   createdAt: string;
   updatedAt: string;

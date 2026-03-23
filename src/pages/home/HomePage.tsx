@@ -68,103 +68,138 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900" />
+        {/* Background with College Building */}
+        <div className="absolute inset-0 z-0">
+          {/* Dark gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-navy-950/95 via-navy-950/90 to-navy-950" />
           
-          {/* Floating Elements */}
-          <div className="absolute top-20 left-10 w-20 h-20 bg-primary-500/20 rounded-full blur-xl animate-pulse" />
-          <div className="absolute top-40 right-20 w-32 h-32 bg-purple-500/20 rounded-full blur-xl animate-bounce" />
-          <div className="absolute bottom-20 left-20 w-24 h-24 bg-accent-500/20 rounded-full blur-xl animate-pulse" />
-          <div className="absolute top-1/2 right-10 w-16 h-16 bg-cyan-500/20 rounded-full blur-xl animate-ping" />
+          {/* Animated gradient orbs - larger and more vibrant */}
+          <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-gradient-to-r from-blue-500/30 to-cyan-500/30 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute top-40 right-20 w-[400px] h-[400px] bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full blur-3xl animate-float-slow" />
+          <div className="absolute bottom-20 left-1/4 w-[350px] h-[350px] bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-float" />
+          <div className="absolute top-1/2 right-1/4 w-[300px] h-[300px] bg-gradient-to-r from-orange-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          
+          {/* Floating particles */}
+          <div className="absolute inset-0">
+            {[...Array(20)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-white/30 rounded-full animate-float"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 5}s`,
+                  animationDuration: `${5 + Math.random() * 10}s`
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             {/* Organization */}
-            <div className="mb-6 animate-fade-in">
-              <p className="text-white/80 text-lg font-medium tracking-wide">
+            <div className="mb-8 animate-fade-in">
+              <p className="text-white/90 text-lg md:text-xl font-bold tracking-wide">
                 Shri Ram Group, Jabalpur Presents
               </p>
             </div>
 
-            {/* Main Title */}
-            <h1 className="hero-text text-4xl sm:text-5xl lg:text-7xl font-display font-bold mb-6 leading-tight animate-slide-up">
-              Tech Fest 2026
-            </h1>
+            {/* Aavhaan Logo & Title */}
+            <div className="mb-6 animate-slide-up">
+              {/* Main Aavhaan Title with Premium Effects */}
+              <div className="flex items-center justify-center mb-8">
+                <div className="relative">
+                  {/* Glowing background effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 blur-3xl opacity-50 animate-pulse" />
+                  
+                  {/* Main Hindi Title */}
+                  <h1 className="relative text-7xl sm:text-8xl lg:text-9xl font-display font-black leading-tight tracking-tight">
+                    <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 bg-clip-text text-transparent drop-shadow-2xl animate-gradient-shift">
+                      आव्हान
+                    </span>
+                  </h1>
+                  
+                  {/* Year badge */}
+                  <div className="absolute -top-6 -right-6 sm:-top-8 sm:-right-8">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-pink-500 blur-xl opacity-60 animate-pulse" />
+                      <span className="relative text-5xl sm:text-6xl lg:text-7xl font-black bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">
+                        2026
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* English subtitle with premium styling */}
+              <div className="relative inline-block">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-cyan-500 to-purple-500 blur-2xl opacity-40 animate-pulse" />
+                <h2 className="relative text-3xl sm:text-4xl lg:text-5xl font-display font-black mb-4 bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent tracking-wider">
+                  AAVHAAN 2026
+                </h2>
+              </div>
+            </div>
 
             {/* Tagline */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
               CODE IT. BUILD IT. BREAK LIMITS.
-            </h2>
+            </h3>
+
+            {/* Decorative Line */}
+            <div className="w-32 h-1 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 mx-auto mb-8 rounded-full animate-shimmer" style={{ animationDelay: '0.3s' }} />
 
             {/* Description */}
-            <p className="text-white/80 text-lg sm:text-xl max-w-2xl mx-auto mb-12 leading-relaxed animate-slide-up" style={{ animationDelay: '0.4s' }}>
+            <p className="text-white text-lg sm:text-xl max-w-3xl mx-auto mb-12 leading-relaxed font-medium animate-slide-up" style={{ animationDelay: '0.4s' }}>
               Experience the ultimate celebration of technology, innovation, and creativity. 
               Join us for three days of competitions, workshops, cultural events, and networking.
             </p>
 
-            {/* Event Info Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12 animate-slide-up" style={{ animationDelay: '0.6s' }}>
-              <div className="glass p-4 rounded-lg hover:scale-105 transition-transform duration-300">
-                <Calendar className="w-8 h-8 text-primary-400 mx-auto mb-2" />
-                <p className="text-white font-semibold">April 1-3, 2026</p>
-                <p className="text-white/70 text-sm">3 Days</p>
-              </div>
-              <div className="glass p-4 rounded-lg hover:scale-105 transition-transform duration-300">
-                <MapPin className="w-8 h-8 text-secondary-400 mx-auto mb-2" />
-                <p className="text-white font-semibold">Jabalpur</p>
-                <p className="text-white/70 text-sm">Shri Ram Group</p>
-              </div>
-              <div className="glass p-4 rounded-lg hover:scale-105 transition-transform duration-300">
-                <Users className="w-8 h-8 text-accent-400 mx-auto mb-2" />
-                <p className="text-white font-semibold">10,000+</p>
-                <p className="text-white/70 text-sm">Expected Participants</p>
-              </div>
-              <div className="glass p-4 rounded-lg hover:scale-105 transition-transform duration-300">
-                <Trophy className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-                <p className="text-white font-semibold">50+</p>
-                <p className="text-white/70 text-sm">Events & Competitions</p>
-              </div>
-            </div>
-
             {/* Countdown Timer */}
             {!timeLeft.isExpired && (
-              <div className="mb-12 animate-scale-in" style={{ animationDelay: '0.8s' }}>
-                <h3 className="text-white text-xl font-semibold mb-6">Event Starts In</h3>
-                <div className="flex justify-center space-x-4">
-                  <div className="countdown-item">
-                    <div className="countdown-number">{timeLeft.days}</div>
-                    <div className="countdown-label">Days</div>
+              <div className="mb-12 animate-scale-in" style={{ animationDelay: '0.5s' }}>
+                <h4 className="text-white text-xl font-semibold mb-6">Event Starts In</h4>
+                <div className="flex justify-center gap-4">
+                  <div className="glass-panel px-6 py-4 rounded-2xl border-2 border-cyan-500/50 min-w-[100px]">
+                    <div className="text-5xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-1">
+                      {String(timeLeft.days).padStart(2, '0')}
+                    </div>
+                    <div className="text-white text-sm font-bold uppercase tracking-wider">Days</div>
                   </div>
-                  <div className="countdown-item">
-                    <div className="countdown-number">{timeLeft.hours}</div>
-                    <div className="countdown-label">Hours</div>
+                  <div className="glass-panel px-6 py-4 rounded-2xl border-2 border-purple-500/50 min-w-[100px]">
+                    <div className="text-5xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-1">
+                      {String(timeLeft.hours).padStart(2, '0')}
+                    </div>
+                    <div className="text-white text-sm font-bold uppercase tracking-wider">Hours</div>
                   </div>
-                  <div className="countdown-item">
-                    <div className="countdown-number">{timeLeft.minutes}</div>
-                    <div className="countdown-label">Minutes</div>
+                  <div className="glass-panel px-6 py-4 rounded-2xl border-2 border-blue-500/50 min-w-[100px]">
+                    <div className="text-5xl font-black bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-1">
+                      {String(timeLeft.minutes).padStart(2, '0')}
+                    </div>
+                    <div className="text-white text-sm font-bold uppercase tracking-wider">Minutes</div>
                   </div>
-                  <div className="countdown-item">
-                    <div className="countdown-number">{timeLeft.seconds}</div>
-                    <div className="countdown-label">Seconds</div>
+                  <div className="glass-panel px-6 py-4 rounded-2xl border-2 border-orange-500/50 min-w-[100px]">
+                    <div className="text-5xl font-black bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent mb-1">
+                      {String(timeLeft.seconds).padStart(2, '0')}
+                    </div>
+                    <div className="text-white text-sm font-bold uppercase tracking-wider">Seconds</div>
                   </div>
                 </div>
               </div>
             )}
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 animate-slide-up" style={{ animationDelay: '1s' }}>
+            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 animate-slide-up" style={{ animationDelay: '0.6s' }}>
               <Link
                 to="/events"
-                className="btn-primary text-lg px-8 py-4 w-full sm:w-auto group"
+                className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white font-bold text-lg px-10 py-5 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50 w-full sm:w-auto group inline-flex items-center justify-center"
               >
                 Explore Events
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 to="/schedule"
-                className="btn-outline text-lg px-8 py-4 w-full sm:w-auto"
+                className="glass-panel border-2 border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-500/10 text-white font-bold text-lg px-10 py-5 rounded-2xl transition-all duration-300 hover:scale-105 w-full sm:w-auto inline-flex items-center justify-center backdrop-blur-xl"
               >
                 View Schedule
               </Link>
@@ -175,19 +210,20 @@ const HomePage: React.FC = () => {
         {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
           <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-white/50 rounded-full mt-2 animate-pulse" />
+            <div className="w-1 h-3 bg-gradient-to-b from-cyan-400 to-purple-400 rounded-full mt-2 animate-pulse" />
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-black/20">
+      <section className="py-24 bg-black/20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-display font-bold text-white mb-4">
-              Why Tech Fest 2026?
+            <h2 className="text-4xl lg:text-5xl font-display font-black text-white mb-4">
+              Why Aavhaan 2026?
             </h2>
-            <p className="text-white/80 text-lg max-w-2xl mx-auto">
+            <div className="w-24 h-1 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 mx-auto mb-6 rounded-full" />
+            <p className="text-white text-lg max-w-2xl mx-auto font-medium">
               Experience innovation like never before with cutting-edge technology, 
               diverse culture, and endless opportunities.
             </p>
@@ -199,13 +235,13 @@ const HomePage: React.FC = () => {
               return (
                 <div 
                   key={index}
-                  className="glass p-8 rounded-2xl hover:scale-105 transition-all duration-300 group"
+                  className="glass-panel p-8 rounded-2xl hover:scale-105 transition-all duration-300 group border-2 border-white/20 hover:border-white/40 backdrop-blur-xl"
                 >
-                  <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                  <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
                     <Icon className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-4">{feature.title}</h3>
-                  <p className="text-white/70 leading-relaxed">{feature.description}</p>
+                  <h3 className="text-2xl font-black text-white mb-4">{feature.title}</h3>
+                  <p className="text-white/80 leading-relaxed font-medium">{feature.description}</p>
                 </div>
               );
             })}
@@ -214,33 +250,37 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-24 relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent" />
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-display font-bold text-white mb-4">
+            <h2 className="text-4xl lg:text-5xl font-display font-black text-white mb-4">
               By The Numbers
             </h2>
-            <p className="text-white/80 text-lg">
+            <div className="w-24 h-1 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 mx-auto mb-6 rounded-full" />
+            <p className="text-white text-lg font-medium">
               Join thousands of innovators in this epic celebration
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
                 <div 
                   key={index}
-                  className="text-center group"
+                  className="glass-panel p-8 rounded-2xl text-center group hover:scale-110 transition-all duration-300 border-2 border-white/30 hover:border-cyan-400/50 backdrop-blur-xl hover:shadow-2xl hover:shadow-cyan-500/20"
                 >
-                  <div className="glass p-8 rounded-2xl hover:scale-105 transition-all duration-300">
-                    <Icon className="w-12 h-12 text-primary-400 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
-                    <div className="text-3xl lg:text-4xl font-bold text-white mb-2">
-                      {stat.value}
-                    </div>
-                    <div className="text-white/70 font-medium">
-                      {stat.label}
-                    </div>
+                  <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300 shadow-lg">
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-5xl font-black bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent mb-2">
+                    {stat.value}
+                  </div>
+                  <div className="text-white text-base font-black uppercase tracking-wide">
+                    {stat.label}
                   </div>
                 </div>
               );
@@ -250,29 +290,38 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary-600/20 to-purple-600/20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl lg:text-4xl font-display font-bold text-white mb-6">
-            Ready to Join the Revolution?
-          </h2>
-          <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
-            Don't miss out on the biggest tech festival of 2026. 
-            Register now and be part of something extraordinary.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-            <Link
-              to="/events"
-              className="btn-primary text-lg px-8 py-4 group"
-            >
-              Register Now
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link
-              to="/about"
-              className="btn-outline text-lg px-8 py-4"
-            >
-              Learn More
-            </Link>
+      <section className="py-20 relative overflow-hidden">
+        {/* Animated background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-600/20 via-pink-600/20 to-purple-600/20" />
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-float-slow" />
+        </div>
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <div className="glass-panel p-12 rounded-3xl border-2 border-white/30 backdrop-blur-xl max-w-4xl mx-auto">
+            <h2 className="text-4xl lg:text-5xl font-display font-black text-white mb-6">
+              Ready to Join the Revolution?
+            </h2>
+            <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
+              Don't miss out on the biggest tech festival of 2026. 
+              Register now and be part of something extraordinary.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+              <Link
+                to="/events"
+                className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 hover:from-orange-600 hover:via-pink-600 hover:to-purple-600 text-white font-bold text-lg px-10 py-5 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50 w-full sm:w-auto group inline-flex items-center justify-center"
+              >
+                Register Now
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                to="/about"
+                className="glass-panel border-2 border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-500/10 text-white font-bold text-lg px-10 py-5 rounded-2xl transition-all duration-300 hover:scale-105 w-full sm:w-auto inline-flex items-center justify-center backdrop-blur-xl"
+              >
+                Learn More
+              </Link>
+            </div>
           </div>
         </div>
       </section>

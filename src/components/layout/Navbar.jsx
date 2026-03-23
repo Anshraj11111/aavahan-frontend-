@@ -4,7 +4,7 @@ import { Menu, X, Calendar, Ticket, Home, Info, Phone, Sparkles } from 'lucide-r
 import { motion, AnimatePresence } from 'framer-motion';
 import PremiumButton from '../common/PremiumButton';
 import RegistrationModal from '../modals/RegistrationModal';
-import logoImage from '../../assets/images/Screenshot 2026-03-21 125551.png';
+import logoImage from '../../assets/images/logo.png';
 
 /**
  * Navbar Component
@@ -65,8 +65,8 @@ const Navbar = () => {
       <header 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled 
-            ? 'glass-panel border-b border-white/10 shadow-lg' 
-            : 'bg-transparent'
+            ? 'bg-[#0a1628]/95 backdrop-blur-md border-b border-blue-400/30 shadow-lg shadow-blue-500/20' 
+            : 'bg-[#0a1628]/80 backdrop-blur-sm border-b border-blue-400/20'
         }`}
       >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -78,7 +78,7 @@ const Navbar = () => {
           >
             {/* Shri Ram Group Logo - Actual Image */}
             <div className="relative flex-shrink-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300 relative overflow-hidden bg-white shadow-lg">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300 relative overflow-hidden bg-blue-900/50 backdrop-blur-md shadow-lg border border-blue-400/30">
                 <img 
                   src={logoImage} 
                   alt="Shri Ram Group Logo" 
@@ -89,10 +89,9 @@ const Navbar = () => {
             
             {/* Text - Always visible on all devices */}
             <div>
-              <p className="text-gray-300 text-[10px] sm:text-xs lg:text-sm font-medium whitespace-nowrap" 
+              <p className="text-blue-200 text-[10px] sm:text-xs lg:text-sm font-semibold whitespace-nowrap" 
                  style={{ 
-                   fontFamily: "'Inter', sans-serif",
-                   textShadow: "1px 1px 2px rgba(0,0,0,0.6)"
+                   fontFamily: "'Inter', sans-serif"
                  }}>
                 Shri Ram Group, Jabalpur
               </p>
@@ -100,8 +99,6 @@ const Navbar = () => {
                   style={{ 
                     fontFamily: "'Space Grotesk', system-ui, sans-serif",
                     fontWeight: 900,
-                    textShadow: "2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.4)",
-                    color: "#ffffff",
                     letterSpacing: "0.02em"
                   }}>
                 Aavhaan 2026
@@ -121,10 +118,10 @@ const Navbar = () => {
                   to={item.path}
                   className="relative group"
                 >
-                  <div className={`flex items-center gap-2 py-2 text-sm xl:text-base font-medium transition-all duration-300 ${
+                  <div className={`flex items-center gap-2 py-2 text-sm xl:text-base font-bold transition-all duration-300 ${
                     isActive 
-                      ? 'text-blue-400' 
-                      : 'text-gray-300 hover:text-white'
+                      ? 'text-cyan-400' 
+                      : 'text-blue-200 hover:text-cyan-400'
                   }`}>
                     <Icon size={16} className="xl:w-5 xl:h-5" />
                     <span>{item.label}</span>
@@ -134,13 +131,13 @@ const Navbar = () => {
                   {isActive && (
                     <motion.div
                       layoutId="activeNav"
-                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+                      className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full shadow-lg shadow-cyan-500/50"
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
                   
                   {/* Hover glow */}
-                  <div className="absolute inset-0 bg-blue-500/0 group-hover:bg-blue-500/5 rounded-lg transition-colors duration-300 -z-10" />
+                  <div className="absolute inset-0 bg-blue-500/0 group-hover:bg-blue-500/20 rounded-lg transition-colors duration-300 -z-10" />
                 </Link>
               );
             })}
@@ -150,7 +147,7 @@ const Navbar = () => {
           <div className="hidden lg:flex items-center gap-3 xl:gap-4">
             <Link
               to="/my-tickets"
-              className="flex items-center gap-2 text-gray-300 hover:text-white font-medium transition-colors duration-300 text-sm xl:text-base"
+              className="flex items-center gap-2 text-blue-200 hover:text-cyan-400 font-bold transition-colors duration-300 text-sm xl:text-base"
             >
               <Ticket size={18} className="xl:w-5 xl:h-5" />
               <span>My Tickets</span>
@@ -169,7 +166,7 @@ const Navbar = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-2 text-white hover:text-blue-400 transition-colors duration-300"
+            className="lg:hidden p-2 text-white hover:text-cyan-400 transition-colors duration-300"
             aria-label="Toggle menu"
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -197,19 +194,19 @@ const Navbar = () => {
                       to={item.path}
                       className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                         isActive 
-                          ? 'bg-blue-500/20 text-blue-400' 
-                          : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                          ? 'bg-blue-500/30 backdrop-blur-md text-cyan-400 border border-blue-400/30' 
+                          : 'text-blue-200 hover:bg-blue-500/20 hover:text-cyan-400'
                       }`}
                     >
                       <Icon size={20} />
-                      <span className="font-medium">{item.label}</span>
+                      <span className="font-semibold">{item.label}</span>
                     </Link>
                   );
                 })}
                 
                 <div className="pt-3 space-y-2">
                   <Link to="/my-tickets" className="block">
-                    <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-all duration-300">
+                    <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500/30 backdrop-blur-md hover:bg-blue-500/40 text-cyan-400 rounded-lg font-semibold transition-all duration-300 border border-blue-400/30">
                       <Ticket size={18} />
                       My Tickets
                     </button>
