@@ -13,9 +13,9 @@ import {
   Phone,
   MapPin,
   Calendar,
-  Image as ImageIcon,
-  X,
-  FileText
+  FileText,
+  CreditCard,
+  Shield
 } from 'lucide-react';
 import { adminService } from '../../services/admin';
 import { generateReceipt } from '../../utils/receiptGenerator';
@@ -27,7 +27,7 @@ const RegistrationsList = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [eventFilter, setEventFilter] = useState('all');
   const [selectedRegistration, setSelectedRegistration] = useState(null);
-  const [viewingScreenshot, setViewingScreenshot] = useState(null);
+  // Removed viewingScreenshot state - not needed with Razorpay
 
   // Get unique event titles for filter
   const uniqueEvents = [...new Set(registrations.map(r => r.eventTitle))].sort();
@@ -128,22 +128,6 @@ const RegistrationsList = () => {
     }
   };
 
-  const handleVerifyPayment = async (registrationId) => {
-    try {
-      await adminService.editRegistration(registrationId, {
-        paymentStatus: 'paid',
-        verifiedAt: new Date().toISOString()
-      });
-      // Refresh the list
-      const response = await adminService.getAllRegistrations();
-      setRegistrations(response.data?.registrations || []);
-      toast.success('Payment verified successfully!');
-    } catch (error) {
-      console.error('Failed to verify payment:', error);
-      toast.error('Failed to verify payment');
-    }
-  };
-
   const handleRejectRegistration = async (registrationId) => {
     try {
       await adminService.rejectRegistration(registrationId);
@@ -157,6 +141,8 @@ const RegistrationsList = () => {
       toast.error('Failed to reject registration');
     }
   };
+  
+  // Removed handleVerifyPayment - Razorpay automatically verifies payments
 
   const handleDownloadReceipt = (registration) => {
     try {
@@ -502,76 +488,69 @@ const RegistrationsList = () => {
                   key={registration._id}
                   className="border-t border-gray-700/50 hover:bg-gray-800/30 transition-colors"
                 >
-                  <td className="p-4">
+                  <td className="p-3">
                     <div>
-                      <p className="text-white font-medium">{registration.fullName}</p>
-                      <p className="text-gray-400 text-sm">{registration.email}</p>
+                      <p className="text-white font-medium text-sm">{registration.fullName}</p>
+                      <p className="text-gray-400 text-xs">{registration.email}</p>
                       <p className="text-gray-500 text-xs">{registration.phone}</p>
-                      <p className="text-gray-500 text-xs">{registration.instituteName}</p>
-                      <p className="text-gray-500 text-xs">{registration.department} - {registration.yearOrSemester}</p>
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="p-3">
                     <div>
-                      <p className="text-white font-medium">{registration.eventTitle}</p>
-                      <p className="text-gray-400 text-sm">Day {registration.eventDay}</p>
-                      <p className="text-gray-500 text-xs capitalize">{registration.participationType}</p>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div>
-                      <p className="text-white font-medium">{registration.uniqueRegistrationId}</p>
-                      <p className="text-gray-400 text-sm">{new Date(registration.createdAt).toLocaleDateString()}</p>
+                      <p className="text-white font-medium text-sm">{registration.eventTitle}</p>
+                      <p className="text-gray-400 text-xs">Day {registration.eventDay}</p>
                       {registration.teamName && (
                         <p className="text-blue-400 text-xs">Team: {registration.teamName}</p>
                       )}
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="p-3">
                     <div>
-                      <p className="text-white font-medium">₹{registration.amountPaid}/{registration.amountExpected}</p>
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(registration.paymentStatus)}`}>
-                        {registration.paymentStatus.replace('_', ' ')}
-                      </span>
-                      {registration.verifiedAt && (
-                        <p className="text-green-400 text-xs mt-1">
-                          Verified: {new Date(registration.verifiedAt).toLocaleDateString()}
-                        </p>
-                      )}
+                      <p className="text-white font-medium text-sm">{registration.uniqueRegistrationId}</p>
+                      <p className="text-gray-400 text-xs">{new Date(registration.createdAt).toLocaleDateString()}</p>
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="p-3">
+                    <div>
+                      <p className="text-white font-medium text-sm">₹{registration.amountPaid}</p>
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(registration.paymentStatus)}`}>
+                        {registration.paymentStatus === 'paid' ? (
+                          <span className="flex items-center gap-1">
+                            <Shield size={10} />
+                            Paid
+                          </span>
+                        ) : (
+                          registration.paymentStatus.replace('_', ' ')
+                        )}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-3">
                     <div>
                       {registration.transactionId ? (
                         <>
-                          <p className="text-white font-medium text-sm">{registration.transactionId}</p>
-                          <p className="text-green-400 text-xs">Transaction ID provided</p>
+                          <p className="text-white font-mono text-xs">{registration.transactionId.substring(0, 20)}...</p>
+                          <p className="text-green-400 text-xs flex items-center gap-1">
+                            <CreditCard size={10} />
+                            Razorpay
+                          </p>
                         </>
                       ) : (
-                        <p className="text-gray-500 text-sm">No transaction ID</p>
-                      )}
-                      {registration.paymentScreenshotUrl && (
-                        <button
-                          onClick={() => setViewingScreenshot(registration.paymentScreenshotUrl)}
-                          className="flex items-center gap-1 mt-1 text-blue-400 hover:text-blue-300 text-xs transition-colors"
-                        >
-                          <ImageIcon size={12} />
-                          View Screenshot
-                        </button>
+                        <p className="text-gray-500 text-xs">No transaction ID</p>
                       )}
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="p-3">
                     <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(registration.registrationStatus)}`}>
                       {registration.registrationStatus}
                     </span>
                   </td>
-                  <td className="p-4">
+                  <td className="p-3">
                     <button
                       onClick={() => setSelectedRegistration(registration)}
-                      className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors"
                     >
-                      <Eye size={14} />
+                      <Eye size={12} />
                       View
                     </button>
                   </td>
@@ -694,55 +673,46 @@ const RegistrationsList = () => {
 
               {/* Payment Information */}
               <div>
-                <h4 className="text-lg font-semibold text-white mb-3">Payment Information</h4>
-                <div className="bg-gray-800/30 p-4 rounded-lg">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-green-400" />
+                  Payment Information (Razorpay)
+                </h4>
+                <div className="bg-gray-800/30 p-4 rounded-lg space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-gray-400 text-sm">Amount</p>
-                      <p className="text-white font-medium">₹{selectedRegistration.amountPaid} / ₹{selectedRegistration.amountExpected}</p>
+                      <p className="text-gray-400 text-sm">Amount Paid</p>
+                      <p className="text-white font-bold text-xl">₹{selectedRegistration.amountPaid}</p>
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm">Payment Status</p>
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(selectedRegistration.paymentStatus)}`}>
-                        {selectedRegistration.paymentStatus.replace('_', ' ')}
+                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(selectedRegistration.paymentStatus)}`}>
+                        {selectedRegistration.paymentStatus === 'paid' && <Shield size={14} />}
+                        {selectedRegistration.paymentStatus === 'paid' ? 'Verified & Paid' : selectedRegistration.paymentStatus.replace('_', ' ')}
                       </span>
                     </div>
                   </div>
                   
                   {selectedRegistration.transactionId && (
-                    <div className="mb-4">
-                      <p className="text-gray-400 text-sm">Transaction ID</p>
-                      <p className="text-white font-mono bg-gray-700 px-3 py-2 rounded text-sm">
+                    <div className="bg-gray-700/50 p-3 rounded-lg">
+                      <p className="text-gray-400 text-sm mb-1 flex items-center gap-2">
+                        <CreditCard size={14} />
+                        Razorpay Transaction ID
+                      </p>
+                      <p className="text-white font-mono text-sm bg-gray-800 px-3 py-2 rounded break-all">
                         {selectedRegistration.transactionId}
                       </p>
-                    </div>
-                  )}
-                  
-                  {selectedRegistration.paymentScreenshotUrl && (
-                    <div className="mb-4">
-                      <p className="text-gray-400 text-sm mb-2">Payment Screenshot</p>
-                      <div 
-                        onClick={() => setViewingScreenshot(selectedRegistration.paymentScreenshotUrl)}
-                        className="relative w-full max-w-xs cursor-pointer group"
-                      >
-                        <img 
-                          src={selectedRegistration.paymentScreenshotUrl} 
-                          alt="Payment Screenshot"
-                          className="w-full h-auto rounded-lg border border-gray-600 group-hover:border-blue-500 transition-colors"
-                        />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                          <Eye className="w-8 h-8 text-white" />
-                        </div>
-                      </div>
-                      <p className="text-gray-500 text-xs mt-1">Click to view full size</p>
+                      <p className="text-green-400 text-xs mt-2 flex items-center gap-1">
+                        <Shield size={12} />
+                        Payment verified by Razorpay gateway
+                      </p>
                     </div>
                   )}
                   
                   {selectedRegistration.verifiedAt && (
                     <div>
-                      <p className="text-gray-400 text-sm">Verified At</p>
-                      <p className="text-green-400 text-sm">
-                        {new Date(selectedRegistration.verifiedAt).toLocaleString()}
+                      <p className="text-gray-400 text-sm">Payment Verified At</p>
+                      <p className="text-green-400 text-sm font-medium">
+                        {new Date(selectedRegistration.verifiedAt).toLocaleString('en-IN')}
                       </p>
                     </div>
                   )}
@@ -760,27 +730,24 @@ const RegistrationsList = () => {
                   Download Receipt
                 </button>
                 
-                {/* Other Actions */}
+                {/* Registration Actions */}
                 <div className="flex gap-3">
-                  {selectedRegistration.paymentStatus !== 'paid' && (
-                    <button 
-                      onClick={() => handleVerifyPayment(selectedRegistration._id)}
-                      className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                    >
-                      Verify Payment
-                    </button>
-                  )}
                   <button 
                     onClick={() => handleApproveRegistration(selectedRegistration._id)}
-                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                    disabled={selectedRegistration.registrationStatus === 'approved'}
+                    className={`flex-1 px-4 py-2 rounded-lg transition-colors font-medium ${
+                      selectedRegistration.registrationStatus === 'approved'
+                        ? 'bg-green-600/50 text-green-200 cursor-not-allowed'
+                        : 'bg-green-600 hover:bg-green-700 text-white'
+                    }`}
                   >
-                    {selectedRegistration.registrationStatus === 'approved' ? 'Already Approved' : 'Approve Registration'}
+                    {selectedRegistration.registrationStatus === 'approved' ? '✓ Approved' : 'Approve Registration'}
                   </button>
                   <button 
                     onClick={() => handleRejectRegistration(selectedRegistration._id)}
-                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
                   >
-                    Reject Registration
+                    Reject
                   </button>
                 </div>
               </div>
@@ -789,39 +756,6 @@ const RegistrationsList = () => {
         </div>
       )}
 
-      {/* Screenshot Viewer Modal */}
-      {viewingScreenshot && (
-        <div 
-          className="fixed inset-0 bg-black/95 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
-          onClick={() => setViewingScreenshot(null)}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="relative max-w-5xl w-full max-h-[90vh] overflow-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 z-10 flex justify-between items-center mb-4 bg-black/50 backdrop-blur-md p-4 rounded-t-lg">
-              <h3 className="text-white text-lg font-semibold">Payment Screenshot</h3>
-              <button
-                onClick={() => setViewingScreenshot(null)}
-                className="text-white hover:text-gray-300 transition-colors flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20"
-              >
-                <X size={20} />
-                <span>Close</span>
-              </button>
-            </div>
-            <div className="bg-white rounded-lg p-4">
-              <img 
-                src={viewingScreenshot} 
-                alt="Payment Screenshot Full Size"
-                className="w-full h-auto rounded-lg shadow-2xl"
-                style={{ maxHeight: '80vh', objectFit: 'contain' }}
-              />
-            </div>
-          </motion.div>
-        </div>
-      )}
         </>
       )}
     </div>

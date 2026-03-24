@@ -1,13 +1,15 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { Search, Filter, Calendar, MapPin, Users, Clock, Trophy, Star, Zap, Award, Eye, UserPlus, Sparkles, Download, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Event, EventFilters } from '../../types';
 import { fadeInUp, staggerContainer, scaleUp } from '../../lib/animations';
-import RegistrationModal from '../../components/modals/RegistrationModal';
 import { useRegistrations } from '../../contexts/RegistrationContext';
 import { useEvents } from '../../contexts/EventsContext';
 import LightweightBackground from '../../components/backgrounds/LightweightBackground';
 import toast from 'react-hot-toast';
+
+// Lazy load heavy components
+const RegistrationModal = lazy(() => import('../../components/modals/RegistrationModal'));
 
 // @ts-ignore - Image import
 import collegeBuilding from '../../assets/images/college.png';
@@ -19,13 +21,14 @@ const EventsPage = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [showEventDetailsModal, setShowEventDetailsModal] = useState(false);
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  // Remove filteredEvents state - now using useMemo
+  // const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const { getRegistrationStats, getRegistrationsByEvent } = useRegistrations();
   const { events, loading } = useEvents();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Filter events based on search and filters
-  useEffect(() => {
+  // Memoize filtered events to prevent unnecessary re-renders
+  const filteredEvents = useMemo(() => {
     let filtered = events as Event[];
 
     // Exclude schedule-only items from Events page
@@ -50,8 +53,11 @@ const EventsPage = () => {
       filtered = filtered.filter((event: Event) => event.day === dayString || event.day === filters.day);
     }
 
-    setFilteredEvents(filtered);
+    return filtered;
   }, [searchQuery, filters, events]);
+
+  // Remove the old useEffect for filtering
+  // useEffect(() => { ... }, [searchQuery, filters, events]);
 
   const handleFilterChange = (key: keyof EventFilters, value: any) => {
     setFilters(prev => ({
@@ -597,13 +603,11 @@ const EventsPage = () => {
                 {eventsWithRealCounts.map((event, index) => (
                   <motion.div
                     key={event._id}
-                    variants={scaleUp}
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    transition={{ delay: index * 0.1 }}
-                    className="glass-panel rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all duration-500 relative"
-                    whileHover={{ y: -8 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.3) }}
+                    className="glass-panel rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all duration-300 relative"
                   >
                     {/* Event Image */}
                     <div className="relative h-56 bg-gradient-to-br from-blue-500/20 to-purple-500/20 overflow-hidden">
@@ -612,6 +616,8 @@ const EventsPage = () => {
                           src={event.posterImage}
                           alt={event.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          loading="lazy"
+                          decoding="async"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500/30 to-purple-500/30">
@@ -696,47 +702,41 @@ const EventsPage = () => {
                           </span>
                         </div>
                         <div className="w-full bg-white/10 rounded-full h-2">
-                          <motion.div 
-                            className={`h-2 rounded-full ${
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-500 ${
                               event.category === 'cultural' 
                                 ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
                                 : 'bg-gradient-to-r from-blue-500 to-cyan-500'
                             }`}
-                            initial={{ width: 0 }}
-                            animate={{ 
+                            style={{ 
                               width: `${Math.min((event.currentRegistrations / event.maxRegistrations) * 100, 100)}%` 
                             }}
-                            transition={{ duration: 1, delay: index * 0.1 }}
                           />
                         </div>
                       </div>
 
                       {/* Action Buttons */}
                       <div className="flex space-x-3">
-                        <motion.button
+                        <button
                           onClick={() => handleViewDetailsClick(event)}
                           className="flex-1 glass-panel px-4 py-3 text-center text-white font-medium rounded-xl hover:bg-white/10 transition-all duration-300 border border-white/20 hover:border-white/40 flex items-center justify-center space-x-2 group"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
                         >
                           <Eye className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
                           <span>View Details</span>
-                        </motion.button>
+                        </button>
                         
                         {canRegisterUpdated(event) ? (
-                          <motion.button
+                          <button
                             onClick={() => handleRegisterClick(event)}
                             className={`flex-1 bg-gradient-to-r ${
                               event.category === 'cultural' 
                                 ? 'from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600' 
                                 : 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
                             } text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 group`}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
                           >
                             <UserPlus className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
                             <span>Register</span>
-                          </motion.button>
+                          </button>
                         ) : (
                           <button
                             disabled
@@ -759,14 +759,16 @@ const EventsPage = () => {
       </motion.section>
 
       {/* Registration Modal */}
-      <RegistrationModal
-        isOpen={showRegistrationModal}
-        onClose={() => {
-          setShowRegistrationModal(false);
-          setSelectedEvent(null);
-        }}
-        event={selectedEvent}
-      />
+      <Suspense fallback={<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div></div>}>
+        <RegistrationModal
+          isOpen={showRegistrationModal}
+          onClose={() => {
+            setShowRegistrationModal(false);
+            setSelectedEvent(null);
+          }}
+          event={selectedEvent}
+        />
+      </Suspense>
 
       {/* Event Details Modal */}
       <AnimatePresence>
@@ -795,6 +797,8 @@ const EventsPage = () => {
                     src={selectedEvent.posterImage}
                     alt={selectedEvent.title}
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500/30 to-purple-500/30">
@@ -1018,7 +1022,7 @@ const EventsPage = () => {
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
                   {canRegisterUpdated(selectedEvent) ? (
-                    <motion.button
+                    <button
                       onClick={() => {
                         handleCloseEventDetailsModal();
                         handleRegisterClick(selectedEvent);
@@ -1028,12 +1032,10 @@ const EventsPage = () => {
                           ? 'from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600' 
                           : 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
                       } text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm sm:text-base`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
                     >
                       <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span>Register Now</span>
-                    </motion.button>
+                    </button>
                   ) : (
                     <button
                       disabled

@@ -1,18 +1,16 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { X, User, Users, CheckCircle, AlertCircle, CreditCard, FileText } from 'lucide-react';
+import { X, User, Users, Upload, QrCode, CheckCircle, AlertCircle, CreditCard, FileText, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { paymentService } from '../../services/payment';
 import { registrationsService } from '../../services/registrations';
-import { razorpayService } from '../../services/razorpay';
 import { useEvents } from '../../contexts/EventsContext';
 
 const RegistrationModal = ({ isOpen, onClose, event }) => {
   const { refreshEvents } = useEvents();
   const modalContentRef = useRef(null);
-  const [razorpayKeyId, setRazorpayKeyId] = useState('');
-  const [paymentCompleted, setPaymentCompleted] = useState(false);
-  const [paymentData, setPaymentData] = useState(null);
-  
+  const [qrLoaded, setQrLoaded] = useState(false);
+  const [paymentConfig, setPaymentConfig] = useState(null);
   const [formData, setFormData] = useState({
     teamName: '',
     teamLeader: {
@@ -28,6 +26,8 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
       { fullName: '', email: '', phone: '', college: '', branch: '', semester: '' },
       { fullName: '', email: '', phone: '', college: '', branch: '', semester: '' }
     ],
+    paymentScreenshot: null,
+    transactionId: ''
   });
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -65,24 +65,56 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
     };
   }, [isOpen]);
 
-  // Fetch Razorpay Key ID
+  // Fetch payment config from backend
   useEffect(() => {
-    const fetchRazorpayKey = async () => {
+    const fetchPaymentConfig = async () => {
       try {
-        const response = await razorpayService.getKeyId();
-        if (response.success && response.data?.keyId) {
-          setRazorpayKeyId(response.data.keyId);
-          console.log('Razorpay Key ID loaded:', response.data.keyId);
+        console.log('Fetching payment config from backend...');
+        const response = await paymentService.getPaymentConfig();
+        console.log('Payment config response:', response);
+        
+        if (response.success && response.data?.config) {
+          setPaymentConfig(response.data.config);
+          console.log('Payment config loaded:', response.data.config);
+          console.log('UPI ID:', response.data.config.upiId);
+          console.log('Payee Name:', response.data.config.payeeName);
+        } else {
+          console.warn('No payment config found in response');
         }
       } catch (error) {
-        console.error('Failed to fetch Razorpay key:', error);
+        console.error('Failed to fetch payment config:', error);
       }
     };
 
     if (isOpen && event?.entryFee > 0) {
-      fetchRazorpayKey();
+      fetchPaymentConfig();
     }
   }, [isOpen, event?.entryFee]);
+
+  // Generate QR code URL - uses backend config or fallback to defaults
+  const qrCodeUrl = useMemo(() => {
+    if (!event?.entryFee) return '';
+    
+    const upiId = paymentConfig?.upiId || '8269858259@ybl';
+    const merchantName = paymentConfig?.payeeName || 'Aavhaan 2026';
+    
+    const params = new URLSearchParams({
+      pa: upiId,
+      pn: merchantName,
+      cu: 'INR',
+      am: event.entryFee.toString()
+    });
+    
+    const upiString = `upi://pay?${params.toString()}`;
+    const url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
+    console.log('Generated QR URL:', url);
+    return url;
+  }, [event?.entryFee, paymentConfig]);
+
+  const upiDetails = {
+    upiId: paymentConfig?.upiId || '8269858259@ybl',
+    phone: paymentConfig?.upiId?.split('@')[0] || '8269858259'
+  };
 
   // Auto-scroll to top when step changes
   useEffect(() => {
@@ -102,8 +134,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   useEffect(() => {
     if (!isOpen) {
       setCurrentStep(1);
-      setPaymentCompleted(false);
-      setPaymentData(null);
+      setQrLoaded(false);
       setRegistrationSuccess(false);
       setRegistrationData(null);
       setFormData({
@@ -121,6 +152,8 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
           { fullName: '', email: '', phone: '', college: '', branch: '', semester: '' },
           { fullName: '', email: '', phone: '', college: '', branch: '', semester: '' }
         ],
+        paymentScreenshot: null,
+        transactionId: ''
       });
     }
   }, [isOpen]);
@@ -153,109 +186,23 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
     });
   };
 
-  // Razorpay Payment Handler
-  const handleRazorpayPayment = async () => {
-    try {
-      setLoadingMessage('Creating payment order...');
-      
-      const orderResponse = await razorpayService.createOrder(
-        event.entryFee,
-        event._id,
-        event.title
-      );
-
-      if (!orderResponse.success) {
-        throw new Error('Failed to create payment order');
-      }
-
-      const { orderId, amount, currency } = orderResponse.data;
-
-      const options = {
-        key: razorpayKeyId,
-        amount: amount,
-        currency: currency,
-        name: 'Aavhaan 2026',
-        description: event.title,
-        order_id: orderId,
-        handler: async function (response) {
-          try {
-            setLoadingMessage('Verifying payment...');
-            
-            const verifyResponse = await razorpayService.verifyPayment(
-              response.razorpay_order_id,
-              response.razorpay_payment_id,
-              response.razorpay_signature
-            );
-
-            if (verifyResponse.success && verifyResponse.verified) {
-              setPaymentCompleted(true);
-              setPaymentData(verifyResponse.data);
-              setLoadingMessage('');
-              
-              toast.success('Payment successful! Proceeding to confirmation...', {
-                duration: 3000,
-                icon: '✅'
-              });
-
-              setTimeout(() => {
-                setCurrentStep(currentStep + 1);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                if (modalContentRef.current) {
-                  modalContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-              }, 1000);
-            } else {
-              throw new Error('Payment verification failed');
-            }
-          } catch (error) {
-            console.error('Payment verification error:', error);
-            toast.error('Payment verification failed. Please contact support.', {
-              duration: 8000,
-              style: {
-                background: '#ef4444',
-                color: '#fff',
-                fontWeight: '600',
-                fontSize: '14px',
-              },
-            });
-            setLoadingMessage('');
-          }
-        },
-        prefill: {
-          name: formData.teamLeader.fullName,
-          email: formData.teamLeader.email,
-          contact: formData.teamLeader.phone,
-        },
-        theme: {
-          color: '#3B82F6',
-        },
-        modal: {
-          ondismiss: function() {
-            setLoadingMessage('');
-            toast.error('Payment cancelled', {
-              duration: 3000,
-            });
-          }
-        }
-      };
-
-      setLoadingMessage('');
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-      
-    } catch (error) {
-      console.error('Razorpay payment error:', error);
-      setLoadingMessage('');
-      toast.error('Failed to initiate payment. Please try again.', {
-        duration: 5000,
-        style: {
-          background: '#ef4444',
-          color: '#fff',
-          fontWeight: '600',
-          fontSize: '14px',
-        },
-      });
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size should be less than 5MB');
+      e.target.value = '';
+      return;
     }
+    
+    // Set the file - backend will handle OCR verification
+    setFormData(prev => ({
+      ...prev,
+      paymentScreenshot: file
+    }));
+    
+    toast.success('Payment screenshot uploaded!');
   };
 
   const handleNext = async () => {
@@ -313,18 +260,223 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
       }
     }
     
-    // For paid events, payment is handled by Razorpay button in Step 2
-    // Just move forward to next step
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
+    // Step 2 → Step 3: Validate payment details for paid events
+    if (currentStep === 2 && event?.entryFee > 0) {
+      // Validate transaction ID and screenshot are present
+      if (!formData.transactionId || !formData.transactionId.trim()) {
+        toast.error('Please enter transaction ID before proceeding', {
+          duration: 5000,
+          style: {
+            background: '#ef4444',
+            color: '#fff',
+            fontWeight: '600',
+            fontSize: '14px',
+            padding: '16px',
+            borderRadius: '12px',
+          },
+          icon: '❌'
+        });
+        return;
+      }
       
-      // Auto scroll to top after step change
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        if (modalContentRef.current) {
-          modalContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!formData.paymentScreenshot) {
+        toast.error('Please upload payment screenshot before proceeding', {
+          duration: 5000,
+          style: {
+            background: '#ef4444',
+            color: '#fff',
+            fontWeight: '600',
+            fontSize: '14px',
+            padding: '16px',
+            borderRadius: '12px',
+          },
+          icon: '❌'
+        });
+        return;
+      }
+      
+      // Check if transaction ID is already used
+      try {
+        const txResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'}/registrations/check-transaction`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            transactionId: formData.transactionId.trim()
+          })
+        });
+        
+        const txResult = await txResponse.json();
+        
+        if (!txResult.data?.available) {
+          toast.error(txResult.message || 'This transaction ID has already been used. Please verify your transaction ID.', {
+            duration: 8000,
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '14px',
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌'
+          });
+          return;
         }
-      }, 100);
+      } catch (error) {
+        console.error('Transaction ID check failed:', error);
+        // Don't block on network error
+      }
+      
+      // Check if screenshot is already used
+      try {
+        const screenshotData = new FormData();
+        screenshotData.append('screenshot', formData.paymentScreenshot);
+        
+        const ssResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'}/registrations/check-screenshot`, {
+          method: 'POST',
+          body: screenshotData
+        });
+        
+        const ssResult = await ssResponse.json();
+        
+        if (!ssResult.data?.available) {
+          toast.error(ssResult.message || 'This payment screenshot has already been used. Please upload a unique screenshot.', {
+            duration: 8000,
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '14px',
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌'
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Screenshot check failed:', error);
+        // Don't block on network error
+      }
+      
+      // Show detailed loading messages
+      setLoadingMessage('Uploading payment screenshot...');
+      const loadingToast = toast.loading('Uploading payment screenshot...');
+      
+      try {
+        // Prepare FormData for verification
+        const verificationData = new FormData();
+        verificationData.append('transactionId', formData.transactionId.trim());
+        verificationData.append('screenshot', formData.paymentScreenshot);
+        verificationData.append('eventId', event._id);
+        verificationData.append('expectedAmount', event.entryFee.toString());
+        
+        // Update loading message
+        setTimeout(() => {
+          setLoadingMessage('Analyzing payment screenshot with OCR...');
+          toast.dismiss(loadingToast);
+          toast.loading('Analyzing payment screenshot with OCR... This may take 10-15 seconds.');
+        }, 500);
+        
+        // Call backend OCR verification API with longer timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
+        
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'}/registrations/verify-payment`, {
+          method: 'POST',
+          body: verificationData,
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // Update loading message
+        setLoadingMessage('Verifying transaction details...');
+        toast.dismiss();
+        const verifyingToast = toast.loading('Verifying transaction details...');
+        
+        const result = await response.json();
+        
+        toast.dismiss(verifyingToast);
+        setLoadingMessage('');
+        
+        if (!response.ok || !result.success) {
+          toast.error(result.message || 'Payment verification failed. Transaction ID or amount does not match screenshot.', {
+            duration: 8000,
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '14px',
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌'
+          });
+          return;
+        }
+        
+        // Verification successful
+        toast.success('Payment verified successfully!');
+        setCurrentStep(currentStep + 1);
+        
+        // Auto scroll to top after step change
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          if (modalContentRef.current) {
+            modalContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 100);
+        
+      } catch (error) {
+        toast.dismiss();
+        setLoadingMessage('');
+        
+        if (error.name === 'AbortError') {
+          toast.error('Verification timeout. Please try again with a clearer screenshot.', {
+            duration: 8000,
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '14px',
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌'
+          });
+        } else {
+          console.error('Payment verification error:', error);
+          toast.error('Failed to verify payment. Please check your details and try again.', {
+            duration: 8000,
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '14px',
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌'
+          });
+        }
+        return;
+      }
+    } else {
+      // For free events or step 1, just move forward
+      if (currentStep < totalSteps) {
+        setCurrentStep(currentStep + 1);
+        
+        // Auto scroll to top after step change
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          if (modalContentRef.current) {
+            modalContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 100);
+      }
     }
   };
 
@@ -436,16 +588,38 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         formDataToSend.append('teamMembers', JSON.stringify(teamMembersData));
       }
       
-      // Payment info (if paid event and payment completed via Razorpay)
-      if (event?.entryFee > 0 && paymentCompleted && paymentData) {
-        formDataToSend.append('transactionId', paymentData.paymentId);
-        formDataToSend.append('razorpayOrderId', paymentData.orderId);
-        formDataToSend.append('razorpayPaymentId', paymentData.paymentId);
-        console.log('Razorpay payment info added - Payment ID:', paymentData.paymentId);
+      // Payment info (only for paid events)
+      if (event?.entryFee > 0) {
+        if (!formData.transactionId || !formData.transactionId.trim()) {
+          toast.error('Transaction ID is required for paid events');
+          setIsSubmitting(false);
+          setLoadingMessage('');
+          return;
+        }
+        
+        if (!formData.paymentScreenshot) {
+          toast.error('Payment screenshot is required for paid events');
+          setIsSubmitting(false);
+          setLoadingMessage('');
+          return;
+        }
+        
+        formDataToSend.append('transactionId', formData.transactionId.trim());
+        formDataToSend.append('screenshot', formData.paymentScreenshot);
+        console.log('Payment info added - Transaction ID:', formData.transactionId.trim());
       }
       
-      // Finalizing registration
-      setLoadingMessage('Finalizing your registration...');
+      // Step 2: Uploading documents
+      setLoadingMessage('Uploading payment screenshot...');
+      await new Promise(resolve => setTimeout(resolve, 300)); // Small delay for UI feedback
+      
+      // Step 3: Verifying payment
+      if (event?.entryFee > 0) {
+        setLoadingMessage('Verifying payment details with OCR...');
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
+      // Step 4: Finalizing registration
       setLoadingMessage('Finalizing your registration...');
       
       // Submit to backend API
@@ -837,77 +1011,117 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                   Payment Information
                 </h3>
                 
-                <div className="glass-panel p-6 rounded-xl text-center space-y-6">
-                  <div>
-                    <h4 className="text-xl font-bold text-white mb-2">Entry Fee</h4>
-                    <div className="text-4xl font-bold text-green-400">₹{event.entryFee}</div>
+                <div className="glass-panel p-4 md:p-6 rounded-xl text-center">
+                  <div className="mb-4 md:mb-6">
+                    <h4 className="text-lg md:text-xl font-bold text-white mb-2">Entry Fee</h4>
+                    <div className="text-2xl md:text-3xl font-bold text-green-400">₹{event.entryFee}</div>
+                  </div>
+
+                  <div className="mb-4 md:mb-6">
+                    <h4 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4 flex items-center justify-center">
+                      <QrCode className="w-4 h-4 md:w-5 md:h-5 mr-2 text-blue-400" />
+                      Scan QR Code to Pay
+                    </h4>
+                    
+                    <div className="bg-white p-4 rounded-lg inline-block">
+                      <img
+                        src={qrCodeUrl}
+                        alt="Payment QR Code"
+                        className="w-48 h-48 object-contain"
+                        onLoad={() => {
+                          console.log('QR Code loaded successfully:', qrCodeUrl);
+                          setQrLoaded(true);
+                        }}
+                        onError={(e) => {
+                          console.error('QR Code failed to load:', qrCodeUrl);
+                          e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzBWMTMwTTcwIDEwMEgxMzAiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+';
+                        }}
+                      />
+                    </div>
+                    <p className="text-gray-400 text-sm mt-3">
+                      UPI ID: {upiDetails.upiId} | Phone: {upiDetails.phone}
+                    </p>
+                    <p className="text-green-400 text-xs mt-2 flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      QR Code automatically generated from UPI ID
+                    </p>
                   </div>
 
                   <div className="border-t border-white/10 pt-6">
-                    <h4 className="text-lg font-semibold text-white mb-4">
-                      Complete Payment to Continue
+                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center justify-center">
+                      <Upload className="w-5 h-5 mr-2 text-purple-400" />
+                      Payment Details
                     </h4>
                     
-                    {paymentCompleted ? (
-                      <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
-                        <div className="flex items-center justify-center space-x-3 text-green-400 mb-4">
-                          <CheckCircle className="w-8 h-8" />
-                          <span className="text-xl font-semibold">Payment Successful!</span>
-                        </div>
-                        <p className="text-gray-300 text-sm">
-                          Payment ID: {paymentData?.paymentId}
+                    {/* Transaction ID Field - REQUIRED */}
+                    <div className="mb-6">
+                      <label className="block text-white font-medium mb-2 flex items-center">
+                        <CreditCard className="w-4 h-4 mr-2 text-yellow-400" />
+                        Transaction ID / Reference Number *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.transactionId || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, transactionId: e.target.value }))}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                        placeholder="Enter UPI transaction ID or reference number"
+                        required
+                        minLength={1}
+                      />
+                      <p className="text-gray-400 text-sm mt-2">
+                        Enter the transaction ID from your UPI payment app (e.g., 123456789012). Backend will verify it matches your screenshot.
+                      </p>
+                      {!formData.transactionId && (
+                        <p className="text-red-400 text-sm mt-1 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          Transaction ID is mandatory for registration
                         </p>
-                        <p className="text-gray-400 text-xs mt-2">
-                          Amount: ₹{paymentData?.amount} • Method: {paymentData?.method}
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={handleRazorpayPayment}
-                          disabled={!razorpayKeyId || loadingMessage}
-                          className="w-full max-w-md mx-auto py-4 px-6 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-lg font-semibold rounded-xl hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-3"
-                        >
-                          {loadingMessage ? (
-                            <>
-                              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              <span>{loadingMessage}</span>
-                            </>
-                          ) : (
-                            <>
-                              <CreditCard className="w-6 h-6" />
-                              <span>Pay Now with Razorpay</span>
-                            </>
-                          )}
-                        </button>
-                        
-                        <div className="mt-6 space-y-2">
-                          <p className="text-gray-400 text-sm">
-                            Secure payment via Razorpay
-                          </p>
-                          <p className="text-gray-500 text-xs">
-                            Supports UPI, Cards, NetBanking, and Wallets
-                          </p>
-                        </div>
+                      )}
+                    </div>
 
-                        <div className="mt-6 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-                          <div className="flex items-start space-x-3">
-                            <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                            <div className="text-blue-400 text-sm text-left">
-                              <p className="font-medium mb-1">Payment Instructions:</p>
-                              <ul className="space-y-1 text-xs">
-                                <li>• Click "Pay Now" to open Razorpay payment gateway</li>
-                                <li>• Choose your preferred payment method (UPI/Card/NetBanking)</li>
-                                <li>• Complete the payment securely</li>
-                                <li>• Payment will be verified automatically</li>
-                                <li>• You'll be redirected to confirmation page</li>
-                              </ul>
+                    {/* Payment Screenshot Upload - REQUIRED */}
+                    <div>
+                      <label className="block text-white font-medium mb-2 flex items-center">
+                        <Camera className="w-4 h-4 mr-2 text-purple-400" />
+                        Payment Screenshot *
+                      </label>
+                      
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          id="payment-screenshot"
+                          required
+                        />
+                        <label
+                          htmlFor="payment-screenshot"
+                          className="cursor-pointer block w-full p-6 border-2 border-dashed border-white/30 rounded-xl hover:border-white/50 transition-colors duration-300"
+                        >
+                          {formData.paymentScreenshot ? (
+                            <div className="flex items-center justify-center space-x-3 text-green-400">
+                              <CheckCircle className="w-6 h-6" />
+                              <span className="font-medium">{formData.paymentScreenshot.name}</span>
                             </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
+                          ) : (
+                            <div className="flex flex-col items-center space-y-3">
+                              <Camera className="w-12 h-12 text-gray-400" />
+                              <div className="text-center">
+                                <p className="text-white font-medium">Click to upload screenshot *</p>
+                                <p className="text-gray-400 text-sm">PNG, JPG up to 5MB (Required)</p>
+                              </div>
+                            </div>
+                          )}
+                        </label>
+                      </div>
+                      {!formData.paymentScreenshot && (
+                        <p className="text-red-400 text-sm mt-2 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          Payment screenshot is required for registration
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

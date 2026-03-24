@@ -16,10 +16,22 @@ export const EventsProvider = ({ children }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastFetchTime, setLastFetchTime] = useState(0);
+  
+  // Cache duration: 2 minutes
+  const CACHE_DURATION = 2 * 60 * 1000;
 
   // Fetch events from backend MongoDB on mount
-  const fetchEvents = useCallback(async () => {
+  const fetchEvents = useCallback(async (forceRefresh = false) => {
     try {
+      // Check cache - if data is fresh and not forcing refresh, skip fetch
+      const now = Date.now();
+      if (!forceRefresh && events.length > 0 && (now - lastFetchTime) < CACHE_DURATION) {
+        console.log('✓ Using cached events data');
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
       setError(null);
       
@@ -52,6 +64,7 @@ export const EventsProvider = ({ children }) => {
         console.log('✓ Events loaded from MongoDB:', eventsData.length);
         console.log('   Events:', eventsData);
         setEvents(eventsData);
+        setLastFetchTime(Date.now());
       } else {
         console.error('❌ Backend returned success=false or invalid response');
         console.error('   Response:', response);
@@ -79,7 +92,7 @@ export const EventsProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, []); // Empty deps - function doesn't depend on any external values
+  }, [events.length, lastFetchTime, CACHE_DURATION]); // Added dependencies
 
   useEffect(() => {
     fetchEvents();
@@ -194,7 +207,7 @@ export const EventsProvider = ({ children }) => {
     addEvent,
     updateEvent,
     deleteEvent,
-    refreshEvents: fetchEvents,
+    refreshEvents: () => fetchEvents(true), // Force refresh
     getEventById,
     getEventBySlug,
     getEventsByCategory,
