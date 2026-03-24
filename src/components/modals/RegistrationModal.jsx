@@ -622,25 +622,38 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
       
     } catch (error) {
       console.error('Registration error:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error keys:', error ? Object.keys(error) : 'null');
+      console.error('Full error object:', JSON.stringify(error, null, 2));
       
       // Show specific error message from backend
       let errorMessage = 'Failed to submit registration. Please try again.';
       
       // Backend error response format: { success: false, message: "error text", errors: [...] }
-      if (error?.message) {
+      // Axios wraps errors, so check response.data first
+      const errorData = error?.response?.data || error;
+      
+      console.log('Extracted error data:', errorData);
+      
+      if (errorData?.message) {
         // Direct error message from backend
-        errorMessage = error.message;
-      } else if (error?.errors && Array.isArray(error.errors)) {
+        errorMessage = errorData.message;
+      } else if (errorData?.errors && Array.isArray(errorData.errors)) {
         // Validation errors array
-        console.error('Validation errors:', error.errors);
-        errorMessage = error.errors.map(e => `${e.field}: ${e.message}`).join(', ');
-      } else if (error?.error) {
+        console.error('Validation errors:', errorData.errors);
+        errorMessage = errorData.errors.map(e => `${e.field || e.path || 'Field'}: ${e.message || e.msg}`).join(', ');
+      } else if (errorData?.error) {
         // Generic error field
-        errorMessage = error.error;
+        errorMessage = errorData.error;
+      } else if (error?.message) {
+        // Axios error message
+        errorMessage = error.message;
       } else if (typeof error === 'string') {
         // String error
         errorMessage = error;
       }
+      
+      console.log('Final error message to show:', errorMessage);
       
       // Show error toast with longer duration for important messages
       toast.error(errorMessage, { 
