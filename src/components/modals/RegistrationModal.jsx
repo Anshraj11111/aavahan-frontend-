@@ -499,6 +499,46 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate phone number before submission
+    if (formData.teamLeader.phone.length !== 10) {
+      toast.error('Team leader phone number must be exactly 10 digits', {
+        duration: 5000,
+        style: {
+          background: '#ef4444',
+          color: '#fff',
+          fontWeight: '600',
+          fontSize: '14px',
+          padding: '16px',
+          borderRadius: '12px',
+        },
+        icon: '❌'
+      });
+      return;
+    }
+    
+    // Validate team member phone numbers if provided
+    if (isTeamEvent) {
+      for (let i = 0; i < formData.teamMembers.length; i++) {
+        const member = formData.teamMembers[i];
+        if (member.phone && member.phone.length > 0 && member.phone.length !== 10) {
+          toast.error(`Team member ${i + 1} phone number must be exactly 10 digits`, {
+            duration: 5000,
+            style: {
+              background: '#ef4444',
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '14px',
+              padding: '16px',
+              borderRadius: '12px',
+            },
+            icon: '❌'
+          });
+          return;
+        }
+      }
+    }
+    
     setIsSubmitting(true);
 
     try {
@@ -810,17 +850,28 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Phone Number *
+                        Phone Number * (10 digits)
                       </label>
                       <input
                         type="tel"
                         name="phone"
                         value={formData.teamLeader.phone}
-                        onChange={(e) => handleInputChange(e, 'teamLeader')}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, ''); // Only digits
+                          if (value.length <= 10) {
+                            handleInputChange({ target: { name: 'phone', value } }, 'teamLeader');
+                          }
+                        }}
                         required
+                        pattern="[0-9]{10}"
+                        minLength="10"
+                        maxLength="10"
                         className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                        placeholder="Enter phone number"
+                        placeholder="Enter 10 digit phone number"
                       />
+                      {formData.teamLeader.phone && formData.teamLeader.phone.length !== 10 && (
+                        <p className="text-red-400 text-xs mt-1">Phone number must be exactly 10 digits</p>
+                      )}
                     </div>
 
                     <div>
@@ -915,14 +966,27 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                             className="px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
                             placeholder="Email"
                           />
-                          <input
-                            type="tel"
-                            name="phone"
-                            value={member.phone}
-                            onChange={(e) => handleInputChange(e, 'teamMembers', index)}
-                            className="px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
-                            placeholder="Phone"
-                          />
+                          <div>
+                            <input
+                              type="tel"
+                              name="phone"
+                              value={member.phone}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, ''); // Only digits
+                                if (value.length <= 10) {
+                                  handleInputChange({ target: { name: 'phone', value } }, 'teamMembers', index);
+                                }
+                              }}
+                              pattern="[0-9]{10}"
+                              minLength="10"
+                              maxLength="10"
+                              className="px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm w-full"
+                              placeholder="Phone (10 digits)"
+                            />
+                            {member.phone && member.phone.length > 0 && member.phone.length !== 10 && (
+                              <p className="text-red-400 text-xs mt-1">Must be 10 digits</p>
+                            )}
+                          </div>
                           <input
                             type="text"
                             name="college"
