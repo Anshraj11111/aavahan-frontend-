@@ -7,7 +7,6 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/NewFooter';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ScrollToTop from './components/common/ScrollToTop';
-import FloatingQRButton from './components/ui/FloatingQRButton';
 
 // Context Providers
 import { RegistrationProvider } from './contexts/RegistrationContext';
@@ -83,8 +82,6 @@ const App = () => {
                       </Routes>
                     </main>
                     <Footer />
-                    {/* Floating QR Button - Available on all public pages */}
-                    <FloatingQRButton />
                   </div>
                 } />
               </Routes>

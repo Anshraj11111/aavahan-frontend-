@@ -5,6 +5,7 @@ import { ArrowRight, Calendar, Sparkles } from 'lucide-react';
 import collegeBuilding from '../../../assets/images/college.png';
 import aavhaanLogo from '../../../assets/images/techfest logo.png';
 import botImage from '../../../assets/images/bot.png';
+import FloatingQRButton from '../../../components/ui/FloatingQRButton';
 
 const NewHeroSection = () => {
   const [timeLeft, setTimeLeft] = useState({
@@ -244,6 +245,9 @@ const NewHeroSection = () => {
                 <div className="text-sm text-white font-bold uppercase tracking-wide">Days</div>
               </div>
             </motion.div>
+
+            {/* QR Code Button - Below Stats */}
+            <FloatingQRButton />
           </motion.div>
         </div>
       </div>
