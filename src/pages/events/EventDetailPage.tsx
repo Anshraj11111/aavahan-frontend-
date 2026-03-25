@@ -222,31 +222,38 @@ const EventDetailPage = () => {
 
               {/* Registration Status */}
               <div className="bg-white/90 backdrop-blur-sm p-5 rounded-xl mb-6 border-2 border-blue-200 shadow-lg">
+                {/* Status Badge */}
+                <div className={`px-4 py-3 rounded-xl text-center font-bold text-lg mb-4 ${
+                  event.maxRegistrations && (event.currentRegistrations || 0) >= event.maxRegistrations
+                    ? 'bg-red-500/20 text-red-600 border-2 border-red-500/50'
+                    : 'bg-green-500/20 text-green-600 border-2 border-green-500/50'
+                }`}>
+                  {event.maxRegistrations && (event.currentRegistrations || 0) >= event.maxRegistrations
+                    ? '🔴 FULL'
+                    : '🟢 OPEN'}
+                </div>
+                
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-3">
                     {getStatusIcon()}
                     <div>
                       <p className="text-slate-800 font-black text-base">{getStatusText()}</p>
                       <p className="text-slate-600 text-sm font-semibold">
-                        {event?.currentRegistrations || 0} / {event?.maxRegistrations || 0} registered
+                        {event?.currentRegistrations || 0} / {event?.maxRegistrations || '∞'} registered
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-slate-600 text-sm font-bold">Closes</p>
-                    <p className="text-slate-800 font-black text-sm">
-                      {event?.registrationDeadline ? getRelativeTime(event.registrationDeadline) : 'TBD'}
-                    </p>
+                </div>
+                {event.maxRegistrations && (
+                  <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-300"
+                      style={{ 
+                        width: `${Math.min(((event?.currentRegistrations || 0) / (event?.maxRegistrations || 1)) * 100, 100)}%` 
+                      }}
+                    />
                   </div>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                  <div 
-                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-300"
-                    style={{ 
-                      width: `${Math.min(((event?.currentRegistrations || 0) / (event?.maxRegistrations || 1)) * 100, 100)}%` 
-                    }}
-                  />
-                </div>
+                )}
               </div>
 
               {/* Registration Button */}

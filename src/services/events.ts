@@ -6,6 +6,9 @@ export const eventsService = {
   async getEvents(filters?: EventFilters): Promise<ApiResponse<Event[]>> {
     const params = new URLSearchParams();
     
+    // Set high limit to get all events (default is 20)
+    params.append('limit', '100');
+    
     if (filters?.day) params.append('day', filters.day.toString());
     if (filters?.category) params.append('category', filters.category);
     if (filters?.department) params.append('department', filters.department);
@@ -13,7 +16,7 @@ export const eventsService = {
     if (filters?.featured !== undefined) params.append('featured', filters.featured.toString());
 
     const queryString = params.toString();
-    const url = queryString ? `/public/events?${queryString}` : '/public/events';
+    const url = `/public/events?${queryString}`;
     
     return apiService.get<Event[]>(url);
   },

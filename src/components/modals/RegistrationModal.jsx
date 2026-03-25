@@ -719,22 +719,15 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                       <label className="block text-sm font-medium text-gray-300 mb-2">
                         Branch *
                       </label>
-                      <select
+                      <input
+                        type="text"
                         name="branch"
                         value={formData.teamLeader.branch}
                         onChange={(e) => handleInputChange(e, 'teamLeader')}
                         required
-                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                      >
-                        <option value="" className="bg-navy-900">Select Branch</option>
-                        <option value="Computer Science" className="bg-navy-900">Computer Science</option>
-                        <option value="Information Technology" className="bg-navy-900">Information Technology</option>
-                        <option value="Electronics & Communication" className="bg-navy-900">Electronics & Communication</option>
-                        <option value="Electrical Engineering" className="bg-navy-900">Electrical Engineering</option>
-                        <option value="Mechanical Engineering" className="bg-navy-900">Mechanical Engineering</option>
-                        <option value="Civil Engineering" className="bg-navy-900">Civil Engineering</option>
-                        <option value="Other" className="bg-navy-900">Other</option>
-                      </select>
+                        placeholder="e.g., B.Tech (CSE), M.Tech (IT)"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                      />
                     </div>
 
                     <div>
@@ -820,6 +813,22 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                             onChange={(e) => handleInputChange(e, 'teamMembers', index)}
                             className="px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
                             placeholder="College Name"
+                          />
+                          <input
+                            type="text"
+                            name="branch"
+                            value={member.branch}
+                            onChange={(e) => handleInputChange(e, 'teamMembers', index)}
+                            className="px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
+                            placeholder="Branch (e.g., B.Tech CSE)"
+                          />
+                          <input
+                            type="text"
+                            name="semester"
+                            value={member.semester}
+                            onChange={(e) => handleInputChange(e, 'teamMembers', index)}
+                            className="px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
+                            placeholder="Semester (e.g., 5th Sem)"
                           />
                         </div>
                       </div>

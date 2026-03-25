@@ -27,7 +27,7 @@ export interface Event {
   _id: string;
   title: string;
   slug: string;
-  category: 'cultural' | 'technical';
+  category: 'cultural' | 'technical' | 'games';
   department: string;
   day: 1 | 2 | 3 | 'Day 1' | 'Day 2' | 'Day 3' | string;  // Support both number and string formats
   date: string;
@@ -46,8 +46,8 @@ export interface Event {
   coordinatorName: string;
   coordinatorPhone: string;
   coordinatorEmail: string;
-  registrationDeadline: string;
-  maxRegistrations: number;
+  registrationDeadline?: string | null;  // Optional - can be null for no deadline
+  maxRegistrations?: number | null;  // Optional - can be null for unlimited registrations
   currentRegistrations: number;
   posterImage: string;
   bannerImage: string;

@@ -48,9 +48,9 @@ export const EventsProvider = ({ children }) => {
       
       let response;
       if (isAdmin) {
-        // Admin: fetch ALL events (including drafts) from admin API
-        console.log('   Calling: adminService.getAllEvents()');
-        response = await adminService.getAllEvents();
+        // Admin: fetch ALL events (including drafts) from admin API with limit=100
+        console.log('   Calling: adminService.getAllEvents({ limit: 100 })');
+        response = await adminService.getAllEvents({ limit: 100 });
         console.log('✓ Admin: Backend events response:', response);
       } else {
         // Public: fetch only published events

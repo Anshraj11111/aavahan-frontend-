@@ -134,7 +134,7 @@ const SchedulePage = () => {
                       <div className="font-bold text-2xl mb-1">Day {day}</div>
                       <div className="text-sm opacity-90 font-medium">{info.title}</div>
                       <div className="text-xs opacity-70 mt-1">
-                        {new Date(info.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        {new Date(info.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                       </div>
                     </div>
                     
@@ -625,7 +625,7 @@ const SchedulePage = () => {
                                   {/* Register Button - Only show for non-schedule-only events */}
                                   {!event.isScheduleOnly && 
                                    event.status === 'published' && 
-                                   event.currentRegistrations < event.maxRegistrations &&
+                                   (!event.maxRegistrations || event.currentRegistrations < event.maxRegistrations) &&
                                    (!event.registrationDeadline || new Date(event.registrationDeadline) > new Date()) && (
                                     <motion.div 
                                       whileHover={{ scale: 1.05 }} 

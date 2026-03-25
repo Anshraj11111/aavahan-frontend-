@@ -19,17 +19,16 @@ export const formatDate = (date: string | Date | null | undefined, format: 'shor
   
   if (format === 'long') {
     return dateObj.toLocaleDateString('en-IN', {
-      weekday: 'long',
+      day: '2-digit',
+      month: '2-digit',
       year: 'numeric',
-      month: 'long',
-      day: 'numeric',
     });
   }
   
   return dateObj.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: '2-digit',
     year: 'numeric',
-    month: 'short',
-    day: 'numeric',
   });
 };
 
@@ -42,9 +41,9 @@ export const formatDateTime = (date: string | Date | null | undefined): string =
   if (isNaN(dateObj.getTime())) return 'Invalid Date';
   
   return dateObj.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: '2-digit',
     year: 'numeric',
-    month: 'short',
-    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,

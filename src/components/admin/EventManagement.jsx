@@ -49,18 +49,33 @@ const EventManagement = () => {
       displayDate = `${day}/${month}/${year}`;
     }
     
+    // Convert registration deadline to DD/MM/YYYY format
+    let displayDeadline = '';
+    if (event.registrationDeadline) {
+      const deadlineObj = new Date(event.registrationDeadline);
+      const day = String(deadlineObj.getDate()).padStart(2, '0');
+      const month = String(deadlineObj.getMonth() + 1).padStart(2, '0');
+      const year = deadlineObj.getFullYear();
+      displayDeadline = `${day}/${month}/${year}`;
+    }
+    
     setFormData({
       ...event, 
       day: dayNumber,
       date: displayDate,
       posterImage: event.posterImage || event.bannerImage || '',
-      registrationDeadline: event.registrationDeadline ? new Date(event.registrationDeadline).toISOString().slice(0, 16) : '',
+      registrationDeadline: displayDeadline,
       maxRegistrations: event.maxRegistrations || '',
       coordinators: coordinators,
       rules: event.rules || [''], 
       tags: event.tags || ['']
     });
     setShowModal(true);
+    
+    // Auto-scroll to top when modal opens
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   const handleAdd = () => {
@@ -86,8 +101,14 @@ const EventManagement = () => {
         backendDate = `${year}-${month}-${day}`;
       }
 
-      // Handle registration deadline - only use if provided, don't auto-set
-      let deadline = formData.registrationDeadline || null;
+      // Handle registration deadline - convert DD/MM/YYYY to YYYY-MM-DD
+      let deadline = null;
+      if (formData.registrationDeadline && formData.registrationDeadline.trim()) {
+        const [day, month, year] = formData.registrationDeadline.split('/');
+        if (day && month && year) {
+          deadline = `${year}-${month}-${day}`;
+        }
+      }
 
       // Handle maxRegistrations - if empty or "no limit" text, set to null (unlimited)
       let maxRegs = null;
@@ -104,6 +125,8 @@ const EventManagement = () => {
         day: formData.day ? `Day ${formData.day}` : 'Day 1',
         registrationDeadline: deadline,
         maxRegistrations: maxRegs,
+        minTeamSize: formData.minTeamSize || 1,
+        maxTeamSize: formData.maxTeamSize || 1,
         coordinators: formData.coordinators.filter(c => c.name || c.phone || c.email),
         rules: formData.rules.filter(r => r && r.trim()),
         tags: formData.tags.filter(t => t && t.trim()),
@@ -397,8 +420,17 @@ const EventManagement = () => {
                       </div>
                       <div>
                         <label className="block text-white text-sm font-medium mb-1.5">Registration Deadline (Optional)</label>
-                        <input type="datetime-local" value={formData.registrationDeadline} onChange={(e) => handleInputChange('registrationDeadline', e.target.value)}
-                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" />
+                        <input 
+                          type="text" 
+                          value={formData.registrationDeadline} 
+                          onChange={(e) => {
+                            let value = e.target.value.replace(/[^0-9/]/g, '');
+                            if (value.length === 2 && !value.includes('/')) value += '/';
+                            if (value.length === 5 && value.split('/').length === 2) value += '/';
+                            if (value.length <= 10) handleInputChange('registrationDeadline', value);
+                          }}
+                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                          placeholder="DD/MM/YYYY" />
                         <p className="text-gray-500 text-xs mt-1">Leave empty to allow registrations until event date</p>
                       </div>
                     </div>
@@ -420,13 +452,21 @@ const EventManagement = () => {
                         </div>
                         <div>
                           <label className="block text-white text-sm font-medium mb-1.5">Min Size</label>
-                          <input type="number" value={formData.minTeamSize} onChange={(e) => handleInputChange('minTeamSize', parseInt(e.target.value))}
-                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" min="1" />
+                          <input 
+                            type="text" 
+                            value={formData.minTeamSize} 
+                            onChange={(e) => handleInputChange('minTeamSize', e.target.value ? parseInt(e.target.value) : '')}
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" 
+                            placeholder="Leave empty for no limit" />
                         </div>
                         <div>
                           <label className="block text-white text-sm font-medium mb-1.5">Max Size</label>
-                          <input type="number" value={formData.maxTeamSize} onChange={(e) => handleInputChange('maxTeamSize', parseInt(e.target.value))}
-                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" min="1" />
+                          <input 
+                            type="text" 
+                            value={formData.maxTeamSize} 
+                            onChange={(e) => handleInputChange('maxTeamSize', e.target.value ? parseInt(e.target.value) : '')}
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" 
+                            placeholder="Leave empty for no limit" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">

@@ -77,7 +77,7 @@ const EventsPage = () => {
   const getEventStatusColor = (event: Event) => {
     const now = new Date();
     
-    if (event.currentRegistrations >= event.maxRegistrations) {
+    if (event.maxRegistrations && event.currentRegistrations >= event.maxRegistrations) {
       return 'bg-red-500/20 text-red-400 border-red-500/30';
     } else if (event.registrationDeadline && new Date(event.registrationDeadline) < now) {
       return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
@@ -89,7 +89,7 @@ const EventsPage = () => {
   const getEventStatusText = (event: Event) => {
     const now = new Date();
     
-    if (event.currentRegistrations >= event.maxRegistrations) {
+    if (event.maxRegistrations && event.currentRegistrations >= event.maxRegistrations) {
       return 'Full';
     } else if (event.registrationDeadline && new Date(event.registrationDeadline) < now) {
       return 'Closed';
@@ -100,12 +100,17 @@ const EventsPage = () => {
 
   const canRegister = (event: Event) => {
     const now = new Date();
+    
+    // If maxRegistrations is null/undefined, it means unlimited registrations
+    const hasSpace = !event.maxRegistrations || event.currentRegistrations < event.maxRegistrations;
+    
     // If no registration deadline, allow registration
     if (!event.registrationDeadline) {
-      return event.currentRegistrations < event.maxRegistrations;
+      return hasSpace;
     }
+    
     const registrationDeadline = new Date(event.registrationDeadline);
-    return event.currentRegistrations < event.maxRegistrations && registrationDeadline > now;
+    return hasSpace && registrationDeadline > now;
   };
 
   const handleRegisterClick = (event: Event) => {
@@ -226,23 +231,25 @@ const EventsPage = () => {
           <div class="section">
             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
               <span style="font-weight: bold;">Current Registrations:</span>
-              <span style="font-weight: bold; font-size: 18px;">${event.currentRegistrations} / ${event.maxRegistrations}</span>
+              <span style="font-weight: bold; font-size: 18px;">${event.currentRegistrations} / ${event.maxRegistrations || '∞'}</span>
             </div>
+            ${event.maxRegistrations ? `
             <div class="progress-bar">
               <div class="progress-fill" style="width: ${Math.min((event.currentRegistrations / event.maxRegistrations) * 100, 100)}%">
                 ${Math.round((event.currentRegistrations / event.maxRegistrations) * 100)}%
               </div>
             </div>
+            ` : ''}
             <div style="margin-top: 15px; padding: 15px; background: ${
-              event.currentRegistrations >= event.maxRegistrations ? '#fee2e2' : 
-              new Date(event.registrationDeadline) < new Date() ? '#fef3c7' : '#dcfce7'
+              event.maxRegistrations && event.currentRegistrations >= event.maxRegistrations ? '#fee2e2' : 
+              event.registrationDeadline && new Date(event.registrationDeadline) < new Date() ? '#fef3c7' : '#dcfce7'
             }; border-radius: 8px; text-align: center; font-weight: bold; color: ${
-              event.currentRegistrations >= event.maxRegistrations ? '#991b1b' : 
-              new Date(event.registrationDeadline) < new Date() ? '#92400e' : '#166534'
+              event.maxRegistrations && event.currentRegistrations >= event.maxRegistrations ? '#991b1b' : 
+              event.registrationDeadline && new Date(event.registrationDeadline) < new Date() ? '#92400e' : '#166534'
             };">
               Status: ${
-                event.currentRegistrations >= event.maxRegistrations ? 'FULL' : 
-                new Date(event.registrationDeadline) < new Date() ? 'CLOSED' : 'OPEN'
+                event.maxRegistrations && event.currentRegistrations >= event.maxRegistrations ? 'FULL' : 
+                event.registrationDeadline && new Date(event.registrationDeadline) < new Date() ? 'CLOSED' : 'OPEN'
               }
             </div>
           </div>
@@ -322,8 +329,17 @@ const EventsPage = () => {
   // Helper function to check if registration is available for updated events
   const canRegisterUpdated = (event: Event) => {
     const now = new Date();
+    
+    // If maxRegistrations is null/undefined, it means unlimited registrations
+    const hasSpace = !event.maxRegistrations || event.currentRegistrations < event.maxRegistrations;
+    
+    // If no registration deadline, event is open (only check max registrations)
+    if (!event.registrationDeadline) {
+      return hasSpace;
+    }
+    
     const registrationDeadline = new Date(event.registrationDeadline);
-    return event.currentRegistrations < event.maxRegistrations && registrationDeadline > now;
+    return hasSpace && registrationDeadline > now;
   };
 
   return (
@@ -460,7 +476,7 @@ const EventsPage = () => {
                   {loading ? (
                     <div className="h-10 bg-white/10 rounded w-16 mx-auto animate-pulse" />
                   ) : (
-                    eventsWithRealCounts.filter(event => canRegisterUpdated(event)).length
+                    filteredEvents.filter(event => !event.maxRegistrations || event.currentRegistrations < event.maxRegistrations).length
                   )}
                 </div>
                 <div className="text-white text-base font-black uppercase tracking-wide">Open</div>
@@ -627,6 +643,18 @@ const EventsPage = () => {
                       {/* Overlay Gradient */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                       
+                      {/* Status Badge - Top Left */}
+                      <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-full text-sm font-bold flex items-center space-x-1 ${
+                        event.maxRegistrations && event.currentRegistrations >= event.maxRegistrations
+                          ? 'bg-red-500/90 text-white'
+                          : 'bg-green-500/90 text-white'
+                      }`}>
+                        <span>{event.maxRegistrations && event.currentRegistrations >= event.maxRegistrations ? '🔴 FULL' : '🟢 OPEN'}</span>
+                        <span className="text-xs">
+                          ({event.currentRegistrations}/{event.maxRegistrations || '∞'})
+                        </span>
+                      </div>
+
                       {/* Featured Badge */}
                       {event.featured && (
                         <motion.div 
@@ -673,7 +701,7 @@ const EventsPage = () => {
                       <div className="space-y-2 mb-6">
                         <div className="flex items-center text-white text-base font-semibold">
                           <Calendar className="w-5 h-5 mr-2 text-blue-400" />
-                          <span>{new Date(event.date).toLocaleDateString()}</span>
+                          <span>{new Date(event.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
                         </div>
                         <div className="flex items-center text-white text-base font-semibold">
                           <Clock className="w-5 h-5 mr-2 text-purple-400" />
@@ -835,7 +863,7 @@ const EventsPage = () => {
                       </div>
                       <div>
                         <p className="text-gray-400 text-sm">Date</p>
-                        <p className="text-white font-bold">{new Date(selectedEvent.date).toLocaleDateString()}</p>
+                        <p className="text-white font-bold">{new Date(selectedEvent.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
                       </div>
                     </div>
                   </div>
@@ -921,22 +949,38 @@ const EventsPage = () => {
                       Registration Status
                     </h3>
                     <div className="space-y-4">
+                      {/* Status Badge */}
+                      <div className={`px-4 py-3 rounded-xl text-center font-bold text-lg ${
+                        selectedEvent.maxRegistrations && selectedEvent.currentRegistrations >= selectedEvent.maxRegistrations
+                          ? 'bg-red-500/20 text-red-400 border-2 border-red-500/50'
+                          : 'bg-green-500/20 text-green-400 border-2 border-green-500/50'
+                      }`}>
+                        {selectedEvent.maxRegistrations && selectedEvent.currentRegistrations >= selectedEvent.maxRegistrations
+                          ? '🔴 FULL'
+                          : '🟢 OPEN'}
+                      </div>
+                      
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">Current / Maximum</span>
-                        <span className="text-white font-bold text-lg">{selectedEvent.currentRegistrations} / {selectedEvent.maxRegistrations}</span>
+                        <span className="text-white font-bold text-lg">
+                          {selectedEvent.currentRegistrations} / {selectedEvent.maxRegistrations || '∞'}
+                        </span>
                       </div>
-                      <div className="w-full bg-white/10 rounded-full h-3">
-                        <div 
-                          className={`h-3 rounded-full ${
-                            selectedEvent.category === 'cultural' 
-                              ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
-                              : selectedEvent.category === 'games'
-                              ? 'bg-gradient-to-r from-green-500 to-emerald-500'
-                              : 'bg-gradient-to-r from-blue-500 to-cyan-500'
-                          }`}
-                          style={{ width: `${Math.min((selectedEvent.currentRegistrations / selectedEvent.maxRegistrations) * 100, 100)}%` }}
-                        />
-                      </div>
+                      
+                      {selectedEvent.maxRegistrations && (
+                        <div className="w-full bg-white/10 rounded-full h-3">
+                          <div 
+                            className={`h-3 rounded-full ${
+                              selectedEvent.category === 'cultural' 
+                                ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
+                                : selectedEvent.category === 'games'
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                                : 'bg-gradient-to-r from-blue-500 to-cyan-500'
+                            }`}
+                            style={{ width: `${Math.min((selectedEvent.currentRegistrations / selectedEvent.maxRegistrations) * 100, 100)}%` }}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -972,23 +1016,50 @@ const EventsPage = () => {
                   </div>
                 )}
 
-                {/* Coordinator Info */}
-                {selectedEvent.coordinatorName && (
+                {/* Coordinators Info - Support Multiple Coordinators */}
+                {((selectedEvent.coordinators && selectedEvent.coordinators.length > 0) || selectedEvent.coordinatorName) && (
                   <div className="glass-panel p-6 rounded-xl">
-                    <h3 className="text-2xl font-bold text-white mb-4">Event Coordinator</h3>
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                        <Users className="w-8 h-8 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-white font-bold text-lg">{selectedEvent.coordinatorName}</p>
-                        {selectedEvent.coordinatorPhone && (
-                          <p className="text-gray-400">📞 +91 {selectedEvent.coordinatorPhone}</p>
-                        )}
-                        {selectedEvent.coordinatorEmail && (
-                          <p className="text-gray-400">✉️ {selectedEvent.coordinatorEmail}</p>
-                        )}
-                      </div>
+                    <h3 className="text-2xl font-bold text-white mb-4">Event Coordinator{((selectedEvent.coordinators && selectedEvent.coordinators.length > 1) ? 's' : '')}</h3>
+                    <div className="space-y-4">
+                      {/* New format - Multiple coordinators */}
+                      {selectedEvent.coordinators && selectedEvent.coordinators.length > 0 ? (
+                        selectedEvent.coordinators.map((coordinator, index) => (
+                          <div key={index} className="flex items-center gap-4 p-4 bg-white/5 rounded-lg">
+                            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                              <span className="text-white text-2xl font-bold">
+                                {coordinator.name ? coordinator.name.charAt(0).toUpperCase() : '?'}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-white font-bold text-lg">{coordinator.name || 'N/A'}</p>
+                              {coordinator.phone && (
+                                <p className="text-gray-400">📞 +91 {coordinator.phone}</p>
+                              )}
+                              {coordinator.email && (
+                                <p className="text-gray-400">✉️ {coordinator.email}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        /* Old format - Single coordinator (backward compatibility) */
+                        selectedEvent.coordinatorName && (
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                              <Users className="w-8 h-8 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-white font-bold text-lg">{selectedEvent.coordinatorName}</p>
+                              {selectedEvent.coordinatorPhone && (
+                                <p className="text-gray-400">📞 +91 {selectedEvent.coordinatorPhone}</p>
+                              )}
+                              {selectedEvent.coordinatorEmail && (
+                                <p className="text-gray-400">✉️ {selectedEvent.coordinatorEmail}</p>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 )}
