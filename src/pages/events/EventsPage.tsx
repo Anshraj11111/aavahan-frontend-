@@ -5,7 +5,6 @@ import { Event, EventFilters } from '../../types';
 import { fadeInUp, staggerContainer, scaleUp } from '../../lib/animations';
 import { useRegistrations } from '../../contexts/RegistrationContext';
 import { useEvents } from '../../contexts/EventsContext';
-import LightweightBackground from '../../components/backgrounds/LightweightBackground';
 import toast from 'react-hot-toast';
 
 // Lazy load heavy components
@@ -325,23 +324,19 @@ const EventsPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-20 bg-navy-950 relative overflow-hidden" ref={containerRef}>
-      {/* Premium Animated Background */}
-      <LightweightBackground />
-
+    <div className="min-h-screen pt-20 bg-gradient-to-b from-navy-950 via-navy-900 to-navy-950 relative overflow-hidden" ref={containerRef}>
+      {/* Simple gradient background - no heavy animations */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-navy-950 to-navy-950" />
+      
       {/* Header with College Building - Poster Style */}
-      <motion.section 
-        className="py-24 relative z-10"
-        initial="hidden"
-        animate="visible"
-        variants={staggerContainer}
-      >
+      <motion.section className="py-24 relative z-10">
         {/* College Building Background */}
         <div className="absolute inset-0 z-0">
           <img 
             src={collegeBuilding} 
             alt="Shri Ram Group College" 
             className="w-full h-full object-cover opacity-15"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-navy-950/90 via-navy-950/95 to-navy-950" />
         </div>
@@ -691,6 +686,12 @@ const EventsPage = () => {
                           <Users className="w-5 h-5 mr-2 text-yellow-400" />
                           <span>{event.participationType === 'team' ? 'Team Event' : 'Solo Event'}</span>
                         </div>
+                        {event.prizeDetails && (
+                          <div className="flex items-center text-yellow-300 text-base font-bold">
+                            <Trophy className="w-5 h-5 mr-2 text-yellow-400" />
+                            <span>{event.prizeDetails}</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Registration Progress */}

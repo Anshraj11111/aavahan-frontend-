@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Users, Trophy, ArrowRight, Sparkles, Zap, Target } from 'lucide-react';
+import { Calendar, MapPin, Users, Trophy, ArrowRight, Sparkles, Zap, Target, QrCode, Smartphone } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 const HomePage: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState({
@@ -285,6 +286,134 @@ const HomePage: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* QR Code Section - Schedule Access */}
+      <section className="py-24 relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-900/10 to-transparent" />
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-10 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-10 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-float" />
+        </div>
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center justify-center gap-3 mb-6">
+              <Smartphone className="w-10 h-10 text-cyan-400 animate-bounce" />
+              <h2 className="text-4xl lg:text-5xl font-display font-black text-white">
+                Quick Schedule Access
+              </h2>
+              <QrCode className="w-10 h-10 text-purple-400 animate-pulse" />
+            </div>
+            <div className="w-24 h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 mx-auto mb-6 rounded-full" />
+            <p className="text-white text-lg max-w-2xl mx-auto font-medium">
+              Scan the QR code with your phone to instantly access the complete 3-day event schedule
+            </p>
+          </div>
+
+          <div className="max-w-5xl mx-auto">
+            <div className="glass-panel p-8 md:p-12 rounded-3xl border-2 border-white/30 backdrop-blur-xl">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                {/* QR Code */}
+                <div className="flex flex-col items-center">
+                  <div className="relative group">
+                    {/* Glowing effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-3xl blur-2xl opacity-50 group-hover:opacity-75 transition-opacity duration-300 animate-pulse" />
+                    
+                    {/* QR Code Container */}
+                    <div className="relative bg-white p-6 rounded-3xl shadow-2xl group-hover:scale-105 transition-transform duration-300">
+                      <QRCodeSVG
+                        value={`${window.location.origin}/schedule`}
+                        size={280}
+                        level="H"
+                        includeMargin={true}
+                        imageSettings={{
+                          src: "/logo.png",
+                          height: 40,
+                          width: 40,
+                          excavate: true,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 text-center">
+                    <p className="text-white font-bold text-lg mb-2">Scan to View Schedule</p>
+                    <p className="text-white/70 text-sm">Works with any QR scanner app</p>
+                  </div>
+                </div>
+
+                {/* Instructions */}
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4 group">
+                    <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                      <span className="text-white font-black text-xl">1</span>
+                    </div>
+                    <div>
+                      <h3 className="text-white font-bold text-xl mb-2">Open Camera</h3>
+                      <p className="text-white/80 leading-relaxed">Open your phone's camera or any QR code scanner app</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 group">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                      <span className="text-white font-black text-xl">2</span>
+                    </div>
+                    <div>
+                      <h3 className="text-white font-bold text-xl mb-2">Scan QR Code</h3>
+                      <p className="text-white/80 leading-relaxed">Point your camera at the QR code above</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 group">
+                    <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                      <span className="text-white font-black text-xl">3</span>
+                    </div>
+                    <div>
+                      <h3 className="text-white font-bold text-xl mb-2">View Schedule</h3>
+                      <p className="text-white/80 leading-relaxed">Instantly access the complete day-wise event schedule</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 p-6 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-2xl border border-cyan-500/30">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Calendar className="w-6 h-6 text-cyan-400" />
+                      <h4 className="text-white font-bold text-lg">What You'll See:</h4>
+                    </div>
+                    <ul className="space-y-2 text-white/80">
+                      <li className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full" />
+                        Day 1: Ethnic Day - Cultural Events
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                        Day 2: Technical Day 1 - Competitions
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                        Day 3: Technical Day 2 - Workshops
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Alternative Link */}
+              <div className="mt-8 text-center">
+                <p className="text-white/60 text-sm mb-4">Or access directly from your browser</p>
+                <Link
+                  to="/schedule"
+                  className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 font-bold transition-colors duration-300 group"
+                >
+                  <Calendar className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  View Schedule Online
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

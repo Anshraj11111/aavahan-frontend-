@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule QR Code Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        #qrcode {
+            display: inline-block;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .url-display {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: monospace;
+            color: #555;
+            font-size: 14px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: left;
+            border-left: 4px solid #2196F3;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 8px 0;
+            color: #555;
+        }
+        .success {
+            color: #4CAF50;
+            font-weight: bold;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Schedule QR Code</h1>
+        <p class="subtitle">Aavhaan 2026 - Event Schedule</p>
+        
+        <div id="qrcode"></div>
+        
+        <div class="url-display" id="urlDisplay">
+            Loading...
+        </div>
+        
+        <button onclick="downloadQR()">⬇️ Download QR Code</button>
+        <button onclick="printQR()">🖨️ Print QR Code</button>
+        
+        <p class="success" id="successMsg">✓ QR Code downloaded successfully!</p>
+        
+        <div class="instructions">
+            <h3>📋 How to Use:</h3>
+            <ol>
+                <li><strong>Download:</strong> Click "Download QR Code" to save as PNG</li>
+                <li><strong>Print:</strong> Click "Print QR Code" for physical copies</li>
+                <li><strong>Share:</strong> Add to posters, flyers, or social media</li>
+                <li><strong>Test:</strong> Scan with your phone to verify it works</li>
+            </ol>
+            <p style="margin-top: 15px; color: #666; font-size: 14px;">
+                <strong>💡 Tip:</strong> The QR code links directly to your schedule page. 
+                Anyone scanning it will see the complete 3-day event schedule!
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Get the current domain or use production URL
+        const scheduleUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5173/schedule'  // Development
+            : `${window.location.protocol}//${window.location.hostname}/schedule`; // Production
+        
+        // Display the URL
+        document.getElementById('urlDisplay').textContent = scheduleUrl;
+        
+        // Generate QR Code
+        const qrcode = new QRCode(document.getElementById("qrcode"), {
+            text: scheduleUrl,
+            width: 300,
+            height: 300,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        function downloadQR() {
+            const canvas = document.querySelector('#qrcode canvas');
+            if (canvas) {
+                // Create a larger canvas for better quality
+                const largeCanvas = document.createElement('canvas');
+                const ctx = largeCanvas.getContext('2d');
+                largeCanvas.width = 1000;
+                largeCanvas.height = 1000;
+                
+                // Draw white background
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, 1000, 1000);
+                
+                // Draw QR code scaled up
+                ctx.drawImage(canvas, 0, 0, 1000, 1000);
+                
+                // Download
+                const link = document.createElement('a');
+                link.download = 'aavhaan-2026-schedule-qr-code.png';
+                link.href = largeCanvas.toDataURL('image/png');
+                link.click();
+                
+                // Show success message
+                const successMsg = document.getElementById('successMsg');
+                successMsg.style.display = 'block';
+                setTimeout(() => {
+                    successMsg.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        function printQR() {
+            window.print();
+        }
+    </script>
+    
+    <style media="print">
+        body {
+            background: white;
+        }
+        .container {
+            box-shadow: none;
+            max-width: 100%;
+        }
+        button, .instructions {
+            display: none;
+        }
+        h1 {
+            font-size: 36px;
+        }
+        .subtitle {
+            font-size: 20px;
+        }
+        #qrcode {
+            transform: scale(1.5);
+            margin: 60px 0;
+        }
+    </style>
+</body>
+</html>
