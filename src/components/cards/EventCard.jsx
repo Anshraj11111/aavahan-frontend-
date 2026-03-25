@@ -140,24 +140,6 @@ const EventCard = ({ event, featured = false }) => {
               )}
             </div>
 
-            {/* Registration Progress */}
-            {maxRegistrations && (
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-bold text-white">Registrations</span>
-                  <span className="text-sm text-white font-black">{currentRegistrations}/{maxRegistrations}</span>
-                </div>
-                <div className="w-full bg-white/10 rounded-full h-2">
-                  <motion.div 
-                    className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${registrationPercentage}%` }}
-                    transition={{ duration: 1 }}
-                  />
-                </div>
-              </div>
-            )}
-
             {/* Footer */}
             <div className="flex items-center justify-between pt-4 border-t border-white/10">
               <div className="text-sm">

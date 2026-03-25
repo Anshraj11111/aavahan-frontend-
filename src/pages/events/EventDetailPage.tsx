@@ -27,6 +27,10 @@ const EventDetailPage = () => {
   const canRegister = () => {
     if (!event) return false;
     const now = new Date();
+    // If no registration deadline, allow registration
+    if (!event.registrationDeadline) {
+      return (event.currentRegistrations || 0) < (event.maxRegistrations || 0);
+    }
     const registrationDeadline = new Date(event.registrationDeadline);
     return (event.currentRegistrations || 0) < (event.maxRegistrations || 0) && registrationDeadline > now;
   };
@@ -34,11 +38,10 @@ const EventDetailPage = () => {
   const getStatusIcon = () => {
     if (!event) return null;
     const now = new Date();
-    const registrationDeadline = new Date(event.registrationDeadline);
     
     if ((event.currentRegistrations || 0) >= (event.maxRegistrations || 0)) {
       return <XCircle className="w-6 h-6 text-red-400" />;
-    } else if (registrationDeadline < now) {
+    } else if (event.registrationDeadline && new Date(event.registrationDeadline) < now) {
       return <AlertCircle className="w-6 h-6 text-yellow-400" />;
     } else {
       return <CheckCircle className="w-6 h-6 text-green-400" />;
@@ -48,11 +51,10 @@ const EventDetailPage = () => {
   const getStatusText = () => {
     if (!event) return '';
     const now = new Date();
-    const registrationDeadline = new Date(event.registrationDeadline);
     
     if ((event.currentRegistrations || 0) >= (event.maxRegistrations || 0)) {
       return 'Registration Full';
-    } else if (registrationDeadline < now) {
+    } else if (event.registrationDeadline && new Date(event.registrationDeadline) < now) {
       return 'Registration Closed';
     } else {
       return 'Registration Open';
@@ -248,21 +250,12 @@ const EventDetailPage = () => {
               </div>
 
               {/* Registration Button */}
-              {isRegistrationOpen ? (
-                <Link
-                  to={`/registration/${event?._id}`}
-                  className="block text-center bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 hover:from-blue-700 hover:via-purple-700 hover:to-cyan-700 text-white font-bold text-lg py-4 px-8 rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 mb-4"
-                >
-                  Register Now →
-                </Link>
-              ) : (
-                <button
-                  disabled
-                  className="w-full bg-slate-400 text-slate-200 font-bold py-4 px-8 rounded-xl cursor-not-allowed mb-4"
-                >
-                  Registration Unavailable
-                </button>
-              )}
+              <Link
+                to={`/registration/${event?._id}`}
+                className="block text-center bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 hover:from-blue-700 hover:via-purple-700 hover:to-cyan-700 text-white font-bold text-lg py-4 px-8 rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 mb-4"
+              >
+                Register Now →
+              </Link>
             </motion.div>
           </div>
         </div>

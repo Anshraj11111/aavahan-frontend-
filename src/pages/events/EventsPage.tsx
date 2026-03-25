@@ -76,11 +76,10 @@ const EventsPage = () => {
 
   const getEventStatusColor = (event: Event) => {
     const now = new Date();
-    const registrationDeadline = new Date(event.registrationDeadline);
     
     if (event.currentRegistrations >= event.maxRegistrations) {
       return 'bg-red-500/20 text-red-400 border-red-500/30';
-    } else if (registrationDeadline < now) {
+    } else if (event.registrationDeadline && new Date(event.registrationDeadline) < now) {
       return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
     } else {
       return 'bg-green-500/20 text-green-400 border-green-500/30';
@@ -89,11 +88,10 @@ const EventsPage = () => {
 
   const getEventStatusText = (event: Event) => {
     const now = new Date();
-    const registrationDeadline = new Date(event.registrationDeadline);
     
     if (event.currentRegistrations >= event.maxRegistrations) {
       return 'Full';
-    } else if (registrationDeadline < now) {
+    } else if (event.registrationDeadline && new Date(event.registrationDeadline) < now) {
       return 'Closed';
     } else {
       return 'Open';
@@ -102,6 +100,10 @@ const EventsPage = () => {
 
   const canRegister = (event: Event) => {
     const now = new Date();
+    // If no registration deadline, allow registration
+    if (!event.registrationDeadline) {
+      return event.currentRegistrations < event.maxRegistrations;
+    }
     const registrationDeadline = new Date(event.registrationDeadline);
     return event.currentRegistrations < event.maxRegistrations && registrationDeadline > now;
   };
@@ -146,6 +148,7 @@ const EventsPage = () => {
             .badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; margin-right: 10px; margin-bottom: 10px; }
             .badge-cultural { background: #ec4899; color: white; }
             .badge-technical { background: #3b82f6; color: white; }
+            .badge-games { background: #10b981; color: white; }
             .badge-featured { background: #f59e0b; color: white; }
             .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0; }
             .info-box { background: #f3f4f6; padding: 20px; border-radius: 8px; border-left: 4px solid #1e40af; }
@@ -164,7 +167,7 @@ const EventsPage = () => {
             <h1>${event.title}</h1>
             <p style="margin: 10px 0 0 0; font-size: 18px;">${event.shortDescription}</p>
             <div style="margin-top: 15px;">
-              <span class="badge badge-${event.category}">${event.category === 'cultural' ? '🎭 Cultural' : '💻 Technical'}</span>
+              <span class="badge badge-${event.category}">${event.category === 'cultural' ? '🎭 Cultural' : event.category === 'games' ? '🎮 Games' : '💻 Technical'}</span>
               <span class="badge" style="background: rgba(255,255,255,0.2);">${typeof event.day === 'string' ? event.day : `Day ${event.day}`}</span>
               ${event.featured ? '<span class="badge badge-featured">⭐ Featured</span>' : ''}
             </div>
@@ -511,6 +514,7 @@ const EventsPage = () => {
                   <option value="" className="bg-navy-900">All Categories</option>
                   <option value="cultural" className="bg-navy-900">Cultural</option>
                   <option value="technical" className="bg-navy-900">Technical</option>
+                  <option value="games" className="bg-navy-900">Games</option>
                 </select>
 
                 <motion.button
@@ -623,15 +627,10 @@ const EventsPage = () => {
                       {/* Overlay Gradient */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                       
-                      {/* Status Badge */}
-                      <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium border backdrop-blur-sm ${getEventStatusColor(event)}`}>
-                        {getEventStatusText(event)}
-                      </div>
-
                       {/* Featured Badge */}
                       {event.featured && (
                         <motion.div 
-                          className="absolute top-4 left-4 px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full text-sm font-medium flex items-center space-x-1"
+                          className="absolute top-4 right-4 px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full text-sm font-medium flex items-center space-x-1"
                           animate={{ scale: [1, 1.05, 1] }}
                           transition={{ duration: 2, repeat: Infinity }}
                         >
@@ -652,9 +651,11 @@ const EventsPage = () => {
                         <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                           event.category === 'cultural' 
                             ? 'bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-400 border border-pink-500/30' 
+                            : event.category === 'games'
+                            ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border border-green-500/30'
                             : 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-blue-400 border border-blue-500/30'
                         }`}>
-                          {event.category === 'cultural' ? 'Cultural' : 'Technical'}
+                          {event.category === 'cultural' ? 'Cultural' : event.category === 'games' ? 'Games' : 'Technical'}
                         </span>
                         <div className="text-gray-400 text-sm">
                           ₹{event.entryFee === 0 ? 'Free' : event.entryFee}
@@ -694,28 +695,6 @@ const EventsPage = () => {
                         )}
                       </div>
 
-                      {/* Registration Progress */}
-                      <div className="mb-6">
-                        <div className="flex justify-between text-base mb-2">
-                          <span className="text-white font-bold">Registrations</span>
-                          <span className="text-white font-black">
-                            {event.currentRegistrations}/{event.maxRegistrations}
-                          </span>
-                        </div>
-                        <div className="w-full bg-white/10 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full transition-all duration-500 ${
-                              event.category === 'cultural' 
-                                ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
-                                : 'bg-gradient-to-r from-blue-500 to-cyan-500'
-                            }`}
-                            style={{ 
-                              width: `${Math.min((event.currentRegistrations / event.maxRegistrations) * 100, 100)}%` 
-                            }}
-                          />
-                        </div>
-                      </div>
-
                       {/* Action Buttons */}
                       <div className="flex space-x-3">
                         <button
@@ -726,26 +705,19 @@ const EventsPage = () => {
                           <span>View Details</span>
                         </button>
                         
-                        {canRegisterUpdated(event) ? (
-                          <button
-                            onClick={() => handleRegisterClick(event)}
-                            className={`flex-1 bg-gradient-to-r ${
-                              event.category === 'cultural' 
-                                ? 'from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600' 
-                                : 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
-                            } text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 group`}
-                          >
-                            <UserPlus className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
-                            <span>Register</span>
-                          </button>
-                        ) : (
-                          <button
-                            disabled
-                            className="flex-1 bg-gray-600/50 text-gray-400 font-medium py-3 px-4 rounded-xl cursor-not-allowed flex items-center justify-center space-x-2"
-                          >
-                            <span>Unavailable</span>
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleRegisterClick(event)}
+                          className={`flex-1 bg-gradient-to-r ${
+                            event.category === 'cultural' 
+                              ? 'from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600' 
+                              : event.category === 'games'
+                              ? 'from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
+                              : 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
+                          } text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 group`}
+                        >
+                          <UserPlus className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+                          <span>Register</span>
+                        </button>
                       </div>
                     </div>
 
@@ -831,9 +803,11 @@ const EventsPage = () => {
                     <span className={`px-2 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold ${
                       selectedEvent.category === 'cultural' 
                         ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' 
+                        : selectedEvent.category === 'games'
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
                         : 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
                     }`}>
-                      {selectedEvent.category === 'cultural' ? '🎭 Cultural' : '💻 Technical'}
+                      {selectedEvent.category === 'cultural' ? '🎭 Cultural' : selectedEvent.category === 'games' ? '🎮 Games' : '💻 Technical'}
                     </span>
                     <span className="px-2 sm:px-4 py-1 sm:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-xs sm:text-sm font-bold">
                       {typeof selectedEvent.day === 'string' ? selectedEvent.day : `Day ${selectedEvent.day}`}
@@ -956,13 +930,12 @@ const EventsPage = () => {
                           className={`h-3 rounded-full ${
                             selectedEvent.category === 'cultural' 
                               ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
+                              : selectedEvent.category === 'games'
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-500'
                               : 'bg-gradient-to-r from-blue-500 to-cyan-500'
                           }`}
                           style={{ width: `${Math.min((selectedEvent.currentRegistrations / selectedEvent.maxRegistrations) * 100, 100)}%` }}
                         />
-                      </div>
-                      <div className={`px-4 py-2 rounded-lg text-center font-bold ${getEventStatusColor(selectedEvent)}`}>
-                        {getEventStatusText(selectedEvent)}
                       </div>
                     </div>
                   </div>
@@ -1022,29 +995,22 @@ const EventsPage = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
-                  {canRegisterUpdated(selectedEvent) ? (
-                    <button
-                      onClick={() => {
-                        handleCloseEventDetailsModal();
-                        handleRegisterClick(selectedEvent);
-                      }}
-                      className={`flex-1 bg-gradient-to-r ${
-                        selectedEvent.category === 'cultural' 
-                          ? 'from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600' 
-                          : 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
-                      } text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm sm:text-base`}
-                    >
-                      <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span>Register Now</span>
-                    </button>
-                  ) : (
-                    <button
-                      disabled
-                      className="flex-1 bg-gray-600/50 text-gray-400 font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl cursor-not-allowed text-sm sm:text-base"
-                    >
-                      Registration Unavailable
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      handleCloseEventDetailsModal();
+                      handleRegisterClick(selectedEvent);
+                    }}
+                    className={`flex-1 bg-gradient-to-r ${
+                      selectedEvent.category === 'cultural' 
+                        ? 'from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600' 
+                        : selectedEvent.category === 'games'
+                        ? 'from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
+                        : 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
+                    } text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm sm:text-base`}
+                  >
+                    <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span>Register Now</span>
+                  </button>
                   <button
                     onClick={handleCloseEventDetailsModal}
                     className="px-6 sm:px-8 py-3 sm:py-4 glass-panel text-white font-bold rounded-xl hover:bg-white/10 transition-all duration-300 text-sm sm:text-base"

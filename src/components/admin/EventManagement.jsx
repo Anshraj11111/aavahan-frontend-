@@ -16,19 +16,47 @@ const EventManagement = () => {
     title: '', shortDescription: '', fullDescription: '', category: 'technical',
     department: '', day: 1, date: '', startTime: '', endTime: '', venue: '',
     participationType: 'solo', minTeamSize: 1, maxTeamSize: 1, entryFee: 0,
-    maxRegistrations: 50, prizeDetails: '', coordinatorName: '', coordinatorPhone: '',
-    coordinatorEmail: '', posterImage: '', eligibility: '', registrationDeadline: '',
+    maxRegistrations: '', prizeDetails: '', 
+    coordinators: [{ name: '', phone: '', email: '' }],
+    posterImage: '', eligibility: '', registrationDeadline: '',
     featured: false, rules: [''], tags: ['']
   });
 
   const handleEdit = (event) => {
     setEditingEvent(event);
     const dayNumber = typeof event.day === 'string' ? parseInt(event.day.replace('Day ', '')) : event.day;
+    
+    // Handle coordinators - convert old format to new array format
+    let coordinators = [{ name: '', phone: '', email: '' }];
+    if (event.coordinators && Array.isArray(event.coordinators) && event.coordinators.length > 0) {
+      coordinators = event.coordinators;
+    } else if (event.coordinatorName || event.coordinatorPhone || event.coordinatorEmail) {
+      // Convert old single coordinator format to array
+      coordinators = [{
+        name: event.coordinatorName || '',
+        phone: event.coordinatorPhone || '',
+        email: event.coordinatorEmail || ''
+      }];
+    }
+    
+    // Convert date from YYYY-MM-DD to DD/MM/YYYY for display
+    let displayDate = '';
+    if (event.date) {
+      const dateObj = new Date(event.date);
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const year = dateObj.getFullYear();
+      displayDate = `${day}/${month}/${year}`;
+    }
+    
     setFormData({
       ...event, 
       day: dayNumber,
-      posterImage: event.posterImage || event.bannerImage || '', // Load existing poster or banner image
+      date: displayDate,
+      posterImage: event.posterImage || event.bannerImage || '',
       registrationDeadline: event.registrationDeadline ? new Date(event.registrationDeadline).toISOString().slice(0, 16) : '',
+      maxRegistrations: event.maxRegistrations || '',
+      coordinators: coordinators,
       rules: event.rules || [''], 
       tags: event.tags || ['']
     });
@@ -41,8 +69,9 @@ const EventManagement = () => {
       title: '', shortDescription: '', fullDescription: '', category: 'technical',
       department: '', day: 1, date: '', startTime: '', endTime: '', venue: '',
       participationType: 'solo', minTeamSize: 1, maxTeamSize: 1, entryFee: 0,
-      maxRegistrations: 50, prizeDetails: '', coordinatorName: '', coordinatorPhone: '',
-      coordinatorEmail: '', posterImage: '', eligibility: '', registrationDeadline: '',
+      maxRegistrations: '', prizeDetails: '', 
+      coordinators: [{ name: '', phone: '', email: '' }],
+      posterImage: '', eligibility: '', registrationDeadline: '',
       featured: false, rules: [''], tags: ['']
     });
     setShowModal(true);
@@ -50,80 +79,68 @@ const EventManagement = () => {
 
   const handleSave = async () => {
     try {
-      // Validate required fields
-      if (!formData.title || !formData.title.trim()) {
-        toast.error('Event Title is required');
-        return;
-      }
-      if (!formData.category) {
-        toast.error('Category is required');
-        return;
-      }
-      if (!formData.day) {
-        toast.error('Day is required');
-        return;
-      }
-      if (!formData.date) {
-        toast.error('Date is required');
-        return;
-      }
-      if (!formData.participationType) {
-        toast.error('Participation Type is required');
-        return;
+      // Convert date from DD/MM/YYYY to YYYY-MM-DD for backend
+      let backendDate = formData.date;
+      if (formData.date && formData.date.includes('/')) {
+        const [day, month, year] = formData.date.split('/');
+        backendDate = `${year}-${month}-${day}`;
       }
 
-      // Set default registration deadline to 1 day before event if not provided
-      let deadline = formData.registrationDeadline;
-      if (!deadline && formData.date) {
-        const eventDate = new Date(formData.date);
-        eventDate.setDate(eventDate.getDate() - 1);
-        deadline = eventDate.toISOString();
+      // Handle registration deadline - only use if provided, don't auto-set
+      let deadline = formData.registrationDeadline || null;
+
+      // Handle maxRegistrations - if empty or "no limit" text, set to null (unlimited)
+      let maxRegs = null;
+      if (formData.maxRegistrations) {
+        const maxRegsStr = String(formData.maxRegistrations).toLowerCase().trim();
+        if (maxRegsStr && maxRegsStr !== 'no limit' && maxRegsStr !== 'unlimited' && !isNaN(maxRegsStr)) {
+          maxRegs = parseInt(maxRegsStr);
+        }
       }
 
       const eventData = {
         ...formData,
-        day: `Day ${formData.day}`,
+        date: backendDate,
+        day: formData.day ? `Day ${formData.day}` : 'Day 1',
         registrationDeadline: deadline,
+        maxRegistrations: maxRegs,
+        coordinators: formData.coordinators.filter(c => c.name || c.phone || c.email),
         rules: formData.rules.filter(r => r && r.trim()),
         tags: formData.tags.filter(t => t && t.trim()),
         status: 'published',
-        // Ensure these fields have values
-        shortDescription: formData.shortDescription || formData.title,
-        fullDescription: formData.fullDescription || formData.shortDescription || formData.title,
+        title: formData.title || 'Untitled Event',
+        shortDescription: formData.shortDescription || '',
+        fullDescription: formData.fullDescription || '',
         venue: formData.venue || 'TBA',
         startTime: formData.startTime || '09:00 AM',
         endTime: formData.endTime || '05:00 PM',
-        // CRITICAL: Use posterImage for both poster and banner
+        category: formData.category || 'technical',
+        participationType: formData.participationType || 'solo',
         posterImage: formData.posterImage || '',
-        bannerImage: formData.posterImage || '' // Same image for banner
+        bannerImage: formData.posterImage || ''
       };
 
       console.log('💾 Saving event with data:', eventData);
-      console.log('   Event ID:', editingEvent?._id);
-      console.log('   Poster Image from form:', formData.posterImage);
-      console.log('   Poster Image in eventData:', eventData.posterImage);
-      console.log('   Banner Image in eventData:', eventData.bannerImage);
+      console.log('   Max Registrations:', maxRegs);
+      console.log('   Coordinators:', eventData.coordinators);
 
       if (editingEvent) {
         console.log('🔄 Updating existing event...');
         const updatedEvent = await updateEvent(editingEvent._id, eventData);
         console.log('✅ Event updated successfully:', updatedEvent);
-        console.log('✅ Saved posterImage:', updatedEvent?.posterImage?.substring(0, 100) + '...');
         toast.success('Event updated successfully!');
       } else {
         console.log('➕ Creating new event...');
         const newEvent = await addEvent(eventData);
         console.log('✅ Event created successfully:', newEvent);
-        console.log('✅ Saved posterImage:', newEvent?.posterImage?.substring(0, 100) + '...');
         toast.success('Event created successfully!');
       }
 
       setShowModal(false);
       setEditingEvent(null);
       
-      // Force refresh events from backend to ensure we have latest data
       console.log('🔄 Refreshing events from backend...');
-      window.location.reload(); // Force full page reload to see changes
+      window.location.reload();
     } catch (error) {
       console.error('❌ Save error:', error);
       console.error('   Error details:', error.response?.data || error.message);
@@ -156,6 +173,32 @@ const EventManagement = () => {
   const removeArrayItem = (field, index) => setFormData(prev => ({
     ...prev, [field]: prev[field].filter((_, i) => i !== index)
   }));
+
+  // Coordinator management functions
+  const handleCoordinatorChange = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      coordinators: prev.coordinators.map((coord, i) => 
+        i === index ? { ...coord, [field]: value } : coord
+      )
+    }));
+  };
+
+  const addCoordinator = () => {
+    setFormData(prev => ({
+      ...prev,
+      coordinators: [...prev.coordinators, { name: '', phone: '', email: '' }]
+    }));
+  };
+
+  const removeCoordinator = (index) => {
+    if (formData.coordinators.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        coordinators: prev.coordinators.filter((_, i) => i !== index)
+      }));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -257,10 +300,10 @@ const EventManagement = () => {
                         Basic Information
                       </h4>
                       <div>
-                        <label className="block text-white text-sm font-medium mb-1.5">Event Title *</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Event Title</label>
                         <input type="text" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)}
                           className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter event title" required />
+                          placeholder="Enter event title" />
                       </div>
                       <div>
                         <label className="block text-white text-sm font-medium mb-1.5">Short Description</label>
@@ -276,11 +319,12 @@ const EventManagement = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-white text-sm font-medium mb-1.5">Category *</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Category</label>
                           <select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)}
-                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" required>
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500">
                             <option value="technical">Technical</option>
                             <option value="cultural">Cultural</option>
+                            <option value="games">Games</option>
                           </select>
                         </div>
                         <div>
@@ -300,18 +344,35 @@ const EventManagement = () => {
                       </h4>
                       <div className="grid grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-white text-sm font-medium mb-1.5">Day *</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Day</label>
                           <select value={formData.day} onChange={(e) => handleInputChange('day', parseInt(e.target.value))}
-                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" required>
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500">
                             <option value={1}>Day 1</option>
                             <option value={2}>Day 2</option>
                             <option value={3}>Day 3</option>
                           </select>
                         </div>
                         <div className="col-span-2">
-                          <label className="block text-white text-sm font-medium mb-1.5">Date *</label>
-                          <input type="date" value={formData.date} onChange={(e) => handleInputChange('date', e.target.value)}
-                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" required />
+                          <label className="block text-white text-sm font-medium mb-1.5">Date (DD/MM/YYYY)</label>
+                          <input 
+                            type="text" 
+                            value={formData.date} 
+                            onChange={(e) => {
+                              let value = e.target.value.replace(/[^0-9/]/g, '');
+                              // Auto-add slashes
+                              if (value.length === 2 && !value.includes('/')) {
+                                value = value + '/';
+                              } else if (value.length === 5 && value.split('/').length === 2) {
+                                value = value + '/';
+                              }
+                              // Limit to DD/MM/YYYY format
+                              if (value.length <= 10) {
+                                handleInputChange('date', value);
+                              }
+                            }}
+                            placeholder="DD/MM/YYYY"
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" 
+                          />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
@@ -335,10 +396,10 @@ const EventManagement = () => {
                           placeholder="Event venue" />
                       </div>
                       <div>
-                        <label className="block text-white text-sm font-medium mb-1.5">Registration Deadline</label>
+                        <label className="block text-white text-sm font-medium mb-1.5">Registration Deadline (Optional)</label>
                         <input type="datetime-local" value={formData.registrationDeadline} onChange={(e) => handleInputChange('registrationDeadline', e.target.value)}
                           className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" />
-                        <p className="text-gray-500 text-xs mt-1">Leave empty to auto-set 1 day before event</p>
+                        <p className="text-gray-500 text-xs mt-1">Leave empty to allow registrations until event date</p>
                       </div>
                     </div>
 
@@ -350,9 +411,9 @@ const EventManagement = () => {
                       </h4>
                       <div className="grid grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-white text-sm font-medium mb-1.5">Type *</label>
+                          <label className="block text-white text-sm font-medium mb-1.5">Type</label>
                           <select value={formData.participationType} onChange={(e) => handleInputChange('participationType', e.target.value)}
-                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" required>
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500">
                             <option value="solo">Solo</option>
                             <option value="team">Team</option>
                           </select>
@@ -376,8 +437,10 @@ const EventManagement = () => {
                         </div>
                         <div>
                           <label className="block text-white text-sm font-medium mb-1.5">Max Registrations</label>
-                          <input type="number" value={formData.maxRegistrations} onChange={(e) => handleInputChange('maxRegistrations', parseInt(e.target.value))}
-                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" min="1" />
+                          <input type="text" value={formData.maxRegistrations} onChange={(e) => handleInputChange('maxRegistrations', e.target.value)}
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter number or 'No Limit'" />
+                          <p className="text-gray-500 text-xs mt-1">Leave empty or type "No Limit" for unlimited registrations</p>
                         </div>
                       </div>
                       <div>
@@ -391,11 +454,11 @@ const EventManagement = () => {
 
                   {/* Right Column */}
                   <div className="space-y-6">
-                    {/* Prize & Coordinator */}
+                    {/* Prize & Coordinators */}
                     <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-5 rounded-xl border border-yellow-500/20 shadow-xl space-y-3">
                       <h4 className="text-base sm:text-lg font-semibold text-white mb-3 flex items-center gap-2">
                         <div className="w-1 h-5 bg-yellow-500 rounded-full"></div>
-                        Prize & Coordinator
+                        Prize & Coordinators
                       </h4>
                       <div>
                         <label className="block text-white text-sm font-medium mb-1.5">Prize Details</label>
@@ -403,23 +466,57 @@ const EventManagement = () => {
                           className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                           placeholder="1st: ₹50,000, 2nd: ₹30,000" />
                       </div>
-                      <div>
-                        <label className="block text-white text-sm font-medium mb-1.5">Coordinator Name</label>
-                        <input type="text" value={formData.coordinatorName} onChange={(e) => handleInputChange('coordinatorName', e.target.value)}
-                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
-                          placeholder="Name" />
-                      </div>
-                      <div>
-                        <label className="block text-white text-sm font-medium mb-1.5">Coordinator Phone</label>
-                        <input type="tel" value={formData.coordinatorPhone} onChange={(e) => handleInputChange('coordinatorPhone', e.target.value)}
-                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
-                          placeholder="Phone" />
-                      </div>
-                      <div>
-                        <label className="block text-white text-sm font-medium mb-1.5">Coordinator Email</label>
-                        <input type="email" value={formData.coordinatorEmail} onChange={(e) => handleInputChange('coordinatorEmail', e.target.value)}
-                          className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
-                          placeholder="Email" />
+                      
+                      {/* Multiple Coordinators */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-white text-sm font-medium">Event Coordinators</label>
+                          <button
+                            type="button"
+                            onClick={addCoordinator}
+                            className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1"
+                          >
+                            <Plus size={16} />
+                            Add Coordinator
+                          </button>
+                        </div>
+                        
+                        {formData.coordinators.map((coordinator, index) => (
+                          <div key={index} className="bg-gray-700/30 p-3 rounded-lg space-y-2 relative">
+                            {formData.coordinators.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeCoordinator(index)}
+                                className="absolute top-2 right-2 text-red-400 hover:text-red-300"
+                                title="Remove Coordinator"
+                              >
+                                <X size={16} />
+                              </button>
+                            )}
+                            <div className="text-white text-xs font-medium mb-2">Coordinator {index + 1}</div>
+                            <input
+                              type="text"
+                              value={coordinator.name}
+                              onChange={(e) => handleCoordinatorChange(index, 'name', e.target.value)}
+                              className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                              placeholder="Name"
+                            />
+                            <input
+                              type="tel"
+                              value={coordinator.phone}
+                              onChange={(e) => handleCoordinatorChange(index, 'phone', e.target.value)}
+                              className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                              placeholder="Phone"
+                            />
+                            <input
+                              type="email"
+                              value={coordinator.email}
+                              onChange={(e) => handleCoordinatorChange(index, 'email', e.target.value)}
+                              className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                              placeholder="Email"
+                            />
+                          </div>
+                        ))}
                       </div>
                     </div>
 
