@@ -561,8 +561,7 @@ const EventsPage = () => {
       <motion.section 
         className="py-20 relative z-10"
         initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
+        animate="visible"
         variants={staggerContainer}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -809,8 +808,11 @@ const EventsPage = () => {
                 
                 {/* Close Button */}
                 <button
-                  onClick={handleCloseEventDetailsModal}
-                  className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm text-white rounded-full hover:bg-black/70 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCloseEventDetailsModal();
+                  }}
+                  className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm text-white rounded-full hover:bg-black/70 transition-colors z-10"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -848,7 +850,6 @@ const EventsPage = () => {
                     )}
                   </div>
                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-1 sm:mb-2">{selectedEvent.title}</h2>
-                  <p className="text-white/90 text-sm sm:text-base md:text-lg font-semibold">{selectedEvent.shortDescription}</p>
                 </div>
               </div>
 
@@ -905,14 +906,19 @@ const EventsPage = () => {
                   </div>
                 </div>
 
-                {/* Full Description */}
-                {selectedEvent.fullDescription && (
-                  <div className="glass-panel p-6 rounded-xl">
-                    <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                      <Award className="w-6 h-6 text-blue-400" />
+                {/* Full Description - After Info Cards */}
+                {(selectedEvent.shortDescription || selectedEvent.fullDescription) && (
+                  <div className="glass-panel p-4 sm:p-6 rounded-xl">
+                    <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
+                      <Award className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
                       About This Event
                     </h3>
-                    <p className="text-gray-300 leading-relaxed text-base">{selectedEvent.fullDescription}</p>
+                    {selectedEvent.shortDescription && (
+                      <p className="text-gray-300 leading-relaxed text-sm sm:text-base mb-4">{selectedEvent.shortDescription}</p>
+                    )}
+                    {selectedEvent.fullDescription && (
+                      <p className="text-gray-300 leading-relaxed text-sm sm:text-base">{selectedEvent.fullDescription}</p>
+                    )}
                   </div>
                 )}
 

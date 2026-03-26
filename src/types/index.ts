@@ -43,6 +43,11 @@ export interface Event {
   maxTeamSize?: number;
   entryFee: number;
   prizeDetails: string;
+  coordinators?: Array<{
+    name: string;
+    phone: string;
+    email: string;
+  }>;
   coordinatorName: string;
   coordinatorPhone: string;
   coordinatorEmail: string;
