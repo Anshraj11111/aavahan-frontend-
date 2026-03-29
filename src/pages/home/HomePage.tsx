@@ -14,7 +14,7 @@ const HomePage: React.FC = () => {
 
   // Countdown timer
   useEffect(() => {
-    const targetDate = new Date('2026-04-01T00:00:00').getTime();
+    const targetDate = new Date('2026-04-08T00:00:00').getTime();
     
     const timer = setInterval(() => {
       const now = new Date().getTime();
@@ -40,7 +40,7 @@ const HomePage: React.FC = () => {
   const stats = [
     { icon: Users, value: '10,000+', label: 'Expected Participants' },
     { icon: Trophy, value: '50+', label: 'Events & Competitions' },
-    { icon: Calendar, value: '3', label: 'Days of Innovation' },
+    { icon: Calendar, value: '2', label: 'Days of Innovation' },
     { icon: MapPin, value: '1', label: 'Epic Venue' },
   ];
 
@@ -153,7 +153,7 @@ const HomePage: React.FC = () => {
             {/* Description */}
             <p className="text-white text-lg sm:text-xl max-w-3xl mx-auto mb-12 leading-relaxed font-medium animate-slide-up" style={{ animationDelay: '0.4s' }}>
               Experience the ultimate celebration of technology, innovation, and creativity. 
-              Join us for three days of competitions, workshops, cultural events, and networking.
+              Join us for two days of competitions, workshops, cultural events, and networking.
             </p>
 
             {/* Countdown Timer */}
@@ -310,7 +310,7 @@ const HomePage: React.FC = () => {
             </div>
             <div className="w-24 h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 mx-auto mb-6 rounded-full" />
             <p className="text-white text-lg max-w-2xl mx-auto font-medium">
-              Scan the QR code with your phone to instantly access the complete 3-day event schedule
+              Scan the QR code with your phone to instantly access the complete 2-day event schedule
             </p>
           </div>
 
@@ -386,15 +386,11 @@ const HomePage: React.FC = () => {
                     <ul className="space-y-2 text-white/80">
                       <li className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-                        Day 1: Ethnic Day - Cultural Events
+                        Day 1: Cultural Day - Traditional Events
                       </li>
                       <li className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                        Day 2: Technical Day 1 - Competitions
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-purple-400 rounded-full" />
-                        Day 3: Technical Day 2 - Workshops
+                        Day 2: Technical Day - Competitions & Workshops
                       </li>
                     </ul>
                   </div>

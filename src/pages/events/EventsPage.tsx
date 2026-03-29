@@ -519,7 +519,6 @@ const EventsPage = () => {
                   <option value="" className="bg-navy-900">All Days</option>
                   <option value="1" className="bg-navy-900">Day 1 - Cultural Day</option>
                   <option value="2" className="bg-navy-900">Day 2 - Technical Day</option>
-                  <option value="3" className="bg-navy-900">Day 3 - Innovation Day</option>
                 </select>
 
                 <select

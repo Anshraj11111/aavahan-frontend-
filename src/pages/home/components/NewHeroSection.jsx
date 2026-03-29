@@ -13,7 +13,7 @@ const NewHeroSection = () => {
   });
 
   useEffect(() => {
-    const targetDate = new Date('2026-04-01T00:00:00').getTime();
+    const targetDate = new Date('2026-04-08T00:00:00').getTime();
     const timer = setInterval(() => {
       const now = new Date().getTime();
       const difference = targetDate - now;
@@ -241,7 +241,7 @@ const NewHeroSection = () => {
               </div>
               <div className="w-px bg-blue-400/30" />
               <div className="text-center lg:text-left">
-                <div className="text-3xl font-black text-cyan-400">3</div>
+                <div className="text-3xl font-black text-cyan-400">2</div>
                 <div className="text-sm text-white font-bold uppercase tracking-wide">Days</div>
               </div>
             </motion.div>

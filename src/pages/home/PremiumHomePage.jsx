@@ -88,7 +88,7 @@ const PremiumHomePage = () => {
 
   // Countdown timer
   useEffect(() => {
-    const targetDate = new Date('2026-04-01T00:00:00').getTime();
+    const targetDate = new Date('2026-04-08T00:00:00').getTime();
     const timer = setInterval(() => {
       const now = new Date().getTime();
       const difference = targetDate - now;

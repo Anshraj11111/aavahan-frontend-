@@ -8,8 +8,8 @@ export const FEST_INFO = {
   tagline: 'CODE IT. BUILD IT. BREAK LIMITS.',
   theme: 'Unity in Diversity',
   dates: {
-    start: '2026-04-01',
-    end: '2026-04-03',
+    start: '2026-04-08',
+    end: '2026-04-09',
   },
   venue: 'Shri Ram Group Campus, Jabalpur',
   description: 'The ultimate technology festival celebrating innovation, creativity, and technical excellence.',
@@ -38,16 +38,15 @@ export const EVENT_CATEGORIES = {
 export const EVENT_DAYS = {
   DAY_1: 1,
   DAY_2: 2,
-  DAY_3: 3,
 } as const;
 
 // Day Information
 export const DAY_INFO = {
   1: {
-    date: '2026-04-01',
-    title: 'Ethnic Day',
+    date: '2026-04-08',
+    title: 'Cultural Day',
     theme: 'Unity in Diversity',
-    description: 'Celebrating cultural diversity through traditional events',
+    description: 'Celebrating cultural diversity through traditional events and performances',
     events: [
       'Traditional Dress Show',
       'Folk Dance Performances',
@@ -58,26 +57,15 @@ export const DAY_INFO = {
     ],
   },
   2: {
-    date: '2026-04-02',
-    title: 'Technical Day 1',
+    date: '2026-04-09',
+    title: 'Technical Day',
     theme: 'Innovation & Technology',
-    description: 'Technical competitions and workshops',
+    description: 'Technical competitions, workshops, and grand prize ceremony',
     events: [
       'Coding Competitions',
       'Hackathon',
       'Technical Workshops',
       'Project Presentations',
-      'DJ Night',
-    ],
-  },
-  3: {
-    date: '2026-04-03',
-    title: 'Technical Day 2',
-    theme: 'Future of Technology',
-    description: 'Advanced technical events and prize ceremony',
-    events: [
-      'Final Competitions',
-      'Tech Talks',
       'Innovation Showcase',
       'DJ Night',
       'Grand Prize Ceremony',
@@ -291,7 +279,7 @@ export const ROUTES = {
 // Meta Tags
 export const META_TAGS = {
   DEFAULT_TITLE: 'Aavhaan 2026 - Shri Ram Group, Jabalpur',
-  DEFAULT_DESCRIPTION: 'Join the ultimate technology festival at Shri Ram Group, Jabalpur. Experience innovation, creativity, and technical excellence from April 1-3, 2026.',
+  DEFAULT_DESCRIPTION: 'Join the ultimate technology festival at Shri Ram Group, Jabalpur. Experience innovation, creativity, and technical excellence on April 8-9, 2026.',
   DEFAULT_KEYWORDS: 'aavhaan, tech fest, technology festival, shri ram group, jabalpur, coding competition, hackathon, cultural events, technical events',
   DEFAULT_IMAGE: '/images/og-image.jpg',
   SITE_NAME: 'Aavhaan 2026',

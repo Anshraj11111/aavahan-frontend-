@@ -27,10 +27,26 @@ const RegistrationsList = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [eventFilter, setEventFilter] = useState('all');
   const [selectedRegistration, setSelectedRegistration] = useState(null);
+  const [allEvents, setAllEvents] = useState([]);
   // Removed viewingScreenshot state - not needed with Razorpay
 
-  // Get unique event titles for filter
-  const uniqueEvents = [...new Set(registrations.map(r => r.eventTitle))].sort();
+  // Fetch all events for filter dropdown
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await adminService.getAllEvents({ limit: 100 });
+        if (response.success && response.data) {
+          setAllEvents(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch events:', error);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  // Get unique event titles for filter from ALL events (not just registered ones)
+  const uniqueEvents = allEvents.map(e => e.title).sort();
 
   // Fetch registrations from backend
   useEffect(() => {

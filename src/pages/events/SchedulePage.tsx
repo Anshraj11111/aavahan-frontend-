@@ -84,7 +84,7 @@ const SchedulePage = () => {
               className="text-white text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed font-bold"
             >
               Plan your Tech Fest 2026 experience with our comprehensive schedule. 
-              Three days of innovation, culture, and celebration await you.
+              Two days of innovation, culture, and celebration await you.
             </motion.p>
           </div>
           
@@ -622,33 +622,7 @@ const SchedulePage = () => {
                                     </div>
                                   )}
 
-                                  {/* Register Button - Only show for non-schedule-only events */}
-                                  {!event.isScheduleOnly && 
-                                   event.status === 'published' && 
-                                   (!event.maxRegistrations || event.currentRegistrations < event.maxRegistrations) &&
-                                   (!event.registrationDeadline || new Date(event.registrationDeadline) > new Date()) && (
-                                    <motion.div 
-                                      whileHover={{ scale: 1.05 }} 
-                                      whileTap={{ scale: 0.95 }}
-                                      className="mt-6"
-                                    >
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();  // Prevent card collapse
-                                          setSelectedEvent(event);
-                                          setShowRegistrationModal(true);
-                                        }}
-                                        className={`w-full bg-gradient-to-r ${
-                                          selectedDay === 1 ? 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' :
-                                          selectedDay === 2 ? 'from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' :
-                                          'from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
-                                        } text-white font-bold py-4 px-8 rounded-xl text-center transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center space-x-2`}
-                                      >
-                                        <Plus size={20} />
-                                        <span>Register Now</span>
-                                      </button>
-                                    </motion.div>
-                                  )}
+                                  {/* No Register Button in Schedule Page */}
                                 </motion.div>
                               )}
                             </AnimatePresence>
@@ -713,7 +687,7 @@ const SchedulePage = () => {
                     <div>
                       <h4 className="text-xl font-bold text-white mb-2">PDF Schedule</h4>
                       <p className="text-gray-300 leading-relaxed">
-                        Complete 3-day schedule with event details, timings, and venue information in a beautifully formatted PDF.
+                        Complete 2-day schedule with event details, timings, and venue information in a beautifully formatted PDF.
                       </p>
                     </div>
                   </div>
@@ -729,22 +703,107 @@ const SchedulePage = () => {
                       </p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Zap className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="text-xl font-bold text-white mb-2">Live Updates</h4>
-                      <p className="text-gray-300 leading-relaxed">
-                        Get real-time notifications about schedule changes, new events, and important announcements.
-                      </p>
-                    </div>
-                  </div>
                 </div>
                 
                 <div className="space-y-4">
                   <motion.button 
+                    onClick={() => {
+                      // Generate comprehensive PDF with all 2 days events
+                      const allDaysEvents = Object.entries(schedule).map(([day, events]) => {
+                        return `
+                          <div style="page-break-before: always; padding: 40px;">
+                            <h1 style="color: #1e40af; font-size: 36px; margin-bottom: 20px; border-bottom: 4px solid #1e40af; padding-bottom: 15px;">
+                              ${day} - ${DAY_INFO[day.replace('Day ', '') as keyof typeof DAY_INFO]?.title || ''}
+                            </h1>
+                            <p style="color: #6b7280; font-size: 18px; margin-bottom: 30px;">
+                              ${DAY_INFO[day.replace('Day ', '') as keyof typeof DAY_INFO]?.theme || ''}
+                            </p>
+                            ${events.map((event: any) => `
+                              <div style="background: #f9fafb; padding: 25px; margin-bottom: 25px; border-radius: 10px; border-left: 5px solid #3b82f6;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                                  <h2 style="color: #1f2937; font-size: 24px; margin: 0;">${event.title}</h2>
+                                  <span style="background: ${event.category === 'cultural' ? '#ec4899' : '#3b82f6'}; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold;">
+                                    ${event.category === 'cultural' ? '🎭 Cultural' : '💻 Technical'}
+                                  </span>
+                                </div>
+                                <p style="color: #4b5563; margin-bottom: 15px; line-height: 1.6;">${event.shortDescription}</p>
+                                ${event.fullDescription ? `<p style="color: #6b7280; margin-bottom: 15px; line-height: 1.8;">${event.fullDescription}</p>` : ''}
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px;">
+                                  <div style="background: white; padding: 15px; border-radius: 8px;">
+                                    <strong style="color: #6b7280; font-size: 14px;">⏰ Time:</strong>
+                                    <p style="color: #1f2937; margin: 5px 0 0 0; font-size: 16px;">${event.startTime} - ${event.endTime}</p>
+                                  </div>
+                                  <div style="background: white; padding: 15px; border-radius: 8px;">
+                                    <strong style="color: #6b7280; font-size: 14px;">📍 Venue:</strong>
+                                    <p style="color: #1f2937; margin: 5px 0 0 0; font-size: 16px;">${event.venue}</p>
+                                  </div>
+                                  <div style="background: white; padding: 15px; border-radius: 8px;">
+                                    <strong style="color: #6b7280; font-size: 14px;">💰 Entry Fee:</strong>
+                                    <p style="color: #1f2937; margin: 5px 0 0 0; font-size: 16px;">₹${event.entryFee === 0 ? 'Free' : event.entryFee}</p>
+                                  </div>
+                                  <div style="background: white; padding: 15px; border-radius: 8px;">
+                                    <strong style="color: #6b7280; font-size: 14px;">👥 Type:</strong>
+                                    <p style="color: #1f2937; margin: 5px 0 0 0; font-size: 16px;">${event.participationType === 'team' ? 'Team Event' : 'Solo Event'}</p>
+                                  </div>
+                                </div>
+                                ${event.rules && event.rules.length > 0 ? `
+                                  <div style="margin-top: 20px;">
+                                    <strong style="color: #1f2937; font-size: 18px;">Rules:</strong>
+                                    <ul style="margin-top: 10px; padding-left: 20px;">
+                                      ${event.rules.map((rule: string) => `<li style="color: #4b5563; margin: 8px 0; line-height: 1.6;">${rule}</li>`).join('')}
+                                    </ul>
+                                  </div>
+                                ` : ''}
+                                ${event.coordinatorName ? `
+                                  <div style="margin-top: 20px; background: white; padding: 15px; border-radius: 8px;">
+                                    <strong style="color: #1f2937;">📞 Coordinator:</strong>
+                                    <p style="margin: 5px 0 0 0; color: #4b5563;">${event.coordinatorName}</p>
+                                    ${event.coordinatorPhone ? `<p style="margin: 5px 0 0 0; color: #4b5563;">Phone: ${event.coordinatorPhone}</p>` : ''}
+                                    ${event.coordinatorEmail ? `<p style="margin: 5px 0 0 0; color: #4b5563;">Email: ${event.coordinatorEmail}</p>` : ''}
+                                  </div>
+                                ` : ''}
+                              </div>
+                            `).join('')}
+                          </div>
+                        `;
+                      }).join('');
+
+                      const htmlContent = `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                          <meta charset="UTF-8">
+                          <title>Tech Fest 2026 - Complete Schedule</title>
+                          <style>
+                            body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+                            @media print {
+                              body { margin: 0; }
+                            }
+                          </style>
+                        </head>
+                        <body>
+                          <div style="background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); color: white; padding: 60px 40px; text-align: center;">
+                            <h1 style="font-size: 48px; margin: 0 0 20px 0;">Tech Fest 2026</h1>
+                            <p style="font-size: 24px; margin: 0;">Complete 2-Day Schedule</p>
+                            <p style="font-size: 18px; margin: 20px 0 0 0; opacity: 0.9;">Shri Ram Group of Colleges</p>
+                          </div>
+                          ${allDaysEvents}
+                          <div style="text-align: center; padding: 40px; background: #f3f4f6; color: #6b7280;">
+                            <p style="margin: 0; font-size: 14px;">Downloaded on ${new Date().toLocaleString('en-IN')}</p>
+                            <p style="margin: 10px 0 0 0; font-size: 14px;">For more information, visit our website</p>
+                          </div>
+                        </body>
+                        </html>
+                      `;
+
+                      const blob = new Blob([htmlContent], { type: 'text/html' });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = 'TechFest-2026-Complete-Schedule.html';
+                      link.click();
+                      URL.revokeObjectURL(url);
+                    }}
                     className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -754,21 +813,45 @@ const SchedulePage = () => {
                   </motion.button>
                   
                   <motion.button 
+                    onClick={() => {
+                      // Create ICS file for calendar
+                      const icsContent = sortedEvents.map(event => {
+                        const startDate = new Date(event.date);
+                        const [startHour, startMin] = event.startTime.split(':');
+                        startDate.setHours(parseInt(startHour), parseInt(startMin));
+                        
+                        const endDate = new Date(event.date);
+                        const [endHour, endMin] = event.endTime.split(':');
+                        endDate.setHours(parseInt(endHour), parseInt(endMin));
+                        
+                        return `BEGIN:VEVENT
+DTSTART:${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+DTEND:${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+SUMMARY:${event.title}
+DESCRIPTION:${event.shortDescription}
+LOCATION:${event.venue}
+END:VEVENT`;
+                      }).join('\n');
+                      
+                      const ics = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Tech Fest 2026//Schedule//EN
+${icsContent}
+END:VCALENDAR`;
+                      
+                      const blob = new Blob([ics], { type: 'text/calendar' });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `techfest-2026-day-${selectedDay}.ics`;
+                      link.click();
+                    }}
                     className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <Calendar size={20} />
                     <span>Add to Calendar</span>
-                  </motion.button>
-                  
-                  <motion.button 
-                    className="w-full glass-panel border border-white/20 hover:border-white/40 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 hover:bg-white/10 flex items-center justify-center space-x-3"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Zap size={20} />
-                    <span>Enable Notifications</span>
                   </motion.button>
                 </div>
               </div>
