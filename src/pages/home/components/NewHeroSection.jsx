@@ -168,35 +168,33 @@ const NewHeroSection = () => {
               CODE IT. BUILD IT. BREAK LIMITS.
             </motion.p>
 
-            {/* Countdown Timer */}
-            {!timeLeft.isExpired && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
-                className="mb-8"
-              >
-                <div className="flex gap-3 justify-center lg:justify-start max-w-md">
-                  {[
-                    { value: timeLeft.days, label: 'Days' },
-                    { value: timeLeft.hours, label: 'Hours' },
-                    { value: timeLeft.minutes, label: 'Minutes' },
-                    { value: timeLeft.seconds, label: 'Seconds' }
-                  ].map((item, i) => (
-                    <motion.div 
-                      key={i} 
-                      className="bg-blue-900/50 backdrop-blur-md px-3 py-3 rounded-xl border border-blue-400/30 flex-1 shadow-lg hover:shadow-blue-500/50 hover:scale-105 transition-all duration-300"
-                      whileHover={{ y: -5 }}
-                    >
-                      <div className="text-2xl md:text-3xl font-black text-cyan-400 mb-1">
-                        {String(item.value).padStart(2, '0')}
-                      </div>
-                      <div className="text-xs text-white font-bold uppercase tracking-wide">{item.label}</div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
+            {/* Countdown Timer - Always Visible */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="mb-8"
+            >
+              <div className="flex gap-3 justify-center lg:justify-start max-w-md">
+                {[
+                  { value: timeLeft.days, label: 'Days' },
+                  { value: timeLeft.hours, label: 'Hours' },
+                  { value: timeLeft.minutes, label: 'Minutes' },
+                  { value: timeLeft.seconds, label: 'Seconds' }
+                ].map((item, i) => (
+                  <motion.div 
+                    key={i} 
+                    className="bg-blue-900/50 backdrop-blur-md px-3 py-3 rounded-xl border border-blue-400/30 flex-1 shadow-lg hover:shadow-blue-500/50 hover:scale-105 transition-all duration-300"
+                    whileHover={{ y: -5 }}
+                  >
+                    <div className="text-2xl md:text-3xl font-black text-cyan-400 mb-1">
+                      {String(item.value).padStart(2, '0')}
+                    </div>
+                    <div className="text-xs text-white font-bold uppercase tracking-wide">{item.label}</div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
 
             {/* CTA Buttons */}
             <motion.div

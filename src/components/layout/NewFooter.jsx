@@ -52,7 +52,7 @@ const NewFooter = () => {
                 <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/30 flex-shrink-0">
                   <MapPin className="w-5 h-5 text-white" />
                 </div>
-                <span>Shri Ram Group of Colleges, Muzaffarnagar</span>
+                <span>Shri Ram Group of Colleges, Jabalpur</span>
               </li>
             </ul>
           </div>
@@ -73,7 +73,7 @@ const NewFooter = () => {
                 </div>
                 <span className="text-blue-200 text-xs font-bold">Twitter</span>
               </a>
-              <a href="#" className="glass-panel hover:bg-white/10 border border-white/20 hover:border-purple-400/50 rounded-xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-purple-500/30 group">
+              <a href="https://www.instagram.com/shri_ram_group_of_institutions?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" className="glass-panel hover:bg-white/10 border border-white/20 hover:border-purple-400/50 rounded-xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-purple-500/30 group">
                 <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-purple-500/30">
                   <span className="text-white font-bold text-sm">IG</span>
                 </div>
