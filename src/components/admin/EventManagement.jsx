@@ -14,7 +14,7 @@ const EventManagement = () => {
   const [editingEvent, setEditingEvent] = useState(null);
   const [formData, setFormData] = useState({
     title: '', shortDescription: '', fullDescription: '', category: 'technical',
-    department: '', day: 1, date: '', startTime: '', endTime: '', venue: '',
+    department: '', day: 1, dates: [''], startTime: '', endTime: '', venue: '',
     participationType: 'solo', minTeamSize: 1, maxTeamSize: 1, entryFee: 0,
     maxRegistrations: '', prizeDetails: '', 
     coordinators: [{ name: '', phone: '', email: '' }],
@@ -24,7 +24,15 @@ const EventManagement = () => {
 
   const handleEdit = (event) => {
     setEditingEvent(event);
-    const dayNumber = typeof event.day === 'string' ? parseInt(event.day.replace('Day ', '')) : event.day;
+    // Handle day - convert string to number, "Day 1 / Day 2" to 0
+    let dayNumber = 1;
+    if (event.day === 'Day 1 / Day 2' || event.day === 'Both Days') {
+      dayNumber = 0;
+    } else if (typeof event.day === 'string') {
+      dayNumber = parseInt(event.day.replace('Day ', ''));
+    } else {
+      dayNumber = event.day;
+    }
     
     // Handle coordinators - convert old format to new array format
     let coordinators = [{ name: '', phone: '', email: '' }];
@@ -40,13 +48,17 @@ const EventManagement = () => {
     }
     
     // Convert date from YYYY-MM-DD to DD/MM/YYYY for display
-    let displayDate = '';
+    let displayDates = [''];
     if (event.date) {
-      const dateObj = new Date(event.date);
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const year = dateObj.getFullYear();
-      displayDate = `${day}/${month}/${year}`;
+      // Handle both single date string and comma-separated dates
+      const dateStrings = typeof event.date === 'string' ? event.date.split(',').map(d => d.trim()) : [event.date];
+      displayDates = dateStrings.map(dateStr => {
+        const dateObj = new Date(dateStr);
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const year = dateObj.getFullYear();
+        return `${day}/${month}/${year}`;
+      });
     }
     
     // Convert registration deadline to DD/MM/YYYY format
@@ -62,7 +74,7 @@ const EventManagement = () => {
     setFormData({
       ...event, 
       day: dayNumber,
-      date: displayDate,
+      dates: displayDates,
       posterImage: event.posterImage || event.bannerImage || '',
       registrationDeadline: displayDeadline,
       maxRegistrations: event.maxRegistrations || '',
@@ -82,7 +94,7 @@ const EventManagement = () => {
     setEditingEvent(null);
     setFormData({
       title: '', shortDescription: '', fullDescription: '', category: 'technical',
-      department: '', day: 1, date: '', startTime: '', endTime: '', venue: '',
+      department: '', day: 1, dates: [''], startTime: '', endTime: '', venue: '',
       participationType: 'solo', minTeamSize: 1, maxTeamSize: 1, entryFee: 0,
       maxRegistrations: '', prizeDetails: '', 
       coordinators: [{ name: '', phone: '', email: '' }],
@@ -94,11 +106,19 @@ const EventManagement = () => {
 
   const handleSave = async () => {
     try {
-      // Convert date from DD/MM/YYYY to YYYY-MM-DD for backend
-      let backendDate = formData.date;
-      if (formData.date && formData.date.includes('/')) {
-        const [day, month, year] = formData.date.split('/');
-        backendDate = `${year}-${month}-${day}`;
+      // Convert dates from DD/MM/YYYY to YYYY-MM-DD and join with comma
+      let backendDate = '';
+      if (formData.dates && formData.dates.length > 0) {
+        const convertedDates = formData.dates
+          .filter(d => d && d.trim())
+          .map(dateStr => {
+            if (dateStr.includes('/')) {
+              const [day, month, year] = dateStr.split('/');
+              return `${year}-${month}-${day}`;
+            }
+            return dateStr;
+          });
+        backendDate = convertedDates.join(', ');
       }
 
       // Handle registration deadline - convert DD/MM/YYYY to YYYY-MM-DD
@@ -122,7 +142,7 @@ const EventManagement = () => {
       const eventData = {
         ...formData,
         date: backendDate,
-        day: formData.day ? `Day ${formData.day}` : 'Day 1',
+        day: formData.day === 0 ? 'Day 1 / Day 2' : `Day ${formData.day}`,
         registrationDeadline: deadline,
         maxRegistrations: maxRegs,
         minTeamSize: formData.minTeamSize || 1,
@@ -219,6 +239,30 @@ const EventManagement = () => {
       setFormData(prev => ({
         ...prev,
         coordinators: prev.coordinators.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  // Date management functions
+  const handleDateChange = (index, value) => {
+    setFormData(prev => ({
+      ...prev,
+      dates: prev.dates.map((date, i) => i === index ? value : date)
+    }));
+  };
+
+  const addDate = () => {
+    setFormData(prev => ({
+      ...prev,
+      dates: [...prev.dates, '']
+    }));
+  };
+
+  const removeDate = (index) => {
+    if (formData.dates.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        dates: prev.dates.filter((_, i) => i !== index)
       }));
     }
   };
@@ -372,30 +416,55 @@ const EventManagement = () => {
                             className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500">
                             <option value={1}>Day 1</option>
                             <option value={2}>Day 2</option>
-                            <option value={3}>Day 3</option>
+                            <option value={0}>Day 1 / Day 2</option>
                           </select>
                         </div>
                         <div className="col-span-2">
-                          <label className="block text-white text-sm font-medium mb-1.5">Date (DD/MM/YYYY)</label>
-                          <input 
-                            type="text" 
-                            value={formData.date} 
-                            onChange={(e) => {
-                              let value = e.target.value.replace(/[^0-9/]/g, '');
-                              // Auto-add slashes
-                              if (value.length === 2 && !value.includes('/')) {
-                                value = value + '/';
-                              } else if (value.length === 5 && value.split('/').length === 2) {
-                                value = value + '/';
-                              }
-                              // Limit to DD/MM/YYYY format
-                              if (value.length <= 10) {
-                                handleInputChange('date', value);
-                              }
-                            }}
-                            placeholder="DD/MM/YYYY"
-                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" 
-                          />
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="block text-white text-sm font-medium">Date (DD/MM/YYYY)</label>
+                            <button
+                              type="button"
+                              onClick={addDate}
+                              className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1"
+                            >
+                              <Plus size={14} />
+                              Add Date
+                            </button>
+                          </div>
+                          <div className="space-y-2">
+                            {formData.dates.map((date, index) => (
+                              <div key={index} className="flex gap-2">
+                                <input 
+                                  type="text" 
+                                  value={date} 
+                                  onChange={(e) => {
+                                    let value = e.target.value.replace(/[^0-9/]/g, '');
+                                    // Auto-add slashes
+                                    if (value.length === 2 && !value.includes('/')) {
+                                      value = value + '/';
+                                    } else if (value.length === 5 && value.split('/').length === 2) {
+                                      value = value + '/';
+                                    }
+                                    // Limit to DD/MM/YYYY format
+                                    if (value.length <= 10) {
+                                      handleDateChange(index, value);
+                                    }
+                                  }}
+                                  placeholder="DD/MM/YYYY"
+                                  className="flex-1 px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" 
+                                />
+                                {formData.dates.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeDate(index)}
+                                    className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
