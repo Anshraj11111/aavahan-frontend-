@@ -122,10 +122,11 @@ const EventManagement = () => {
       }
 
       // Handle registration deadline - convert DD/MM/YYYY to YYYY-MM-DD
-      let deadline = null;
+      let deadline = '';
       if (formData.registrationDeadline && formData.registrationDeadline.trim()) {
-        const [day, month, year] = formData.registrationDeadline.split('/');
-        if (day && month && year) {
+        const parts = formData.registrationDeadline.split('/');
+        if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+          const [day, month, year] = parts;
           deadline = `${year}-${month}-${day}`;
         }
       }
@@ -140,27 +141,37 @@ const EventManagement = () => {
       }
 
       const eventData = {
-        ...formData,
-        date: backendDate,
-        day: formData.day === 0 ? 'Day 1 / Day 2' : `Day ${formData.day}`,
-        registrationDeadline: deadline,
-        maxRegistrations: maxRegs,
-        minTeamSize: formData.minTeamSize || 1,
-        maxTeamSize: formData.maxTeamSize || 1,
-        coordinators: formData.coordinators.filter(c => c.name || c.phone || c.email),
-        rules: formData.rules.filter(r => r && r.trim()),
-        tags: formData.tags.filter(t => t && t.trim()),
-        status: 'published',
         title: formData.title || 'Untitled Event',
         shortDescription: formData.shortDescription || '',
         fullDescription: formData.fullDescription || '',
-        venue: formData.venue || 'TBA',
+        category: formData.category || 'technical',
+        department: formData.department || '',
+        day: formData.day === 0 ? 'Day 1 / Day 2' : `Day ${formData.day}`,
+        date: backendDate || '',
         startTime: formData.startTime || '09:00 AM',
         endTime: formData.endTime || '05:00 PM',
-        category: formData.category || 'technical',
+        venue: formData.venue || 'TBA',
         participationType: formData.participationType || 'solo',
+        minTeamSize: parseInt(formData.minTeamSize) || 1,
+        maxTeamSize: parseInt(formData.maxTeamSize) || 1,
+        entryFee: parseInt(formData.entryFee) || 0,
+        maxRegistrations: maxRegs,
+        prizeDetails: formData.prizeDetails || '',
+        coordinators: formData.coordinators
+          .filter(c => c.name || c.phone || c.email)
+          .map(c => ({
+            name: c.name || '',
+            phone: c.phone || '',
+            email: c.email || ''
+          })),
+        eligibility: formData.eligibility || '',
+        registrationDeadline: deadline,
+        featured: formData.featured || false,
+        rules: formData.rules.filter(r => r && r.trim()),
+        tags: formData.tags.filter(t => t && t.trim()),
         posterImage: formData.posterImage || '',
-        bannerImage: formData.posterImage || ''
+        bannerImage: formData.posterImage || '',
+        status: 'published'
       };
 
       console.log('💾 Saving event with data:', eventData);
@@ -522,27 +533,33 @@ const EventManagement = () => {
                         <div>
                           <label className="block text-white text-sm font-medium mb-1.5">Min Size</label>
                           <input 
-                            type="text" 
+                            type="number" 
                             value={formData.minTeamSize} 
-                            onChange={(e) => handleInputChange('minTeamSize', e.target.value ? parseInt(e.target.value) : '')}
+                            onChange={(e) => handleInputChange('minTeamSize', e.target.value ? parseInt(e.target.value) : 1)}
                             className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" 
-                            placeholder="Leave empty for no limit" />
+                            placeholder="1" 
+                            min="1" />
                         </div>
                         <div>
                           <label className="block text-white text-sm font-medium mb-1.5">Max Size</label>
                           <input 
-                            type="text" 
+                            type="number" 
                             value={formData.maxTeamSize} 
-                            onChange={(e) => handleInputChange('maxTeamSize', e.target.value ? parseInt(e.target.value) : '')}
+                            onChange={(e) => handleInputChange('maxTeamSize', e.target.value ? parseInt(e.target.value) : 1)}
                             className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" 
-                            placeholder="Leave empty for no limit" />
+                            placeholder="1" 
+                            min="1" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-white text-sm font-medium mb-1.5">Entry Fee (₹)</label>
-                          <input type="number" value={formData.entryFee} onChange={(e) => handleInputChange('entryFee', parseInt(e.target.value))}
-                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" min="0" />
+                          <input 
+                            type="number" 
+                            value={formData.entryFee} 
+                            onChange={(e) => handleInputChange('entryFee', e.target.value ? parseInt(e.target.value) : 0)}
+                            className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" 
+                            min="0" />
                         </div>
                         <div>
                           <label className="block text-white text-sm font-medium mb-1.5">Max Registrations</label>
