@@ -173,6 +173,7 @@ const RegistrationsList = () => {
         department: registration.department,
         yearOrSemester: registration.yearOrSemester,
         teamName: registration.teamName || 'N/A',
+        teamMembers: registration.teamMembers || [],
         participationType: registration.participationType,
         transactionId: registration.transactionId || 'N/A',
         amountPaid: registration.amountPaid,
@@ -583,7 +584,7 @@ const RegistrationsList = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="glass-panel p-6 rounded-xl border border-white/10 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="glass-panel p-6 rounded-xl border border-white/10 max-w-3xl w-full max-h-[85vh] overflow-y-auto"
           >
             <div className="flex justify-between items-start mb-6">
               <h3 className="text-xl font-bold text-white">Registration Details</h3>
@@ -598,53 +599,55 @@ const RegistrationsList = () => {
             <div className="space-y-6">
               {/* Participant Info */}
               <div>
-                <h4 className="text-lg font-semibold text-white mb-3">Participant Information</h4>
+                <h4 className="text-lg font-semibold text-white mb-4">Participant Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <Users className="w-5 h-5 text-blue-400" />
-                    <div>
+                  <div className="flex items-start gap-3">
+                    <Users className="w-5 h-5 text-blue-400 flex-shrink-0 mt-1" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-gray-400 text-sm">Name</p>
-                      <p className="text-white">{selectedRegistration.fullName}</p>
+                      <p className="text-white break-words">{selectedRegistration.fullName}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-green-400" />
-                    <div>
+                  <div className="flex items-start gap-3">
+                    <Mail className="w-5 h-5 text-green-400 flex-shrink-0 mt-1" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-gray-400 text-sm">Email</p>
-                      <p className="text-white">{selectedRegistration.email}</p>
+                      <p className="text-white break-all text-sm">{selectedRegistration.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Phone className="w-5 h-5 text-purple-400" />
-                    <div>
+                  <div className="flex items-start gap-3">
+                    <Phone className="w-5 h-5 text-purple-400 flex-shrink-0 mt-1" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-gray-400 text-sm">Phone</p>
                       <p className="text-white">{selectedRegistration.phone}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <MapPin className="w-5 h-5 text-red-400" />
-                    <div>
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-red-400 flex-shrink-0 mt-1" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-gray-400 text-sm">City</p>
-                      <p className="text-white">{selectedRegistration.city}</p>
+                      <p className="text-white break-words">{selectedRegistration.city}</p>
                     </div>
                   </div>
                 </div>
                 
                 {/* Academic Information */}
                 <div className="mt-4 p-4 bg-gray-800/30 rounded-lg">
-                  <h5 className="text-white font-medium mb-2">Academic Details</h5>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <h5 className="text-white font-medium mb-3">Academic Details</h5>
+                  <div className="grid grid-cols-1 gap-3 text-sm">
                     <div>
-                      <p className="text-gray-400">Institution</p>
-                      <p className="text-white">{selectedRegistration.instituteName}</p>
+                      <p className="text-gray-400 text-xs mb-1">Institution</p>
+                      <p className="text-white break-words">{selectedRegistration.instituteName}</p>
                     </div>
-                    <div>
-                      <p className="text-gray-400">Department</p>
-                      <p className="text-white">{selectedRegistration.department}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Year/Semester</p>
-                      <p className="text-white">{selectedRegistration.yearOrSemester}</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-gray-400 text-xs mb-1">Department</p>
+                        <p className="text-white break-words">{selectedRegistration.department}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-xs mb-1">Year/Semester</p>
+                        <p className="text-white">{selectedRegistration.yearOrSemester}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -653,13 +656,14 @@ const RegistrationsList = () => {
               {/* Team Members */}
               {selectedRegistration.teamMembers && selectedRegistration.teamMembers.length > 0 && (
                 <div>
-                  <h4 className="text-lg font-semibold text-white mb-3">Team Members</h4>
+                  <h4 className="text-lg font-semibold text-white mb-4">Team Members</h4>
                   <div className="space-y-3">
                     {selectedRegistration.teamMembers.map((member, index) => (
-                      <div key={index} className="bg-gray-800/50 p-3 rounded-lg">
-                        <p className="text-white font-medium">{member.name}</p>
-                        <p className="text-gray-400 text-sm">{member.email}</p>
-                        <p className="text-gray-500 text-xs">{member.phone}</p>
+                      <div key={index} className="bg-gray-800/50 p-4 rounded-lg">
+                        <p className="text-white font-medium mb-2 break-words">{member.name || member.fullName || 'N/A'}</p>
+                        {member.email && <p className="text-gray-400 text-sm break-all mb-1">{member.email}</p>}
+                        {member.phone && <p className="text-gray-500 text-sm mb-1">{member.phone}</p>}
+                        {member.college && <p className="text-gray-500 text-sm break-words">{member.college}</p>}
                       </div>
                     ))}
                   </div>
@@ -668,20 +672,20 @@ const RegistrationsList = () => {
 
               {/* Event Info */}
               <div>
-                <h4 className="text-lg font-semibold text-white mb-3">Event Information</h4>
+                <h4 className="text-lg font-semibold text-white mb-4">Event Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-yellow-400" />
-                    <div>
+                  <div className="flex items-start gap-3">
+                    <Calendar className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-1" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-gray-400 text-sm">Event</p>
-                      <p className="text-white">{selectedRegistration.eventTitle}</p>
+                      <p className="text-white break-words">{selectedRegistration.eventTitle}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5 text-cyan-400" />
-                    <div>
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-1" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-gray-400 text-sm">Day</p>
-                      <p className="text-white">Day {selectedRegistration.eventDay}</p>
+                      <p className="text-white">{selectedRegistration.eventDay}</p>
                     </div>
                   </div>
                 </div>
@@ -689,14 +693,14 @@ const RegistrationsList = () => {
 
               {/* Payment Information */}
               <div>
-                <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-green-400" />
-                  Payment Information (Razorpay)
+                  Payment Information
                 </h4>
                 <div className="bg-gray-800/30 p-4 rounded-lg space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-gray-400 text-sm">Amount Paid</p>
+                      <p className="text-gray-400 text-sm">Amount</p>
                       <p className="text-white font-bold text-xl">₹{selectedRegistration.amountPaid}</p>
                     </div>
                     <div>

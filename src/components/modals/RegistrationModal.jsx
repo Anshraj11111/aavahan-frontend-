@@ -1,17 +1,13 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { X, User, Users, CheckCircle, AlertCircle, CreditCard, FileText } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, User, Users, CheckCircle, AlertCircle, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { registrationsService } from '../../services/registrations';
-import { razorpayService } from '../../services/razorpay';
 import { useEvents } from '../../contexts/EventsContext';
 
 const RegistrationModal = ({ isOpen, onClose, event }) => {
   const { refreshEvents } = useEvents();
   const modalContentRef = useRef(null);
-  const [razorpayKeyId, setRazorpayKeyId] = useState('');
-  const [paymentCompleted, setPaymentCompleted] = useState(false);
-  const [paymentData, setPaymentData] = useState(null);
   
   const [formData, setFormData] = useState({
     teamName: '',
@@ -36,10 +32,8 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [registrationData, setRegistrationData] = useState(null);
   
-  // Calculate total steps based on entry fee
-  const totalSteps = useMemo(() => {
-    return event?.entryFee > 0 ? 3 : 2; // 3 steps for paid, 2 for free
-  }, [event?.entryFee]);
+  // Calculate total steps - always 2 steps (no payment)
+  const totalSteps = 2; // Personal Info → Review & Submit
 
   // Scroll to top when modal opens and lock body scroll
   useEffect(() => {
@@ -65,25 +59,6 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
     };
   }, [isOpen]);
 
-  // Fetch Razorpay Key ID
-  useEffect(() => {
-    const fetchRazorpayKey = async () => {
-      try {
-        const response = await razorpayService.getKeyId();
-        if (response.success && response.data?.keyId) {
-          setRazorpayKeyId(response.data.keyId);
-          console.log('Razorpay Key ID loaded:', response.data.keyId);
-        }
-      } catch (error) {
-        console.error('Failed to fetch Razorpay key:', error);
-      }
-    };
-
-    if (isOpen && event?.entryFee > 0) {
-      fetchRazorpayKey();
-    }
-  }, [isOpen, event?.entryFee]);
-
   // Auto-scroll to top when step changes
   useEffect(() => {
     if (modalContentRef.current) {
@@ -102,8 +77,6 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
   useEffect(() => {
     if (!isOpen) {
       setCurrentStep(1);
-      setPaymentCompleted(false);
-      setPaymentData(null);
       setRegistrationSuccess(false);
       setRegistrationData(null);
       setFormData({
@@ -151,111 +124,6 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         };
       }
     });
-  };
-
-  // Razorpay Payment Handler
-  const handleRazorpayPayment = async () => {
-    try {
-      setLoadingMessage('Creating payment order...');
-      
-      const orderResponse = await razorpayService.createOrder(
-        event.entryFee,
-        event._id,
-        event.title
-      );
-
-      if (!orderResponse.success) {
-        throw new Error('Failed to create payment order');
-      }
-
-      const { orderId, amount, currency } = orderResponse.data;
-
-      const options = {
-        key: razorpayKeyId,
-        amount: amount,
-        currency: currency,
-        name: 'Aavhaan 2026',
-        description: event.title,
-        order_id: orderId,
-        handler: async function (response) {
-          try {
-            setLoadingMessage('Verifying payment...');
-            
-            const verifyResponse = await razorpayService.verifyPayment(
-              response.razorpay_order_id,
-              response.razorpay_payment_id,
-              response.razorpay_signature
-            );
-
-            if (verifyResponse.success && verifyResponse.verified) {
-              setPaymentCompleted(true);
-              setPaymentData(verifyResponse.data);
-              setLoadingMessage('');
-              
-              toast.success('Payment successful! Proceeding to confirmation...', {
-                duration: 3000,
-                icon: '✅'
-              });
-
-              setTimeout(() => {
-                setCurrentStep(currentStep + 1);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                if (modalContentRef.current) {
-                  modalContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-              }, 1000);
-            } else {
-              throw new Error('Payment verification failed');
-            }
-          } catch (error) {
-            console.error('Payment verification error:', error);
-            toast.error('Payment verification failed. Please contact support.', {
-              duration: 8000,
-              style: {
-                background: '#ef4444',
-                color: '#fff',
-                fontWeight: '600',
-                fontSize: '14px',
-              },
-            });
-            setLoadingMessage('');
-          }
-        },
-        prefill: {
-          name: formData.teamLeader.fullName,
-          email: formData.teamLeader.email,
-          contact: formData.teamLeader.phone,
-        },
-        theme: {
-          color: '#3B82F6',
-        },
-        modal: {
-          ondismiss: function() {
-            setLoadingMessage('');
-            toast.error('Payment cancelled', {
-              duration: 3000,
-            });
-          }
-        }
-      };
-
-      setLoadingMessage('');
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-      
-    } catch (error) {
-      console.error('Razorpay payment error:', error);
-      setLoadingMessage('');
-      toast.error('Failed to initiate payment. Please try again.', {
-        duration: 5000,
-        style: {
-          background: '#ef4444',
-          color: '#fff',
-          fontWeight: '600',
-          fontSize: '14px',
-        },
-      });
-    }
   };
 
   const handleNext = async () => {
@@ -313,8 +181,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
       }
     }
     
-    // For paid events, payment is handled by Razorpay button in Step 2
-    // Just move forward to next step
+    // Move to next step
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
       
@@ -436,16 +303,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         formDataToSend.append('teamMembers', JSON.stringify(teamMembersData));
       }
       
-      // Payment info (if paid event and payment completed via Razorpay)
-      if (event?.entryFee > 0 && paymentCompleted && paymentData) {
-        formDataToSend.append('transactionId', paymentData.paymentId);
-        formDataToSend.append('razorpayOrderId', paymentData.orderId);
-        formDataToSend.append('razorpayPaymentId', paymentData.paymentId);
-        console.log('Razorpay payment info added - Payment ID:', paymentData.paymentId);
-      }
-      
       // Finalizing registration
-      setLoadingMessage('Finalizing your registration...');
       setLoadingMessage('Finalizing your registration...');
       
       // Submit to backend API
@@ -456,7 +314,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
         setRegistrationSuccess(true);
         setRegistrationData(response.data);
         
-        toast.success('Thank you for registering! You will receive more information via email shortly.', {
+        toast.success('Thank you for registration! Event coordinator will contact you for payment details.', {
           duration: 5000,
           icon: '✅'
         });
@@ -838,92 +696,8 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
               </div>
             )}
 
-            {/* Step 2: Payment Information */}
-            {currentStep === 2 && event?.entryFee > 0 && (
-              <div className="modal-form-section space-y-6">
-                <h3 className="text-2xl font-semibold text-white mb-6 flex items-center">
-                  <CreditCard className="w-6 h-6 mr-3 text-yellow-400" />
-                  Payment Information
-                </h3>
-                
-                <div className="glass-panel p-6 rounded-xl text-center space-y-6">
-                  <div>
-                    <h4 className="text-xl font-bold text-white mb-2">Entry Fee</h4>
-                    <div className="text-4xl font-bold text-green-400">₹{event.entryFee}</div>
-                  </div>
-
-                  <div className="border-t border-white/10 pt-6">
-                    <h4 className="text-lg font-semibold text-white mb-4">
-                      Complete Payment to Continue
-                    </h4>
-                    
-                    {paymentCompleted ? (
-                      <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
-                        <div className="flex items-center justify-center space-x-3 text-green-400 mb-4">
-                          <CheckCircle className="w-8 h-8" />
-                          <span className="text-xl font-semibold">Payment Successful!</span>
-                        </div>
-                        <p className="text-gray-300 text-sm">
-                          Payment ID: {paymentData?.paymentId}
-                        </p>
-                        <p className="text-gray-400 text-xs mt-2">
-                          Amount: ₹{paymentData?.amount} • Method: {paymentData?.method}
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={handleRazorpayPayment}
-                          disabled={!razorpayKeyId || loadingMessage}
-                          className="w-full max-w-md mx-auto py-4 px-6 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-lg font-semibold rounded-xl hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-3"
-                        >
-                          {loadingMessage ? (
-                            <>
-                              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              <span>{loadingMessage}</span>
-                            </>
-                          ) : (
-                            <>
-                              <CreditCard className="w-6 h-6" />
-                              <span>Pay Now with Razorpay</span>
-                            </>
-                          )}
-                        </button>
-                        
-                        <div className="mt-6 space-y-2">
-                          <p className="text-gray-400 text-sm">
-                            Secure payment via Razorpay
-                          </p>
-                          <p className="text-gray-500 text-xs">
-                            Supports UPI, Cards, NetBanking, and Wallets
-                          </p>
-                        </div>
-
-                        <div className="mt-6 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-                          <div className="flex items-start space-x-3">
-                            <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                            <div className="text-blue-400 text-sm text-left">
-                              <p className="font-medium mb-1">Payment Instructions:</p>
-                              <ul className="space-y-1 text-xs">
-                                <li>• Click "Pay Now" to open Razorpay payment gateway</li>
-                                <li>• Choose your preferred payment method (UPI/Card/NetBanking)</li>
-                                <li>• Complete the payment securely</li>
-                                <li>• Payment will be verified automatically</li>
-                                <li>• You'll be redirected to confirmation page</li>
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Confirmation */}
-            {currentStep === totalSteps && (
+            {/* Step 2: Review & Confirmation */}
+            {currentStep === 2 && (
               <div className="modal-form-section space-y-6">
                 {registrationSuccess ? (
                   // Success State - Show after successful registration
@@ -934,9 +708,9 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                           <CheckCircle className="w-12 h-12 text-green-400" />
                         </div>
                       </div>
-                      <h3 className="text-3xl font-bold text-white">Registration Successful!</h3>
+                      <h3 className="text-3xl font-bold text-white">Thank You for Registration!</h3>
                       <p className="text-gray-300 text-lg">
-                        Your registration has been submitted successfully.
+                        Event coordinator will contact you for payment details.
                       </p>
                     </div>
 
@@ -967,9 +741,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                         </div>
                         <div>
                           <span className="text-gray-400">Status:</span>
-                          <span className="text-yellow-400 ml-2 font-medium">
-                            {event?.entryFee > 0 ? 'Pending Verification' : 'Approved'}
-                          </span>
+                          <span className="text-yellow-400 ml-2 font-medium">Payment Pending</span>
                         </div>
                       </div>
                     </div>
@@ -983,9 +755,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                             <li>• Check your email for confirmation and further details</li>
                             <li>• Save your Registration ID for future reference</li>
                             <li>• Download your receipt using the button below</li>
-                            {event?.entryFee > 0 && (
-                              <li>• Payment will be verified within 24-48 hours</li>
-                            )}
+                            <li>• Event coordinator will contact you for payment details</li>
                             <li>• Bring valid ID proof on event day</li>
                           </ul>
                         </div>
@@ -1108,11 +878,6 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                   <button
                     type="button"
                     onClick={handleNext}
-                    disabled={
-                      // Disable Next button on payment step if transaction ID or screenshot is missing
-                      currentStep === 2 && event?.entryFee > 0 && 
-                      (!formData.transactionId || !formData.transactionId.trim() || !formData.paymentScreenshot)
-                    }
                     className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                   >
                     Next
@@ -1120,7 +885,7 @@ const RegistrationModal = ({ isOpen, onClose, event }) => {
                 ) : (
                   <button
                     type="submit"
-                    disabled={isSubmitting || (event?.entryFee > 0 && (!formData.transactionId || !formData.transactionId.trim() || !formData.paymentScreenshot))}
+                    disabled={isSubmitting}
                     className="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2"
                   >
                     {isSubmitting ? (

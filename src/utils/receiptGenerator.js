@@ -8,6 +8,7 @@ export const downloadReceipt = (registrationData, eventData) => {
     phone,
     instituteName,
     teamName,
+    teamMembers,
     transactionId,
     uniqueRegistrationId,
     amountExpected,
@@ -195,6 +196,38 @@ export const downloadReceipt = (registrationData, eventData) => {
         </div>
       </div>
       
+      ${teamMembers && teamMembers.length > 0 ? `
+      <div class="section">
+        <div class="section-title">Team Members</div>
+        ${teamMembers.map((member, index) => `
+          <div class="highlight" style="margin-bottom: 12px;">
+            <div class="info-row">
+              <span class="info-label">Member ${index + 1}</span>
+              <span class="info-value">${member.name || member.fullName || 'N/A'}</span>
+            </div>
+            ${member.email ? `
+            <div class="info-row">
+              <span class="info-label">Email</span>
+              <span class="info-value">${member.email}</span>
+            </div>
+            ` : ''}
+            ${member.phone ? `
+            <div class="info-row">
+              <span class="info-label">Phone</span>
+              <span class="info-value">${member.phone}</span>
+            </div>
+            ` : ''}
+            ${member.college ? `
+            <div class="info-row">
+              <span class="info-label">College</span>
+              <span class="info-value">${member.college}</span>
+            </div>
+            ` : ''}
+          </div>
+        `).join('')}
+      </div>
+      ` : ''}
+      
       ${amountExpected > 0 ? `
       <div class="section">
         <div class="section-title">Payment Details</div>
@@ -257,6 +290,7 @@ export const generateReceipt = (data) => {
     phone: data.phone,
     instituteName: data.instituteName,
     teamName: data.teamName,
+    teamMembers: data.teamMembers || [],
     transactionId: data.transactionId,
     uniqueRegistrationId: data.registrationId,
     amountExpected: data.amountPaid,

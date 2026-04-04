@@ -152,9 +152,9 @@ const EventManagement = () => {
         endTime: formData.endTime || '05:00 PM',
         venue: formData.venue || 'TBA',
         participationType: formData.participationType || 'solo',
-        minTeamSize: parseInt(formData.minTeamSize) || 1,
-        maxTeamSize: parseInt(formData.maxTeamSize) || 1,
-        entryFee: parseInt(formData.entryFee) || 0,
+        minTeamSize: formData.minTeamSize === '' ? 1 : parseInt(formData.minTeamSize) || 1,
+        maxTeamSize: formData.maxTeamSize === '' ? 1 : parseInt(formData.maxTeamSize) || 1,
+        entryFee: formData.entryFee === '' ? 0 : parseInt(formData.entryFee) || 0,
         maxRegistrations: maxRegs,
         prizeDetails: formData.prizeDetails || '',
         coordinators: formData.coordinators
@@ -533,33 +533,40 @@ const EventManagement = () => {
                         <div>
                           <label className="block text-white text-sm font-medium mb-1.5">Min Size</label>
                           <input 
-                            type="number" 
+                            type="text" 
                             value={formData.minTeamSize} 
-                            onChange={(e) => handleInputChange('minTeamSize', e.target.value ? parseInt(e.target.value) : 1)}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              handleInputChange('minTeamSize', value === '' ? '' : parseInt(value));
+                            }}
                             className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" 
-                            placeholder="1" 
-                            min="1" />
+                            placeholder="1" />
                         </div>
                         <div>
                           <label className="block text-white text-sm font-medium mb-1.5">Max Size</label>
                           <input 
-                            type="number" 
+                            type="text" 
                             value={formData.maxTeamSize} 
-                            onChange={(e) => handleInputChange('maxTeamSize', e.target.value ? parseInt(e.target.value) : 1)}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              handleInputChange('maxTeamSize', value === '' ? '' : parseInt(value));
+                            }}
                             className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" 
-                            placeholder="1" 
-                            min="1" />
+                            placeholder="1" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-white text-sm font-medium mb-1.5">Entry Fee (₹)</label>
                           <input 
-                            type="number" 
+                            type="text" 
                             value={formData.entryFee} 
-                            onChange={(e) => handleInputChange('entryFee', e.target.value ? parseInt(e.target.value) : 0)}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              handleInputChange('entryFee', value === '' ? '' : parseInt(value));
+                            }}
                             className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500" 
-                            min="0" />
+                            placeholder="0" />
                         </div>
                         <div>
                           <label className="block text-white text-sm font-medium mb-1.5">Max Registrations</label>
