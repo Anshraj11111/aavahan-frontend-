@@ -1,13 +1,7 @@
 import { motion } from 'framer-motion';
-import { Phone, Mail, MapPin, User } from 'lucide-react';
+import { Phone, Mail, MapPin } from 'lucide-react';
 
 const NewContactSection = () => {
-  const coordinators = [
-    { name: 'Coordinator 1', role: 'Technical Head', image: null },
-    { name: 'Coordinator 2', role: 'Cultural Head', image: null },
-    { name: 'Coordinator 3', role: 'Operations Head', image: null }
-  ];
-
   return (
     <section className="py-20 relative bg-gradient-to-br from-[#0f1f3d] via-[#0a1628] to-[#1a2744]">
       {/* Starfield Background */}
@@ -45,7 +39,7 @@ const NewContactSection = () => {
 
         <div className="max-w-6xl mx-auto">
           {/* Contact Info Cards */}
-          <div className="grid md:grid-cols-3 gap-6 mb-16">
+          <div className="grid md:grid-cols-3 gap-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -57,7 +51,7 @@ const NewContactSection = () => {
                 <Phone className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-lg font-black text-white mb-2">Phone</h3>
-              <p className="text-gray-100 text-base font-bold">+91 XXXXX XXXXX</p>
+              <p className="text-gray-100 text-base font-bold">+91 7612902220</p>
             </motion.div>
 
             <motion.div
@@ -72,7 +66,7 @@ const NewContactSection = () => {
                 <Mail className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-lg font-black text-white mb-2">Email</h3>
-              <p className="text-gray-100 text-base font-bold">techfest@srgc.edu</p>
+              <p className="text-gray-100 text-base font-bold">info@sritgroup.net</p>
             </motion.div>
 
             <motion.div
@@ -87,32 +81,8 @@ const NewContactSection = () => {
                 <MapPin className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-lg font-black text-white mb-2">Address</h3>
-              <p className="text-gray-100 text-base font-bold">Shri Ram Group, Muzaffarnagar</p>
+              <p className="text-gray-100 text-base font-bold">Shri Ram Group, Jabalpur</p>
             </motion.div>
-          </div>
-
-          {/* Coordinators */}
-          <div>
-            <h3 className="text-3xl font-black text-white text-center mb-8">Meet Our Team</h3>
-            <div className="grid md:grid-cols-3 gap-6">
-              {coordinators.map((coord, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -10 }}
-                  className="bg-blue-900/30 backdrop-blur-md rounded-2xl p-6 border-2 border-blue-400/30 shadow-lg hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 text-center group"
-                >
-                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 rounded-full mx-auto mb-4 flex items-center justify-center border-4 border-blue-400/30 shadow-lg group-hover:scale-110 transition-transform">
-                    <User className="w-12 h-12 text-cyan-400" />
-                  </div>
-                  <h3 className="text-xl font-black text-white mb-1">{coord.name}</h3>
-                  <p className="text-gray-100 text-base font-bold">{coord.role}</p>
-                </motion.div>
-              ))}
-            </div>
           </div>
         </div>
       </div>

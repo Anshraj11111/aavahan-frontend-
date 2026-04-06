@@ -40,13 +40,13 @@ const NewFooter = () => {
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
                   <Phone className="w-5 h-5 text-white" />
                 </div>
-                <span>+91 XXXXX XXXXX</span>
+                <span>+91 7612902220</span>
               </li>
               <li className="flex items-center gap-3 text-blue-200 text-base font-bold">
                 <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/30">
                   <Mail className="w-5 h-5 text-white" />
                 </div>
-                <span>techfest@srgc.edu</span>
+                <span>info@sritgroup.net</span>
               </li>
               <li className="flex items-start gap-3 text-blue-200 text-base font-bold">
                 <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/30 flex-shrink-0">
@@ -61,25 +61,25 @@ const NewFooter = () => {
           <div>
             <h3 className="text-xl font-black mb-4 text-white">Follow Us</h3>
             <div className="grid grid-cols-2 gap-3">
-              <a href="#" className="glass-panel hover:bg-white/10 border border-white/20 hover:border-blue-400/50 rounded-xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-blue-500/30 group">
+              <a href="https://www.facebook.com/ShriRamGroupJabalpur/" className="glass-panel hover:bg-white/10 border border-white/20 hover:border-blue-400/50 rounded-xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-blue-500/30 group">
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-500/30">
                   <span className="text-white font-bold text-sm">FB</span>
                 </div>
                 <span className="text-blue-200 text-xs font-bold">Facebook</span>
               </a>
-              <a href="#" className="glass-panel hover:bg-white/10 border border-white/20 hover:border-blue-400/50 rounded-xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-blue-500/30 group">
+              {/* <a href="#" className="glass-panel hover:bg-white/10 border border-white/20 hover:border-blue-400/50 rounded-xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-blue-500/30 group">
                 <div className="w-10 h-10 bg-gradient-to-r from-sky-500 to-blue-500 rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-sky-500/30">
                   <span className="text-white font-bold text-sm">TW</span>
                 </div>
                 <span className="text-blue-200 text-xs font-bold">Twitter</span>
-              </a>
+              </a> */}
               <a href="https://www.instagram.com/shri_ram_group_of_institutions?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" className="glass-panel hover:bg-white/10 border border-white/20 hover:border-purple-400/50 rounded-xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-purple-500/30 group">
                 <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-purple-500/30">
                   <span className="text-white font-bold text-sm">IG</span>
                 </div>
                 <span className="text-blue-200 text-xs font-bold">Instagram</span>
               </a>
-              <a href="#" className="glass-panel hover:bg-white/10 border border-white/20 hover:border-blue-400/50 rounded-xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-blue-500/30 group">
+              <a href="https://www.linkedin.com/school/shri-ram-institute-of-technology/posts/?feedView=all" className="glass-panel hover:bg-white/10 border border-white/20 hover:border-blue-400/50 rounded-xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-blue-500/30 group">
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-500 rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-500/30">
                   <span className="text-white font-bold text-sm">LI</span>
                 </div>
